@@ -1,0 +1,43 @@
+name: Sonique
+options:
+  bundleIdPrefix: com.seayniclabs
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+
+packages:
+  LiveKit:
+    url: https://github.com/livekit/client-sdk-swift
+    from: "2.0.0"
+
+targets:
+  Sonique:
+    type: application
+    platform: iOS
+    sources:
+      - path: SoniqueApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.seayniclabs.sonique
+        SWIFT_VERSION: "5.9"
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        DEVELOPMENT_TEAM: ""
+        INFOPLIST_FILE: SoniqueApp/Resources/Info.plist
+      configs:
+        debug:
+          SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+    dependencies:
+      - package: LiveKit
+    scheme:
+      testTargets:
+        - SoniqueTests
+
+  SoniqueTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - SoniqueTests
+    dependencies:
+      - target: Sonique
