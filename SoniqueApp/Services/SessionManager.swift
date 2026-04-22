@@ -125,11 +125,10 @@ class SessionManager: NSObject, ObservableObject {
 // MARK: - RoomDelegate
 
 extension SessionManager: RoomDelegate {
-    nonisolated func room(_ room: Room, participant: Participant, trackPublication: TrackPublication, didUpdateIsSpeaking speaking: Bool) {
+    nonisolated func room(_ room: Room, didUpdateSpeakingParticipants participants: [Participant]) {
         Task { @MainActor in
-            if participant is RemoteParticipant {
-                self.agentState = speaking ? .speaking : .listening
-            }
+            let agentSpeaking = participants.contains { $0 is RemoteParticipant }
+            self.agentState = agentSpeaking ? .speaking : .listening
         }
     }
 
