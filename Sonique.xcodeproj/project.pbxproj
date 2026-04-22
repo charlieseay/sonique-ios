@@ -1,0 +1,361 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3FA000000000000000000030 /* SoniqueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA000000000000000000020 /* SoniqueApp.swift */; };
+		3FA000000000000000000031 /* ConnectIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA000000000000000000021 /* ConnectIntent.swift */; };
+		3FA000000000000000000032 /* SessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA000000000000000000022 /* SessionState.swift */; };
+		3FA000000000000000000033 /* ConnectionDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA000000000000000000023 /* ConnectionDetails.swift */; };
+		3FA000000000000000000034 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA000000000000000000024 /* SessionManager.swift */; };
+		3FA000000000000000000035 /* SoniqueSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA000000000000000000025 /* SoniqueSettings.swift */; };
+		3FA000000000000000000036 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA000000000000000000026 /* DesignSystem.swift */; };
+		3FA000000000000000000037 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA000000000000000000027 /* HomeView.swift */; };
+		3FA000000000000000000038 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA000000000000000000028 /* OnboardingView.swift */; };
+		3FA000000000000000000039 /* OrbView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA000000000000000000029 /* OrbView.swift */; };
+		3FA00000000000000000003A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA00000000000000000002A /* SettingsView.swift */; };
+		3FA00000000000000000001A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3FA000000000000000000019 /* Assets.xcassets */; };
+		3FA000000000000000000017 /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3FA000000000000000000016 /* LiveKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		3FA000000000000000000018 /* Sonique.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sonique.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3FA000000000000000000019 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		3FA00000000000000000001B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		3FA000000000000000000020 /* SoniqueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoniqueApp.swift; sourceTree = "<group>"; };
+		3FA000000000000000000021 /* ConnectIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectIntent.swift; sourceTree = "<group>"; };
+		3FA000000000000000000022 /* SessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionState.swift; sourceTree = "<group>"; };
+		3FA000000000000000000023 /* ConnectionDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionDetails.swift; sourceTree = "<group>"; };
+		3FA000000000000000000024 /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
+		3FA000000000000000000025 /* SoniqueSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoniqueSettings.swift; sourceTree = "<group>"; };
+		3FA000000000000000000026 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		3FA000000000000000000027 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		3FA000000000000000000028 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		3FA000000000000000000029 /* OrbView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbView.swift; sourceTree = "<group>"; };
+		3FA00000000000000000002A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3FA00000000000000000000E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3FA000000000000000000017 /* LiveKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		3FA000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				3FA000000000000000000005 /* SoniqueApp */,
+				3FA000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3FA000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3FA000000000000000000018 /* Sonique.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3FA000000000000000000005 /* SoniqueApp */ = {
+			isa = PBXGroup;
+			children = (
+				3FA000000000000000000020 /* SoniqueApp.swift */,
+				3FA000000000000000000009 /* Intents */,
+				3FA000000000000000000007 /* Models */,
+				3FA000000000000000000008 /* Services */,
+				3FA000000000000000000006 /* Views */,
+				3FA00000000000000000000A /* Resources */,
+			);
+			path = SoniqueApp;
+			sourceTree = "<group>";
+		};
+		3FA000000000000000000009 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				3FA000000000000000000021 /* ConnectIntent.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
+		3FA000000000000000000007 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				3FA000000000000000000022 /* SessionState.swift */,
+				3FA000000000000000000023 /* ConnectionDetails.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		3FA000000000000000000008 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				3FA000000000000000000024 /* SessionManager.swift */,
+				3FA000000000000000000025 /* SoniqueSettings.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		3FA000000000000000000006 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				3FA000000000000000000026 /* DesignSystem.swift */,
+				3FA000000000000000000027 /* HomeView.swift */,
+				3FA000000000000000000028 /* OnboardingView.swift */,
+				3FA000000000000000000029 /* OrbView.swift */,
+				3FA00000000000000000002A /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		3FA00000000000000000000A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				3FA000000000000000000019 /* Assets.xcassets */,
+				3FA00000000000000000001B /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3FA00000000000000000000B /* Sonique */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3FA00000000000000000000F /* Build configuration list for PBXNativeTarget "Sonique" */;
+			buildPhases = (
+				3FA00000000000000000000C /* Sources */,
+				3FA00000000000000000000E /* Frameworks */,
+				3FA00000000000000000000D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Sonique;
+			packageDependencies = (
+				3FA000000000000000000016 /* LiveKit */,
+			);
+			productName = Sonique;
+			productReference = 3FA000000000000000000018 /* Sonique.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3FA000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1630;
+				LastUpgradeCheck = 1630;
+				TargetAttributes = {
+					3FA00000000000000000000B = {
+						CreatedOnToolsVersion = 16.3;
+					};
+				};
+			};
+			buildConfigurationList = 3FA000000000000000000012 /* Build configuration list for PBXProject "Sonique" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 3FA000000000000000000002;
+			packageReferences = (
+				3FA000000000000000000015 /* XCRemoteSwiftPackageReference "client-sdk-swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 3FA000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3FA00000000000000000000B /* Sonique */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3FA00000000000000000000D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3FA00000000000000000001A /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3FA00000000000000000000C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3FA000000000000000000030 /* SoniqueApp.swift in Sources */,
+				3FA000000000000000000031 /* ConnectIntent.swift in Sources */,
+				3FA000000000000000000032 /* SessionState.swift in Sources */,
+				3FA000000000000000000033 /* ConnectionDetails.swift in Sources */,
+				3FA000000000000000000034 /* SessionManager.swift in Sources */,
+				3FA000000000000000000035 /* SoniqueSettings.swift in Sources */,
+				3FA000000000000000000036 /* DesignSystem.swift in Sources */,
+				3FA000000000000000000037 /* HomeView.swift in Sources */,
+				3FA000000000000000000038 /* OnboardingView.swift in Sources */,
+				3FA000000000000000000039 /* OrbView.swift in Sources */,
+				3FA00000000000000000003A /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		3FA000000000000000000013 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSET_CATALOG_COMPILER_OPTIMIZATION = space;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("DEBUG=1", "$(inherited)", );
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		3FA000000000000000000014 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSET_CATALOG_COMPILER_OPTIMIZATION = space;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		3FA000000000000000000010 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSTETS_CATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SoniqueApp/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LE_SWIFT_VERSION = 5.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.seayniclabs.sonique;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3FA000000000000000000011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSTETS_CATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SoniqueApp/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LE_SWIFT_VERSION = 5.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.seayniclabs.sonique;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3FA000000000000000000012 /* Build configuration list for PBXProject "Sonique" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3FA000000000000000000013 /* Debug */,
+				3FA000000000000000000014 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3FA00000000000000000000F /* Build configuration list for PBXNativeTarget "Sonique" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3FA000000000000000000010 /* Debug */,
+				3FA000000000000000000011 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3FA000000000000000000015 /* XCRemoteSwiftPackageReference "client-sdk-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/livekit/client-sdk-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3FA000000000000000000016 /* LiveKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3FA000000000000000000015 /* XCRemoteSwiftPackageReference "client-sdk-swift" */;
+			productName = LiveKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+
+	};
+	rootObject = 3FA000000000000000000001 /* Project object */;
+}
