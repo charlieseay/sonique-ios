@@ -52,21 +52,22 @@ struct HomeView: View {
     // MARK: - Sub-views
 
     private var topBar: some View {
-        HStack {
-            // App wordmark
-            Text("sonique")
-                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                .foregroundStyle(
-                    LinearGradient(colors: [.soniqueAccent, .soniqueAccent2],
-                                   startPoint: .leading, endPoint: .trailing)
-                )
+        HStack(spacing: 10) {
+            // Avatar + name
+            HStack(spacing: 8) {
+                avatarBadge
+                Text(session.profile?.name ?? "sonique")
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(colors: [.soniqueAccent, .soniqueAccent2],
+                                       startPoint: .leading, endPoint: .trailing)
+                    )
+            }
 
             Spacer()
 
-            // Server status badge
             serverStatusBadge
 
-            // Settings
             Button {
                 showSettings = true
             } label: {
@@ -74,7 +75,26 @@ struct HomeView: View {
                     .font(.system(size: 18))
                     .foregroundStyle(Color.soniqueSubtext)
             }
-            .padding(.leading, 8)
+            .padding(.leading, 4)
+        }
+    }
+
+    @ViewBuilder
+    private var avatarBadge: some View {
+        if let data = session.avatarData, let img = UIImage(data: data) {
+            Image(uiImage: img)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 28, height: 28)
+                .clipShape(Circle())
+        } else {
+            Circle()
+                .fill(LinearGradient(colors: [.soniqueAccent, .soniqueAccent2],
+                                     startPoint: .topLeading, endPoint: .bottomTrailing))
+                .frame(width: 28, height: 28)
+                .overlay(Image(systemName: "waveform")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.white))
         }
     }
 

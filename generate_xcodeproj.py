@@ -44,6 +44,8 @@ U = {
     "REF_ONBOARDING":        "3FA000000000000000000028",
     "REF_ORBVIEW":           "3FA000000000000000000029",
     "REF_SETTINGSVIEW":      "3FA00000000000000000002A",
+    "REF_ASSTPROFILE":       "3FA00000000000000000002B",
+    "REF_QRSCANNER":         "3FA00000000000000000002C",
     # Build file refs
     "BF_SONIQUEAPP":         "3FA000000000000000000030",
     "BF_CONNECTINTENT":      "3FA000000000000000000031",
@@ -56,6 +58,8 @@ U = {
     "BF_ONBOARDING":         "3FA000000000000000000038",
     "BF_ORBVIEW":            "3FA000000000000000000039",
     "BF_SETTINGSVIEW":       "3FA00000000000000000003A",
+    "BF_ASSTPROFILE":        "3FA00000000000000000003B",
+    "BF_QRSCANNER":          "3FA00000000000000000003C",
 }
 
 # ─── Source file map: (fileRef UUID, buildFile UUID, path, name) ────────────
@@ -71,6 +75,8 @@ SOURCES = [
     (U["REF_ONBOARDING"],    U["BF_ONBOARDING"],    "SoniqueApp/Views/OnboardingView.swift",      "OnboardingView.swift"),
     (U["REF_ORBVIEW"],       U["BF_ORBVIEW"],       "SoniqueApp/Views/OrbView.swift",             "OrbView.swift"),
     (U["REF_SETTINGSVIEW"],  U["BF_SETTINGSVIEW"],  "SoniqueApp/Views/SettingsView.swift",        "SettingsView.swift"),
+    (U["REF_QRSCANNER"],    U["BF_QRSCANNER"],    "SoniqueApp/Views/QRScannerView.swift",        "QRScannerView.swift"),
+    (U["REF_ASSTPROFILE"],  U["BF_ASSTPROFILE"],  "SoniqueApp/Models/AssistantProfile.swift",    "AssistantProfile.swift"),
 ]
 
 def pbxproj():

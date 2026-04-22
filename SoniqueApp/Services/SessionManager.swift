@@ -8,6 +8,8 @@ class SessionManager: NSObject, ObservableObject {
     @Published var serverHealth: ServerHealth = .init()
     @Published var agentAudioLevel: Float = 0.0
     @Published var userAudioLevel: Float = 0.0
+    @Published var profile: AssistantProfile?
+    @Published var avatarData: Data?
 
     private var room: Room?
     private var healthCheckTask: Task<Void, Never>?
@@ -59,6 +61,45 @@ class SessionManager: NSObject, ObservableObject {
                 try? await Task.sleep(for: .seconds(15))
             }
         }
+        Task { await fetchProfile(settings: settings) }
+    }
+
+    func fetchProfile(settings: SoniqueSettings) async {
+        guard settings.isConfigured,
+              let url = URL(string: "\(settings.normalizedServerURL)/api/assistant/profile") else { return }
+        var req = URLRequest(url: url, timeoutInterval: 5)
+        if !settings.apiKey.isEmpty { req.setValue(settings.apiKey, forHTTPHeaderField: "x-api-key") }
+        do {
+            let (data, _) = try await URLSession.shared.data(for: req)
+            let p = try JSONDecoder().decode(AssistantProfile.self, from: data)
+            profile = p
+            if let avatarPath = p.avatarUrl,
+               let avatarURL = URL(string: "\(settings.normalizedServerURL)\(avatarPath)") {
+                var avatarReq = URLRequest(url: avatarURL, timeoutInterval: 5)
+                if !settings.apiKey.isEmpty { avatarReq.setValue(settings.apiKey, forHTTPHeaderField: "x-api-key") }
+                let (imgData, _) = try await URLSession.shared.data(for: avatarReq)
+                avatarData = imgData
+            }
+        } catch {}
+    }
+
+    func updateProfile(settings: SoniqueSettings, name: String? = nil, imageData: Data? = nil, imageExt: String? = nil) async throws {
+        guard let url = URL(string: "\(settings.normalizedServerURL)/api/assistant/profile") else { return }
+        var req = URLRequest(url: url)
+        req.httpMethod = "PUT"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if !settings.apiKey.isEmpty { req.setValue(settings.apiKey, forHTTPHeaderField: "x-api-key") }
+        var body: [String: Any] = [:]
+        if let name { body["name"] = name }
+        if let imageData, let imageExt {
+            body["avatar_b64"] = imageData.base64EncodedString()
+            body["avatar_ext"] = imageExt
+        }
+        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        let (data, _) = try await URLSession.shared.data(for: req)
+        let p = try JSONDecoder().decode(AssistantProfile.self, from: data)
+        profile = p
+        if imageData != nil { avatarData = imageData }
     }
 
     func stopHealthChecks() {

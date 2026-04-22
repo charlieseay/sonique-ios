@@ -12,10 +12,21 @@ struct SoniqueApp: App {
                 .environmentObject(settings)
                 .environmentObject(session)
                 .preferredColorScheme(.dark)
-                // URL scheme: sonique://voice → auto-connect
+                // URL scheme handler: sonique://connect?url=...&key=... (QR onboarding)
+                // or sonique://voice (Siri shortcut auto-connect)
                 .onOpenURL { url in
                     guard url.scheme == "sonique" else { return }
-                    triggerConnect()
+                    if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                       url.host == "connect",
+                       let serverURL = components.queryItems?.first(where: { $0.name == "url" })?.value {
+                        settings.serverURL = serverURL
+                        if let key = components.queryItems?.first(where: { $0.name == "key" })?.value {
+                            settings.apiKey = key
+                        }
+                        settings.hasCompletedSetup = true
+                    } else {
+                        triggerConnect()
+                    }
                 }
                 // AppIntent notification (from Siri shortcut)
                 .onReceive(NotificationCenter.default.publisher(for: .soniqueConnectIntent)) { _ in

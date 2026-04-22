@@ -1,5 +1,6 @@
 import SwiftUI
 import AppIntents
+import PhotosUI
 
 struct SettingsView: View {
     @EnvironmentObject private var settings: SoniqueSettings
@@ -10,6 +11,10 @@ struct SettingsView: View {
     @State private var apiKeyDraft = ""
     @State private var isTesting = false
     @State private var testResult: TestResult?
+    @State private var showQRScanner = false
+    @State private var nameDraft = ""
+    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var isSavingProfile = false
 
     enum TestResult { case success, failure(String) }
 
@@ -18,10 +23,15 @@ struct SettingsView: View {
             ZStack {
                 Color.soniqueBackground.ignoresSafeArea()
                 List {
-                    serverSection
-                    sessionSection
-                    siriSection
-                    aboutSection
+                    if showQRScanner {
+                        qrScannerSection
+                    } else {
+                        profileSection
+                        serverSection
+                        sessionSection
+                        siriSection
+                        aboutSection
+                    }
                 }
                 .listStyle(.insetGrouped)
                 .scrollContentBackground(.hidden)
@@ -40,7 +50,90 @@ struct SettingsView: View {
         .onAppear {
             serverURLDraft = settings.serverURL
             apiKeyDraft = settings.apiKey
+            nameDraft = session.profile?.name ?? ""
         }
+    }
+
+    // MARK: - QR Scanner section
+
+    private var qrScannerSection: some View {
+        Section {
+            VStack(spacing: 12) {
+                Text("Scan the QR code from your base station's settings page to auto-configure.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.soniqueSubtext)
+                    .multilineTextAlignment(.center)
+
+                QRScannerView { value in
+                    handleScannedQR(value)
+                }
+                .frame(height: 280)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                Button("Cancel") { showQRScanner = false }
+                    .foregroundStyle(Color.soniqueOffline)
+            }
+            .padding(.vertical, 8)
+        } header: {
+            Text("Scan QR Code").foregroundStyle(Color.soniqueSubtext)
+        }
+        .listRowBackground(Color.soniqueSurface)
+    }
+
+    // MARK: - Profile section
+
+    private var profileSection: some View {
+        Section {
+            HStack(spacing: 14) {
+                // Avatar picker
+                PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                    Group {
+                        if let data = session.avatarData, let img = UIImage(data: data) {
+                            Image(uiImage: img)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 56, height: 56)
+                                .clipShape(Circle())
+                        } else {
+                            Circle()
+                                .fill(LinearGradient(colors: [.soniqueAccent, .soniqueAccent2],
+                                                     startPoint: .topLeading, endPoint: .bottomTrailing))
+                                .frame(width: 56, height: 56)
+                                .overlay(Image(systemName: "waveform").foregroundStyle(.white))
+                        }
+                    }
+                    .overlay(alignment: .bottomTrailing) {
+                        Circle()
+                            .fill(Color.soniqueSurface)
+                            .frame(width: 20, height: 20)
+                            .overlay(Image(systemName: "camera.fill").font(.system(size: 10)).foregroundStyle(Color.soniqueSubtext))
+                    }
+                }
+                .onChange(of: selectedPhoto) { _, item in
+                    Task { await uploadSelectedPhoto(item) }
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Label("Name", systemImage: "person.fill")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(Color.soniqueSubtext)
+                    TextField("Sonique", text: $nameDraft)
+                        .foregroundStyle(Color.soniqueText)
+                        .onSubmit { Task { await saveName() } }
+                }
+            }
+            .padding(.vertical, 4)
+
+            if isSavingProfile {
+                HStack { Spacer(); ProgressView(); Spacer() }
+            }
+        } header: {
+            Text("Assistant").foregroundStyle(Color.soniqueSubtext)
+        } footer: {
+            Text("Name and photo appear in the iOS app and macOS menu bar.")
+                .foregroundStyle(Color.soniqueSubtext)
+        }
+        .listRowBackground(Color.soniqueSurface)
     }
 
     // MARK: - Server section
@@ -70,6 +163,16 @@ struct SettingsView: View {
                     Text("Set CAAL_API_KEY on the server to require authentication.")
                         .font(.caption)
                         .foregroundStyle(Color.soniqueSubtext)
+                }
+            }
+
+            // QR onboarding shortcut
+            Button {
+                showQRScanner = true
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "qrcode.viewfinder").foregroundStyle(Color.soniqueAccent2)
+                    Text("Scan QR Code to Configure").foregroundStyle(Color.soniqueText)
                 }
             }
 
@@ -249,7 +352,37 @@ struct SettingsView: View {
         session.startHealthChecks(settings: settings)
         dismiss()
     }
+
+    private func handleScannedQR(_ value: String) {
+        guard let url = URL(string: value),
+              url.scheme == "sonique",
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return }
+        let params = components.queryItems ?? []
+        if let u = params.first(where: { $0.name == "url" })?.value { serverURLDraft = u }
+        if let k = params.first(where: { $0.name == "key" })?.value { apiKeyDraft = k }
+        showQRScanner = false
+        saveAndDismiss()
+    }
+
+    private func saveName() async {
+        guard !nameDraft.isEmpty else { return }
+        isSavingProfile = true
+        try? await session.updateProfile(settings: settings, name: nameDraft)
+        isSavingProfile = false
+    }
+
+    private func uploadSelectedPhoto(_ item: PhotosPickerItem?) async {
+        guard let item else { return }
+        isSavingProfile = true
+        do {
+            if let data = try await item.loadTransferable(type: Data.self) {
+                try await session.updateProfile(settings: settings, imageData: data, imageExt: "jpg")
+            }
+        } catch {}
+        isSavingProfile = false
+    }
 }
+
 
 #Preview {
     SettingsView()
