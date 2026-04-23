@@ -18,7 +18,7 @@
 		</data>
 		<key>Frameworks/GoogleMobileAds.framework/GoogleMobileAds</key>
 		<data>
-		fFVYfGRaR5u+jPfEYi5yzkF+Or0=
+		14y2E+4zinr8H/X4zGZCl9cWUVw=
 		</data>
 		<key>Frameworks/GoogleMobileAds.framework/Info.plist</key>
 		<data>
@@ -38,7 +38,7 @@
 		</data>
 		<key>Frameworks/LiveKitWebRTC.framework/LiveKitWebRTC</key>
 		<data>
-		pupRK3xxjfVE+WBEIPvD9Kmz9UU=
+		h4xfKamUWeh0onns1KgT/7TZRxc=
 		</data>
 		<key>Frameworks/LiveKitWebRTC.framework/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -58,7 +58,7 @@
 		</data>
 		<key>Frameworks/UserMessagingPlatform.framework/UserMessagingPlatform</key>
 		<data>
-		AbWviZQD0S4hcxJTCOC6Bx14nG0=
+		6V1kdAS6RQckVq5gZSSbkf9oQ5o=
 		</data>
 		<key>Frameworks/UserMessagingPlatform.framework/_CodeSignature/CodeResources</key>
 		<data>
@@ -66,7 +66,7 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		ZtQibh7BPQM5afD9FB5H45pFpm4=
+		Y8vByInFzhFdyUX8NBNk/oM/Gds=
 		</data>
 		<key>LiveKit_LiveKit.bundle/Info.plist</key>
 		<data>
@@ -86,11 +86,11 @@
 		</data>
 		<key>Metadata.appintents/nlu/nlu.lzfse</key>
 		<data>
-		xjHZJFW9u1XQQgnNcdGUfedjTX8=
+		apzcjLL5Ja6CEhzqWI96IE6HviU=
 		</data>
 		<key>Metadata.appintents/version.json</key>
 		<data>
-		AnCWG4rKs5jrO4QrJ0dwHs72tMI=
+		NPlRq15GZra++9v4rEBA76D/YIs=
 		</data>
 		<key>PkgInfo</key>
 		<data>
@@ -136,7 +136,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			l7vmDPLfeG1VtTbj+MVCzhWY6pmbn6xv28VA5l8Ro2s=
+			lg5wErpEQXAqQF2s+45NBhbYy58Wv1nGoU6RvqMv+3E=
 			</data>
 		</dict>
 		<key>Frameworks/GoogleMobileAds.framework/Info.plist</key>
@@ -171,7 +171,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			9N8cSOLnXxOwAoAk3S50/DWBUzDqH7TmTLEoiNaDzgY=
+			jch84a37wqzZlWss1b+66UkifGKzxWL5VHccVXSq6DA=
 			</data>
 		</dict>
 		<key>Frameworks/LiveKitWebRTC.framework/PrivacyInfo.xcprivacy</key>
@@ -206,7 +206,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			YqxIaKfMQRChAG4v3rmiwZ+i/tFOqaF0E5B4AOfcqig=
+			F5+z3WDWM+0xwkoyCaOfES8ecD5kq1X1QnLz04dCgbU=
 			</data>
 		</dict>
 		<key>Frameworks/UserMessagingPlatform.framework/_CodeSignature/CodeResources</key>
@@ -248,14 +248,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			7l6bPB5UTFr/ba6c3mXn6kBQxKDAonsGkrCsAAh4rgg=
+			rA8gB3Y0GApoB5psgJISvkCIPeuQPYHeNRYI5jDAc98=
 			</data>
 		</dict>
 		<key>Metadata.appintents/version.json</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			S8xCv9nzQ8VW9KYw29TGYHI5yTSFkAK3pTib1ARd6Zo=
+			urRgqhLYJepnd5JrqAEXNLT1v7JyHj/jyDPVFH0iHf0=
 			</data>
 		</dict>
 		<key>SwiftProtobuf_SwiftProtobuf.bundle/Info.plist</key>

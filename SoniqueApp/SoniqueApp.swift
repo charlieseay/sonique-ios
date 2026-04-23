@@ -8,6 +8,7 @@ struct SoniqueApp: App {
     @StateObject private var settings = SoniqueSettings()
     @StateObject private var session = SessionManager()
     @StateObject private var premium = PremiumManager()
+    @StateObject private var network = NetworkMonitor.shared
 
     init() {
         MobileAds.shared.start()
@@ -30,6 +31,7 @@ struct SoniqueApp: App {
                 .environmentObject(settings)
                 .environmentObject(session)
                 .environmentObject(premium)
+                .environmentObject(network)
                 .preferredColorScheme(.dark)
                 // URL scheme: sonique://connect?local=...&external=...&key=... (new)
                 //             sonique://connect?url=...&key=...                  (legacy)

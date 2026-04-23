@@ -42,6 +42,24 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Allow HTTP to RFC1918 LAN addresses (192.168/16, 10/8, 172.16/12) without a per-host exception. -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<!-- Tailscale CGNAT range (100.64.0.0/10) is not covered by NSAllowsLocalNetworking, so list
+		     the tailnet peer explicitly. Add another entry here if the Mac Mini's tailnet IP changes. -->
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>100.122.13.35</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<false/>
+			</dict>
+		</dict>
+	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Sonique uses the camera to scan the QR code from your base station for instant setup.</string>
 	<key>NSMicrophoneUsageDescription</key>

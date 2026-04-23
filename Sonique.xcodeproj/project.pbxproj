@@ -26,6 +26,7 @@
 		3FA00000000000000000003D /* PremiumManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA00000000000000000002D /* PremiumManager.swift */; };
 		3FA00000000000000000003E /* AdBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA00000000000000000002E /* AdBannerView.swift */; };
 		3FA00000000000000000003F /* RemoteAccessGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA00000000000000000002F /* RemoteAccessGuideView.swift */; };
+		3FA000000000000000000040 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA000000000000000000041 /* NetworkMonitor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +49,7 @@
 		3FA00000000000000000002D /* PremiumManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumManager.swift; sourceTree = "<group>"; };
 		3FA00000000000000000002E /* AdBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdBannerView.swift; sourceTree = "<group>"; };
 		3FA00000000000000000002F /* RemoteAccessGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteAccessGuideView.swift; sourceTree = "<group>"; };
+		3FA000000000000000000041 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
 		3FC595A32F998A2100BEFC6F /* Sonique.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Sonique.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -125,6 +127,7 @@
 				3FA000000000000000000024 /* SessionManager.swift */,
 				3FA000000000000000000025 /* SoniqueSettings.swift */,
 				3FA00000000000000000002D /* PremiumManager.swift */,
+				3FA000000000000000000041 /* NetworkMonitor.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -235,6 +238,7 @@
 				3FA00000000000000000003D /* PremiumManager.swift in Sources */,
 				3FA00000000000000000003E /* AdBannerView.swift in Sources */,
 				3FA00000000000000000003F /* RemoteAccessGuideView.swift in Sources */,
+				3FA000000000000000000040 /* NetworkMonitor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -246,7 +250,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
@@ -275,7 +279,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
