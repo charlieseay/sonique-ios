@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 import LiveKit
 
 @MainActor
@@ -13,6 +14,32 @@ class SessionManager: NSObject, ObservableObject {
 
     private var room: Room?
     private var healthCheckTask: Task<Void, Never>?
+    private var interruptionObserver: NSObjectProtocol?
+
+    override init() {
+        super.init()
+        observeAudioInterruptions()
+    }
+
+    private func observeAudioInterruptions() {
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self,
+                  let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+                  let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
+
+            if type == .ended {
+                // Another app released the audio session — resume ours
+                try? AVAudioSession.sharedInstance().setActive(true)
+                Task { @MainActor in
+                    try? await self.room?.localParticipant.setMicrophone(enabled: true)
+                }
+            }
+        }
+    }
 
     // MARK: - Public API
 

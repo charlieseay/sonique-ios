@@ -1,5 +1,6 @@
 import SwiftUI
 import AppIntents
+import AVFoundation
 import GoogleMobileAds
 
 @main
@@ -10,6 +11,17 @@ struct SoniqueApp: App {
 
     init() {
         MobileAds.shared.start()
+        configureAudioSession()
+    }
+
+    private func configureAudioSession() {
+        let audioSession = AVAudioSession.sharedInstance()
+        try? audioSession.setCategory(
+            .playAndRecord,
+            mode: .voiceChat,
+            options: [.defaultToSpeaker, .allowBluetooth, .allowBluetoothA2DP]
+        )
+        try? audioSession.setActive(true)
     }
 
     var body: some Scene {
