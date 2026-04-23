@@ -235,6 +235,7 @@
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/PackageFrameworks");
 				INFOPLIST_FILE = SoniqueApp/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LE_SWIFT_VERSION = 5.0;
@@ -258,6 +259,7 @@
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/PackageFrameworks");
 				INFOPLIST_FILE = SoniqueApp/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LE_SWIFT_VERSION = 5.0;
