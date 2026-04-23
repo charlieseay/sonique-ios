@@ -327,6 +327,29 @@ struct SettingsView: View {
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(Color.soniqueAccent2)
                     }
+
+                    Divider()
+                        .background(Color.soniqueSubtext.opacity(0.2))
+                        .padding(.vertical, 4)
+
+                    Text("Prefer a wake phrase without 'Hey Siri'?")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Color.soniqueText)
+                    Text("Vocal Shortcuts let you say "Hey Cael" (or any phrase) and the app launches automatically.")
+                        .font(.caption)
+                        .foregroundStyle(Color.soniqueSubtext)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("Settings → Accessibility → Vocal Shortcuts → Add Action → Siri → type your phrase")
+                        .font(.caption)
+                        .foregroundStyle(Color.soniqueAccent2.opacity(0.85))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 1)
+                    Link(destination: URL(string: UIApplication.openSettingsURLString)!) {
+                        Label("Open Settings", systemImage: "gear")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(Color.soniqueAccent2)
+                    }
+                    .padding(.top, 2)
                 }
             }
             .padding(.vertical, 6)
