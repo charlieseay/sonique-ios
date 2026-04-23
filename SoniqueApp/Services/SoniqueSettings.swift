@@ -8,6 +8,9 @@ class SoniqueSettings: ObservableObject {
     @AppStorage("apiKey") var apiKey: String = "" {
         didSet { objectWillChange.send() }
     }
+    @AppStorage("externalURL") var externalURL: String = "" {
+        didSet { objectWillChange.send() }
+    }
     @AppStorage("extendedSession") var extendedSession: Bool = false {
         didSet { objectWillChange.send() }
     }
@@ -19,6 +22,12 @@ class SoniqueSettings: ObservableObject {
 
     var normalizedServerURL: String {
         var url = serverURL.trimmingCharacters(in: .whitespaces)
+        if url.hasSuffix("/") { url = String(url.dropLast()) }
+        return url
+    }
+
+    var normalizedExternalURL: String {
+        var url = externalURL.trimmingCharacters(in: .whitespaces)
         if url.hasSuffix("/") { url = String(url.dropLast()) }
         return url
     }

@@ -65,8 +65,9 @@ class SessionManager: NSObject, ObservableObject {
     }
 
     func fetchProfile(settings: SoniqueSettings) async {
-        guard settings.isConfigured,
-              let url = URL(string: "\(settings.normalizedServerURL)/api/assistant/profile") else { return }
+        guard settings.isConfigured else { return }
+        let base = await resolveActiveURL(settings: settings)
+        guard let url = URL(string: "\(base)/api/assistant/profile") else { return }
         var req = URLRequest(url: url, timeoutInterval: 5)
         if !settings.apiKey.isEmpty { req.setValue(settings.apiKey, forHTTPHeaderField: "x-api-key") }
         do {
@@ -74,7 +75,7 @@ class SessionManager: NSObject, ObservableObject {
             let p = try JSONDecoder().decode(AssistantProfile.self, from: data)
             profile = p
             if let avatarPath = p.avatarUrl,
-               let avatarURL = URL(string: "\(settings.normalizedServerURL)\(avatarPath)") {
+               let avatarURL = URL(string: "\(base)\(avatarPath)") {
                 var avatarReq = URLRequest(url: avatarURL, timeoutInterval: 5)
                 if !settings.apiKey.isEmpty { avatarReq.setValue(settings.apiKey, forHTTPHeaderField: "x-api-key") }
                 let (imgData, _) = try await URLSession.shared.data(for: avatarReq)
@@ -84,7 +85,8 @@ class SessionManager: NSObject, ObservableObject {
     }
 
     func updateProfile(settings: SoniqueSettings, name: String? = nil, imageData: Data? = nil, imageExt: String? = nil) async throws {
-        guard let url = URL(string: "\(settings.normalizedServerURL)/api/assistant/profile") else { return }
+        let base = await resolveActiveURL(settings: settings)
+        guard let url = URL(string: "\(base)/api/assistant/profile") else { return }
         var req = URLRequest(url: url)
         req.httpMethod = "PUT"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -109,8 +111,28 @@ class SessionManager: NSObject, ObservableObject {
 
     // MARK: - Private
 
+    // Returns the local URL if reachable within 2s, otherwise the external URL.
+    // Falls back to local if external is not configured.
+    private func resolveActiveURL(settings: SoniqueSettings) async -> String {
+        let local = settings.normalizedServerURL
+        let external = settings.normalizedExternalURL
+        guard !external.isEmpty else { return local }
+
+        if let url = URL(string: "\(local)/api/settings") {
+            var req = URLRequest(url: url, timeoutInterval: 2)
+            if !settings.apiKey.isEmpty { req.setValue(settings.apiKey, forHTTPHeaderField: "x-api-key") }
+            if let (_, resp) = try? await URLSession.shared.data(for: req),
+               let code = (resp as? HTTPURLResponse)?.statusCode,
+               code == 200 || code == 401 {
+                return local
+            }
+        }
+        return external
+    }
+
     private func fetchConnectionDetails(settings: SoniqueSettings) async throws -> ConnectionDetails {
-        guard let url = URL(string: "\(settings.normalizedServerURL)/api/connection-details") else {
+        let base = await resolveActiveURL(settings: settings)
+        guard let url = URL(string: "\(base)/api/connection-details") else {
             throw URLError(.badURL)
         }
         var request = URLRequest(url: url)
@@ -145,7 +167,8 @@ class SessionManager: NSObject, ObservableObject {
         }
         serverHealth.status = .checking
         do {
-            guard let url = URL(string: "\(settings.normalizedServerURL)/api/settings") else {
+            let base = await resolveActiveURL(settings: settings)
+            guard let url = URL(string: "\(base)/api/settings") else {
                 serverHealth.status = .offline
                 return
             }

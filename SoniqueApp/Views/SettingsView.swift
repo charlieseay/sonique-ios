@@ -8,6 +8,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var serverURLDraft = ""
+    @State private var externalURLDraft = ""
     @State private var apiKeyDraft = ""
     @State private var isTesting = false
     @State private var testResult: TestResult?
@@ -49,6 +50,7 @@ struct SettingsView: View {
         .preferredColorScheme(.dark)
         .onAppear {
             serverURLDraft = settings.serverURL
+            externalURLDraft = settings.externalURL
             apiKeyDraft = settings.apiKey
             nameDraft = session.profile?.name ?? ""
         }
@@ -141,7 +143,7 @@ struct SettingsView: View {
     private var serverSection: some View {
         Section {
             settingsField(
-                label: "Server URL",
+                label: "Local URL",
                 icon: "server.rack",
                 hint: "http://192.168.0.x:3000"
             ) {
@@ -150,6 +152,23 @@ struct SettingsView: View {
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
                     .foregroundStyle(Color.soniqueText)
+            }
+
+            settingsField(
+                label: "Remote URL",
+                icon: "network",
+                hint: "Optional — Tailscale, tunnel, etc."
+            ) {
+                VStack(alignment: .leading, spacing: 4) {
+                    TextField("http://100.x.x.x:3000", text: $externalURLDraft)
+                        .keyboardType(.URL)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .foregroundStyle(Color.soniqueText)
+                    Text("Used when your iPhone isn't on the local network.")
+                        .font(.caption)
+                        .foregroundStyle(Color.soniqueSubtext)
+                }
             }
 
             settingsField(
@@ -347,6 +366,7 @@ struct SettingsView: View {
 
     private func saveAndDismiss() {
         settings.serverURL = serverURLDraft
+        settings.externalURL = externalURLDraft
         settings.apiKey = apiKeyDraft
         settings.hasCompletedSetup = !serverURLDraft.trimmingCharacters(in: .whitespaces).isEmpty
         session.startHealthChecks(settings: settings)
@@ -358,7 +378,11 @@ struct SettingsView: View {
               url.scheme == "sonique",
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return }
         let params = components.queryItems ?? []
-        if let u = params.first(where: { $0.name == "url" })?.value { serverURLDraft = u }
+        // New format: local= / external= / key=
+        // Legacy format: url= / key= (backwards compatible)
+        if let u = params.first(where: { $0.name == "local" })?.value { serverURLDraft = u }
+        else if let u = params.first(where: { $0.name == "url" })?.value { serverURLDraft = u }
+        if let e = params.first(where: { $0.name == "external" })?.value { externalURLDraft = e }
         if let k = params.first(where: { $0.name == "key" })?.value { apiKeyDraft = k }
         showQRScanner = false
         saveAndDismiss()
