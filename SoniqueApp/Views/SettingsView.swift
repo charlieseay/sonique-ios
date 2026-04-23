@@ -335,7 +335,7 @@ struct SettingsView: View {
                     Text("Prefer a wake phrase without 'Hey Siri'?")
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(Color.soniqueText)
-                    Text("Vocal Shortcuts let you say "Hey Cael" (or any phrase) and the app launches automatically.")
+                    Text("Vocal Shortcuts let you say \"Hey Cael\" (or any phrase) and the app launches automatically.")
                         .font(.caption)
                         .foregroundStyle(Color.soniqueSubtext)
                         .fixedSize(horizontal: false, vertical: true)
