@@ -1,34 +1,48 @@
 import SwiftUI
 import AppIntents
+import GoogleMobileAds
 
 @main
 struct SoniqueApp: App {
     @StateObject private var settings = SoniqueSettings()
     @StateObject private var session = SessionManager()
+    @StateObject private var premium = PremiumManager()
+
+    init() {
+        MobileAds.shared.start()
+    }
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(settings)
                 .environmentObject(session)
+                .environmentObject(premium)
                 .preferredColorScheme(.dark)
-                // URL scheme handler: sonique://connect?url=...&key=... (QR onboarding)
-                // or sonique://voice (Siri shortcut auto-connect)
+                // URL scheme: sonique://connect?local=...&external=...&key=... (new)
+                //             sonique://connect?url=...&key=...                  (legacy)
+                //             sonique://voice                                    (Siri shortcut)
                 .onOpenURL { url in
                     guard url.scheme == "sonique" else { return }
                     if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-                       url.host == "connect",
-                       let serverURL = components.queryItems?.first(where: { $0.name == "url" })?.value {
-                        settings.serverURL = serverURL
-                        if let key = components.queryItems?.first(where: { $0.name == "key" })?.value {
+                       url.host == "connect" {
+                        let params = components.queryItems ?? []
+                        if let local = params.first(where: { $0.name == "local" })?.value {
+                            settings.serverURL = local
+                        } else if let legacy = params.first(where: { $0.name == "url" })?.value {
+                            settings.serverURL = legacy
+                        }
+                        if let ext = params.first(where: { $0.name == "external" })?.value {
+                            settings.externalURL = ext
+                        }
+                        if let key = params.first(where: { $0.name == "key" })?.value {
                             settings.apiKey = key
                         }
-                        settings.hasCompletedSetup = true
+                        settings.hasCompletedSetup = !settings.serverURL.isEmpty
                     } else {
                         triggerConnect()
                     }
                 }
-                // AppIntent notification (from Siri shortcut)
                 .onReceive(NotificationCenter.default.publisher(for: .soniqueConnectIntent)) { _ in
                     triggerConnect()
                 }
@@ -38,7 +52,6 @@ struct SoniqueApp: App {
     private func triggerConnect() {
         guard settings.isConfigured else { return }
         Task { @MainActor in
-            // Small delay so the window is fully presented
             try? await Task.sleep(for: .milliseconds(300))
             await session.connect(settings: settings, fromShortcut: true)
         }

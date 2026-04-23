@@ -3,6 +3,7 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject private var settings: SoniqueSettings
     @EnvironmentObject private var session: SessionManager
+    @EnvironmentObject private var premium: PremiumManager
     @State private var showSettings = false
 
     var body: some View {
@@ -33,7 +34,12 @@ struct HomeView: View {
                 // Action area
                 actionArea
                     .padding(.horizontal, 32)
-                    .padding(.bottom, 48)
+                    .padding(.bottom, 16)
+
+                // Ad banner — hidden for premium users
+                AdBannerView()
+                    .environmentObject(premium)
+                    .padding(.bottom, premium.isPremium ? 0 : 16)
             }
         }
         .sheet(isPresented: $showSettings) {

@@ -112,11 +112,12 @@ class SessionManager: NSObject, ObservableObject {
     // MARK: - Private
 
     // Returns the local URL if reachable within 2s, otherwise the external URL.
-    // Falls back to local if external is not configured.
+    // External fallback is premium-only — free tier always uses local URL.
     private func resolveActiveURL(settings: SoniqueSettings) async -> String {
         let local = settings.normalizedServerURL
         let external = settings.normalizedExternalURL
-        guard !external.isEmpty else { return local }
+        let isPremium = await PremiumManager.shared?.isPremium ?? false
+        guard isPremium, !external.isEmpty else { return local }
 
         if let url = URL(string: "\(local)/api/settings") {
             var req = URLRequest(url: url, timeoutInterval: 2)

@@ -5,6 +5,7 @@ import PhotosUI
 struct SettingsView: View {
     @EnvironmentObject private var settings: SoniqueSettings
     @EnvironmentObject private var session: SessionManager
+    @EnvironmentObject private var premium: PremiumManager
     @Environment(\.dismiss) private var dismiss
 
     @State private var serverURLDraft = ""
@@ -13,6 +14,8 @@ struct SettingsView: View {
     @State private var isTesting = false
     @State private var testResult: TestResult?
     @State private var showQRScanner = false
+    @State private var showRemoteAccess = false
+    @State private var showUpgrade = false
     @State private var nameDraft = ""
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var isSavingProfile = false
@@ -154,20 +157,46 @@ struct SettingsView: View {
                     .foregroundStyle(Color.soniqueText)
             }
 
-            settingsField(
-                label: "Remote URL",
-                icon: "network",
-                hint: "Optional — Tailscale, tunnel, etc."
-            ) {
-                VStack(alignment: .leading, spacing: 4) {
-                    TextField("http://100.x.x.x:3000", text: $externalURLDraft)
-                        .keyboardType(.URL)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
-                        .foregroundStyle(Color.soniqueText)
-                    Text("Used when your iPhone isn't on the local network.")
-                        .font(.caption)
-                        .foregroundStyle(Color.soniqueSubtext)
+            if premium.isPremium {
+                settingsField(
+                    label: "Remote URL",
+                    icon: "network",
+                    hint: "Optional — Tailscale, tunnel, etc."
+                ) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        TextField("http://100.x.x.x:3000", text: $externalURLDraft)
+                            .keyboardType(.URL)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .foregroundStyle(Color.soniqueText)
+                        Text("Used when your iPhone isn't on the local network.")
+                            .font(.caption)
+                            .foregroundStyle(Color.soniqueSubtext)
+                    }
+                }
+            } else {
+                Button { showUpgrade = true } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "lock.fill")
+                            .foregroundStyle(Color.soniqueAccent2)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Remote URL").foregroundStyle(Color.soniqueText)
+                            Text("Use Sonique outside your home network — Premium")
+                                .font(.caption).foregroundStyle(Color.soniqueSubtext)
+                        }
+                        Spacer()
+                        Text("Unlock")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color.soniqueAccent2)
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 4)
+                            .background(Color.soniqueAccent2.opacity(0.12))
+                            .clipShape(Capsule())
+                    }
+                    .padding(.vertical, 2)
+                }
+                .sheet(isPresented: $showUpgrade) {
+                    UpgradeView().environmentObject(premium)
                 }
             }
 
@@ -184,6 +213,21 @@ struct SettingsView: View {
                         .foregroundStyle(Color.soniqueSubtext)
                 }
             }
+
+            // Remote access help
+            Button { showRemoteAccess = true } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "globe").foregroundStyle(Color.soniqueAccent2)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Set up remote access").foregroundStyle(Color.soniqueText)
+                        Text("Use Sonique outside your home network")
+                            .font(.caption).foregroundStyle(Color.soniqueSubtext)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(Color.soniqueSubtext)
+                }
+            }
+            .sheet(isPresented: $showRemoteAccess) { RemoteAccessGuideView() }
 
             // QR onboarding shortcut
             Button {
@@ -298,22 +342,64 @@ struct SettingsView: View {
     // MARK: - About section
 
     private var aboutSection: some View {
-        Section {
-            HStack {
-                Text("Version").foregroundStyle(Color.soniqueText)
-                Spacer()
-                Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")
+        Group {
+            Section {
+                // Support link
+                Link(destination: URL(string: "https://seayniclabs.com/support")!) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "heart.fill")
+                            .foregroundStyle(Color.soniqueAccent2)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Support Development")
+                                .foregroundStyle(Color.soniqueText)
+                            Text("Sonique is free. A small donation keeps it going.")
+                                .font(.caption)
+                                .foregroundStyle(Color.soniqueSubtext)
+                        }
+                        Spacer()
+                        Image(systemName: "arrow.up.right")
+                            .font(.caption)
+                            .foregroundStyle(Color.soniqueSubtext)
+                    }
+                    .padding(.vertical, 2)
+                }
+            } header: {
+                Text("Support").foregroundStyle(Color.soniqueSubtext)
+            }
+            .listRowBackground(Color.soniqueSurface)
+
+            Section {
+                HStack {
+                    Text("Version").foregroundStyle(Color.soniqueText)
+                    Spacer()
+                    Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")
+                        .foregroundStyle(Color.soniqueSubtext)
+                }
+
+                // CAAL attribution
+                Link(destination: URL(string: "https://github.com/CoreWorxLab/CAAL")!) {
+                    HStack(spacing: 10) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Powered by CAAL").foregroundStyle(Color.soniqueText)
+                            Text("Open-source voice assistant engine by CoreWorxLab.")
+                                .font(.caption)
+                                .foregroundStyle(Color.soniqueSubtext)
+                        }
+                        Spacer()
+                        Image(systemName: "arrow.up.right")
+                            .font(.caption)
+                            .foregroundStyle(Color.soniqueSubtext)
+                    }
+                    .padding(.vertical, 2)
+                }
+            } header: {
+                Text("About").foregroundStyle(Color.soniqueSubtext)
+            } footer: {
+                Text("Sonique is a Seaynic Labs product. The voice engine is CAAL, an open-source project by CoreWorxLab. Sonique wouldn't exist without it.")
                     .foregroundStyle(Color.soniqueSubtext)
             }
-            HStack {
-                Text("Engine").foregroundStyle(Color.soniqueText)
-                Spacer()
-                Text("CAAL / LiveKit").foregroundStyle(Color.soniqueSubtext)
-            }
-        } header: {
-            Text("About").foregroundStyle(Color.soniqueSubtext)
+            .listRowBackground(Color.soniqueSurface)
         }
-        .listRowBackground(Color.soniqueSurface)
     }
 
     // MARK: - Helpers
