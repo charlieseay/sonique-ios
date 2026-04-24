@@ -11,6 +11,12 @@ import Network
 /// to notice when the user moves between networks mid-call.
 @MainActor
 final class NetworkMonitor: ObservableObject {
+    struct QualityStatus {
+        let connection: Connection
+        let isExpensive: Bool
+        let isConstrained: Bool
+        let summary: String
+    }
 
     enum Connection: Equatable {
         case wifi
@@ -28,6 +34,16 @@ final class NetworkMonitor: ObservableObject {
             case .none:     return "no network"
             }
         }
+
+        var apiValue: String {
+            switch self {
+            case .wifi: return "wifi"
+            case .cellular: return "cellular"
+            case .wired: return "wired"
+            case .other: return "other"
+            case .none: return "none"
+            }
+        }
     }
 
     static let shared = NetworkMonitor()
@@ -39,6 +55,7 @@ final class NetworkMonitor: ObservableObject {
 
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "net.seayniclabs.sonique.netmon")
+    private let settings = SoniqueSettings()
 
     private init() {
         monitor.pathUpdateHandler = { [weak self] path in
@@ -61,13 +78,34 @@ final class NetworkMonitor: ObservableObject {
             next = .other
         }
 
-        if next != connection {
+        let nextIsExpensive = path.isExpensive
+        let nextIsConstrained = path.isConstrained
+        let transitioned = next != connection
+
+        if transitioned {
             lastTransitionAt = Date()
             NSLog("[NetworkMonitor] %@ → %@", connection.spoken, next.spoken)
             connection = next
+            isExpensive = nextIsExpensive
+            isConstrained = nextIsConstrained
+            let status = qualityAssessment()
+            let timestamp = lastTransitionAt
+            Task {
+                await postNetworkState(status: status, timestamp: timestamp)
+            }
+            return
         }
-        isExpensive = path.isExpensive
-        isConstrained = path.isConstrained
+        isExpensive = nextIsExpensive
+        isConstrained = nextIsConstrained
+    }
+
+    func qualityAssessment() -> QualityStatus {
+        QualityStatus(
+            connection: connection,
+            isExpensive: isExpensive,
+            isConstrained: isConstrained,
+            summary: summary
+        )
     }
 
     /// One-line status string suitable for voice ("You're on Wi-Fi. Signal looks healthy.").
@@ -85,6 +123,33 @@ final class NetworkMonitor: ObservableObject {
             return "You're on wired Ethernet."
         case .other:
             return "You're on a limited connection (tethering or captive network)."
+        }
+    }
+
+    private func postNetworkState(status: QualityStatus, timestamp: Date) async {
+        let baseURL = settings.normalizedServerURL
+        guard !baseURL.isEmpty,
+              let url = URL(string: "\(baseURL)/api/network-state") else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if !settings.apiKey.isEmpty {
+            request.setValue(settings.apiKey, forHTTPHeaderField: "x-api-key")
+        }
+
+        let payload: [String: Any] = [
+            "connection": status.connection.apiValue,
+            "isExpensive": status.isExpensive,
+            "isConstrained": status.isConstrained,
+            "timestamp": ISO8601DateFormatter().string(from: timestamp)
+        ]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+
+        do {
+            _ = try await URLSession.shared.data(for: request)
+        } catch {
+            NSLog("[NetworkMonitor][debug] Failed POST /api/network-state: %@", error.localizedDescription)
         }
     }
 }
