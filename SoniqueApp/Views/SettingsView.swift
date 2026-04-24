@@ -507,12 +507,20 @@ struct SettingsView: View {
     private func uploadSelectedPhoto(_ item: PhotosPickerItem?) async {
         guard let item else { return }
         isSavingProfile = true
+        defer { isSavingProfile = false }
         do {
-            if let data = try await item.loadTransferable(type: Data.self) {
-                try await session.updateProfile(settings: settings, imageData: data, imageExt: "jpg")
+            // PhotosPickerItem yields the picture in its native format. iPhone
+            // camera photos are HEIC, which the backend can't decode back into
+            // a viewable avatar. Re-encode to JPEG so bytes-and-extension agree.
+            guard let raw = try await item.loadTransferable(type: Data.self),
+                  let uiImage = UIImage(data: raw),
+                  let jpeg = uiImage.jpegData(compressionQuality: 0.9) else {
+                return
             }
-        } catch {}
-        isSavingProfile = false
+            try await session.updateProfile(settings: settings, imageData: jpeg, imageExt: "jpg")
+        } catch {
+            // Error silently swallowed today; future: surface via a toast on SettingsView.
+        }
     }
 }
 
