@@ -6,7 +6,14 @@ class PremiumManager: ObservableObject {
     static let removeAdsProductID = "com.seayniclabs.sonique.removeads"
     static weak var shared: PremiumManager?
 
-    @Published private(set) var isPremium = false
+    /// OPEN-MODE OVERRIDE — set to `true` while Sonique is private (internal
+    /// testing + dogfooding). When `true`, `isPremium` is hardcoded to `true`,
+    /// ads are hidden, and the Remote-URL paywall is unlocked for everyone
+    /// regardless of StoreKit entitlements. Flip back to `false` before the
+    /// public launch so ads + the paywall re-engage.
+    static let openMode = true
+
+    @Published private(set) var isPremium: Bool = openMode
     @Published private(set) var product: Product?
     @Published var isPurchasing = false
     @Published var isRestoring = false
@@ -16,7 +23,7 @@ class PremiumManager: ObservableObject {
     init() {
         PremiumManager.shared = self
         transactionListener = listenForTransactions()
-        Task { await refresh() }
+        if !Self.openMode { Task { await refresh() } }
     }
 
     deinit { transactionListener?.cancel() }
