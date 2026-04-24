@@ -6,6 +6,7 @@ struct SettingsView: View {
     @EnvironmentObject private var settings: SoniqueSettings
     @EnvironmentObject private var session: SessionManager
     @EnvironmentObject private var premium: PremiumManager
+    @EnvironmentObject private var network: NetworkMonitor
     @Environment(\.dismiss) private var dismiss
 
     @State private var serverURLDraft = ""
@@ -33,6 +34,7 @@ struct SettingsView: View {
                         profileSection
                         serverSection
                         sessionSection
+                        networkSection
                         siriSection
                         aboutSection
                     }
@@ -362,6 +364,39 @@ struct SettingsView: View {
         .listRowBackground(Color.soniqueSurface)
     }
 
+    // MARK: - Network section
+
+    private var networkSection: some View {
+        Section {
+            HStack {
+                Text("Connection").foregroundStyle(Color.soniqueText)
+                Spacer()
+                Text(network.connection.spoken).foregroundStyle(Color.soniqueSubtext)
+            }
+            HStack {
+                Text("Expensive").foregroundStyle(Color.soniqueText)
+                Spacer()
+                Text(network.isExpensive ? "Yes" : "No").foregroundStyle(Color.soniqueSubtext)
+            }
+            HStack {
+                Text("Constrained").foregroundStyle(Color.soniqueText)
+                Spacer()
+                Text(network.isConstrained ? "Yes" : "No").foregroundStyle(Color.soniqueSubtext)
+            }
+            HStack {
+                Text("Last Transition").foregroundStyle(Color.soniqueText)
+                Spacer()
+                Text(lastTransitionDisplay).foregroundStyle(Color.soniqueSubtext)
+            }
+        } header: {
+            Text("Network").foregroundStyle(Color.soniqueSubtext)
+        } footer: {
+            Text("Live network state from iOS system path monitoring.")
+                .foregroundStyle(Color.soniqueSubtext)
+        }
+        .listRowBackground(Color.soniqueSurface)
+    }
+
     // MARK: - About section
 
     private var aboutSection: some View {
@@ -522,6 +557,18 @@ struct SettingsView: View {
             // Error silently swallowed today; future: surface via a toast on SettingsView.
         }
     }
+
+    private var lastTransitionDisplay: String {
+        guard network.lastTransitionAt != .distantPast else { return "Not detected yet" }
+        return Self.lastTransitionFormatter.string(from: network.lastTransitionAt)
+    }
+
+    private static let lastTransitionFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+        return formatter
+    }()
 }
 
 
@@ -529,4 +576,5 @@ struct SettingsView: View {
     SettingsView()
         .environmentObject(SoniqueSettings())
         .environmentObject(SessionManager())
+        .environmentObject(NetworkMonitor.shared)
 }
