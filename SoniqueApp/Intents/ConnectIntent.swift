@@ -19,6 +19,22 @@ struct ConnectToSoniqueIntent: AppIntent {
     }
 }
 
+/// Siri App Intent — provides current network quality status.
+struct CheckNetworkStatusIntent: AppIntent {
+    static var title: LocalizedStringResource = "Check network status"
+    static var description = IntentDescription(
+        "Get Sonique's current network connection summary.",
+        categoryName: "Voice"
+    )
+    static var openAppWhenRun = false
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let status = NetworkMonitor.shared.qualityAssessment()
+        return .result(dialog: IntentDialog(stringLiteral: status.summary))
+    }
+}
+
 /// Pre-built app shortcuts — these phrases work immediately with Siri
 /// without any user configuration required.
 struct SoniqueAppShortcuts: AppShortcutsProvider {
@@ -32,6 +48,16 @@ struct SoniqueAppShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "Start session",
             systemImageName: "waveform"
+        )
+        AppShortcut(
+            intent: CheckNetworkStatusIntent(),
+            phrases: [
+                "What's my connection in \(.applicationName)",
+                "Check my connection in \(.applicationName)",
+                "How is my network in \(.applicationName)",
+            ],
+            shortTitle: "Check network",
+            systemImageName: "network"
         )
     }
 }
