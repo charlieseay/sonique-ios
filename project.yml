@@ -22,7 +22,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.seayniclabs.sonique
         SWIFT_VERSION: "5.9"
         MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: "3"
+        CURRENT_PROJECT_VERSION: "5"
         DEVELOPMENT_TEAM: ""
         INFOPLIST_FILE: SoniqueApp/Resources/Info.plist
       configs:
