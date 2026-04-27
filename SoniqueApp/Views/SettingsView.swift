@@ -20,6 +20,11 @@ struct SettingsView: View {
     @State private var nameDraft = ""
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var isSavingProfile = false
+    @State private var llmProviderDraft: SoniqueLLMProvider = .ollama
+    @State private var fallbackPolicyDraft: SoniqueFallbackPolicy = .localOnly
+    @State private var preferredModelLabelDraft = ""
+    @State private var nvidiaBaseURLDraft = ""
+    @State private var nvidiaFeatureDraft = false
 
     enum TestResult { case success, failure(String) }
 
@@ -58,6 +63,11 @@ struct SettingsView: View {
             externalURLDraft = settings.externalURL
             apiKeyDraft = settings.apiKey
             nameDraft = session.profile?.name ?? ""
+            llmProviderDraft = settings.llmProvider
+            fallbackPolicyDraft = settings.fallbackPolicy
+            preferredModelLabelDraft = settings.preferredModelLabel
+            nvidiaBaseURLDraft = settings.nvidiaBaseURL
+            nvidiaFeatureDraft = settings.nvidiaFeatureEnabled
         }
     }
 
@@ -213,6 +223,68 @@ struct SettingsView: View {
                     Text("Set CAAL_API_KEY on the server to require authentication.")
                         .font(.caption)
                         .foregroundStyle(Color.soniqueSubtext)
+                }
+            }
+
+            settingsField(
+                label: "LLM Provider",
+                icon: "cpu",
+                hint: "Provider selection scaffold"
+            ) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Toggle(isOn: $nvidiaFeatureDraft) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("NVIDIA NIM options (experimental)")
+                                .foregroundStyle(Color.soniqueText)
+                            Text("Off by default. No runtime change until CAAL task #284.")
+                                .font(.caption)
+                                .foregroundStyle(Color.soniqueSubtext)
+                        }
+                    }
+                    .tint(Color.soniqueAccent2)
+                    .onChange(of: nvidiaFeatureDraft) { _, enabled in
+                        if !enabled, llmProviderDraft == .nvidia {
+                            llmProviderDraft = .ollama
+                        }
+                    }
+
+                    Picker("LLM Provider", selection: Binding(
+                        get: { llmProviderDraft },
+                        set: { llmProviderDraft = $0 }
+                    )) {
+                        ForEach(nvidiaFeatureDraft ? SoniqueLLMProvider.allCases : [.ollama]) { provider in
+                            Text(provider.displayName).tag(provider)
+                        }
+                    }
+                    .pickerStyle(.menu)
+
+                    TextField("Model label (display only)", text: $preferredModelLabelDraft)
+                        .foregroundStyle(Color.soniqueText)
+
+                    Picker("Fallback Policy", selection: Binding(
+                        get: { fallbackPolicyDraft },
+                        set: { fallbackPolicyDraft = $0 }
+                    )) {
+                        ForEach(SoniqueFallbackPolicy.allCases) { policy in
+                            Text(policy.displayName).tag(policy)
+                        }
+                    }
+                    .pickerStyle(.menu)
+
+                    Text(fallbackPolicyDraft.routingHint)
+                        .font(.caption)
+                        .foregroundStyle(Color.soniqueSubtext)
+
+                    if nvidiaFeatureDraft {
+                        TextField("NVIDIA endpoint base URL", text: $nvidiaBaseURLDraft)
+                            .keyboardType(.URL)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .foregroundStyle(Color.soniqueText)
+                        Text("Placeholder-friendly URL only; keys stay on the server.")
+                            .font(.caption)
+                            .foregroundStyle(Color.soniqueSubtext)
+                    }
                 }
             }
 
@@ -512,6 +584,11 @@ struct SettingsView: View {
         settings.serverURL = serverURLDraft
         settings.externalURL = externalURLDraft
         settings.apiKey = apiKeyDraft
+        settings.nvidiaFeatureEnabled = nvidiaFeatureDraft
+        settings.llmProvider = llmProviderDraft
+        settings.fallbackPolicy = fallbackPolicyDraft
+        settings.preferredModelLabel = preferredModelLabelDraft
+        settings.nvidiaBaseURL = nvidiaBaseURLDraft
         settings.hasCompletedSetup = !serverURLDraft.trimmingCharacters(in: .whitespaces).isEmpty
         session.startHealthChecks(settings: settings)
         dismiss()
