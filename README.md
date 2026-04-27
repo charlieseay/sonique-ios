@@ -48,7 +48,7 @@ For a custom phrase, go to **Settings → Siri** and tap **Open in Shortcuts**.
 Set `CAAL_API_KEY=<caal-api-key>` in the CAAL `.env.local` to require authentication.  
 The iOS app sends it as `x-api-key` header on all API calls.
 
-Provider scaffolding (UI/config only, no behavior changes yet) uses feature-flagged values on the **server** (CAAL `.env` / `settings.json`). The iOS app stores preferences under `AppStorage` keys in `SoniqueApp/Services/SoniqueSettings.swift`:
+Provider scaffolding (UI/config only, no behavior changes yet) uses feature-flagged values on the **server** (CAAL `.env` / `settings.json`). The iOS app stores preferences under `AppStorage` keys in `SoniqueApp/Services/SoniqueSettings.swift` (`LLMRoutingEnvVarNames` there matches Docker `.env` key spellings; same enum in SoniqueBar `MacSettings.swift`):
 
 | App (`LLMRoutingStorageKeys`) | CAAL (`LLMRoutingCAALKeys` / `.env`) |
 |-------------------------------|----------------------------------------|
@@ -61,7 +61,7 @@ Provider scaffolding (UI/config only, no behavior changes yet) uses feature-flag
 ```bash
 NVIDIA_FEATURE_ENABLED=false
 NVIDIA_BASE_URL=<nvidia-base-url>
-NVIDIA_MODEL=<nvidia-model-id>
+NVIDIA_MODEL=<nvidia-model-placeholder>
 # NVIDIA_API_KEY=<nvidia-api-key>
 ```
 

@@ -48,6 +48,10 @@ struct OnboardingView: View {
                         .font(.caption)
                         .foregroundStyle(Color.soniqueSubtext)
                         .multilineTextAlignment(.center)
+                    Text("After connecting: Settings → Base Station for LLM provider, model label, and fallback (optional NVIDIA when enabled).")
+                        .font(.caption2)
+                        .foregroundStyle(Color.soniqueSubtext.opacity(0.85))
+                        .multilineTextAlignment(.center)
                 }
                 .padding(.horizontal, 32)
                 .padding(.bottom, 52)

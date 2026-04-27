@@ -20,6 +20,15 @@ enum LLMRoutingCAALKeys {
     static let cloudInferenceBaseURL = "nvidia_base_url"
 }
 
+/// CAAL Docker `.env` keys (task #284). Keep identical to `SoniqueBar` `MacSettings.swift`; docs use `<placeholder>` values only.
+enum LLMRoutingEnvVarNames {
+    static let llmProvider = "LLM_PROVIDER"
+    static let nvidiaFeatureEnabled = "NVIDIA_FEATURE_ENABLED"
+    static let nvidiaBaseURL = "NVIDIA_BASE_URL"
+    static let nvidiaModel = "NVIDIA_MODEL"
+    static let nvidiaAPIKey = "NVIDIA_API_KEY"
+}
+
 enum SoniqueLLMProvider: String, CaseIterable, Identifiable {
     case ollama
     case nvidia
