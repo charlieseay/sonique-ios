@@ -1,7 +1,8 @@
 import SwiftUI
 import Combine
 
-/// `AppStorage` / `UserDefaults` keys for LLM routing UI (CAAL `settings.json` / `.env` parity in task #284).
+/// `AppStorage` / `UserDefaults` keys for LLM routing UI (CAAL `settings.json` / `.env` parity — task #284).
+/// NVIDIA-specific fields are inert in the agent until CAAL reads them; UI is gated by `nvidiaFeatureEnabled`.
 enum LLMRoutingStorageKeys {
     static let llmProvider = "llmProvider"
     static let preferredModelLabel = "preferredModelLabel"
@@ -39,15 +40,15 @@ enum SoniqueFallbackPolicy: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Short hint for settings / status (routing behavior is enforced in CAAL — task #284).
+    /// Short hint for settings / home summary (enforcement lives in CAAL — task #284).
     var routingHint: String {
         switch self {
         case .localOnly:
             return "When wired: use only the local stack (e.g. Ollama)."
         case .providerThenLocal:
-            return "When wired: try NVIDIA NIM first when enabled, then local."
+            return "When wired: try the configured cloud endpoint first, then local."
         case .localThenProvider:
-            return "When wired: try local first, then NVIDIA NIM if needed."
+            return "When wired: try local first, then the configured cloud endpoint if needed."
         }
     }
 }
@@ -81,6 +82,11 @@ class SoniqueSettings: ObservableObject {
         didSet { objectWillChange.send() }
     }
     @AppStorage("hasCompletedSetup") var hasCompletedSetup: Bool = false
+
+    /// Idle-screen summary line (prefs only; no effect on sessions until CAAL #284).
+    var llmRoutingSummaryLine: String {
+        "\(llmProvider.displayName) · \(fallbackPolicy.displayName) · \(preferredModelLabel)"
+    }
 
     var llmProvider: SoniqueLLMProvider {
         get {

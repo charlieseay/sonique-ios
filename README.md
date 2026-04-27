@@ -45,8 +45,16 @@ For a custom phrase, go to **Settings → Siri** and tap **Open in Shortcuts**.
 
 ## CAAL server — optional API key
 
-Set `CAAL_API_KEY=your-secret` in the CAAL `.env.local` to require authentication.  
+Set `CAAL_API_KEY=<caal-api-key>` in the CAAL `.env.local` to require authentication.  
 The iOS app sends it as `x-api-key` header on all API calls.
+
+Provider scaffolding (UI/config only, no behavior changes yet) uses feature-flagged values:
+
+```bash
+NVIDIA_FEATURE_ENABLED=false
+NVIDIA_BASE_URL=<nvidia-base-url>
+NVIDIA_MODEL=<nvidia-model-id>
+```
 
 ## Architecture
 

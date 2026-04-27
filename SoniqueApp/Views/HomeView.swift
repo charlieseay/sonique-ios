@@ -29,6 +29,17 @@ struct HomeView: View {
                 // State label
                 stateLabel
 
+                if settings.isConfigured {
+                    Text(settings.llmRoutingSummaryLine)
+                        .font(.caption2)
+                        .foregroundStyle(Color.soniqueSubtext.opacity(0.9))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
+                        .padding(.horizontal, 24)
+                        .accessibilityLabel("LLM routing preferences")
+                }
+
                 Spacer()
 
                 // Action area
