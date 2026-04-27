@@ -65,7 +65,11 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Sonique uses the microphone to listen to your voice and talk to your AI assistant.</string>
 	<key>NSSiriUsageDescription</key>
-	<string>Sonique uses Siri to let you start a voice session hands-free.</string>
+	<string>Sonique uses Siri to let you start a voice session hands-free, read your calendar, and send messages.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Sonique can read and create calendar events when you ask it to via Siri.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Sonique uses your contacts to help you send messages when you ask it to.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

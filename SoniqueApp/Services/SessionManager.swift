@@ -31,11 +31,33 @@ class SessionManager: NSObject, ObservableObject {
                   let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
                   let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
 
-            if type == .ended {
-                // Another app released the audio session — resume ours
-                try? AVAudioSession.sharedInstance().setActive(true)
-                Task { @MainActor in
-                    try? await self.room?.localParticipant.setMicrophone(enabled: true)
+            Task { @MainActor in
+                switch type {
+                case .began:
+                    // Audio session was interrupted (e.g., phone call, Siri)
+                    // Pause the microphone during interruption
+                    do {
+                        try await self.room?.localParticipant.setMicrophone(enabled: false)
+                    } catch {
+                        // Silent failure on interruption
+                    }
+
+                case .ended:
+                    // Audio session interruption ended — resume if still active
+                    guard self.sessionState == .active else { return }
+
+                    // Re-activate the audio session with proper options
+                    let audioSession = AVAudioSession.sharedInstance()
+                    do {
+                        try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+                        // Re-enable microphone to resume LiveKit audio
+                        try await self.room?.localParticipant.setMicrophone(enabled: true)
+                    } catch {
+                        print("Failed to resume audio session after interruption: \(error)")
+                    }
+
+                @unknown default:
+                    break
                 }
             }
         }
@@ -143,7 +165,7 @@ class SessionManager: NSObject, ObservableObject {
     private func resolveActiveURL(settings: SoniqueSettings) async -> String {
         let local = settings.normalizedServerURL
         let external = settings.normalizedExternalURL
-        let isPremium = await PremiumManager.shared?.isPremium ?? false
+        let isPremium = PremiumManager.shared?.isPremium ?? false
         guard isPremium, !external.isEmpty else { return local }
 
         if let url = URL(string: "\(local)/api/settings") {

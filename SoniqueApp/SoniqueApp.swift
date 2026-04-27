@@ -17,12 +17,23 @@ struct SoniqueApp: App {
 
     private func configureAudioSession() {
         let audioSession = AVAudioSession.sharedInstance()
-        try? audioSession.setCategory(
-            .playAndRecord,
-            mode: .voiceChat,
-            options: [.defaultToSpeaker, .allowBluetooth, .allowBluetoothA2DP]
-        )
-        try? audioSession.setActive(true)
+        do {
+            // Configure for voice chat with continuous playback
+            try audioSession.setCategory(
+                .playAndRecord,
+                mode: .voiceChat,
+                options: [
+                    .defaultToSpeaker,
+                    .allowBluetoothHFP,
+                    .allowBluetoothA2DP,
+                    .duckOthers  // Lower other audio, don't silence
+                ]
+            )
+            // Ensure the session is active before any audio operations
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        } catch {
+            print("Error configuring audio session: \(error)")
+        }
     }
 
     var body: some Scene {
