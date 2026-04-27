@@ -30,14 +30,30 @@ struct HomeView: View {
                 stateLabel
 
                 if settings.isConfigured {
-                    Text(settings.llmRoutingSummaryLine)
-                        .font(.caption2)
-                        .foregroundStyle(Color.soniqueSubtext.opacity(0.9))
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.85)
-                        .padding(.horizontal, 24)
-                        .accessibilityLabel("LLM routing preferences")
+                    VStack(spacing: 4) {
+                        Text(settings.llmRoutingSummaryLine)
+                            .font(.caption2)
+                            .foregroundStyle(Color.soniqueSubtext.opacity(0.9))
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.85)
+                        Text(settings.fallbackPolicy.routingHint)
+                            .font(.caption2)
+                            .foregroundStyle(Color.soniqueSubtext.opacity(0.65))
+                            .multilineTextAlignment(.center)
+                            .lineLimit(3)
+                            .minimumScaleFactor(0.85)
+                        if settings.nvidiaFeatureEnabled {
+                            Text("NVIDIA NIM: experimental UI only until CAAL is wired.")
+                                .font(.caption2)
+                                .foregroundStyle(Color.soniqueSubtext.opacity(0.65))
+                                .multilineTextAlignment(.center)
+                                .lineLimit(2)
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("LLM routing preferences")
                 }
 
                 Spacer()
