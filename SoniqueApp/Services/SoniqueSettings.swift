@@ -11,6 +11,15 @@ enum LLMRoutingStorageKeys {
     static let nvidiaBaseURL = "nvidiaBaseURL"
 }
 
+/// Snake_case keys for CAAL `settings.json` and POST `/api/settings` (task #284). Keep in sync with SoniqueBar `LLMRoutingCAALKeys`.
+enum LLMRoutingCAALKeys {
+    static let provider = "llm_provider"
+    static let modelLabel = "llm_model_label"
+    static let fallbackPolicy = "llm_fallback_policy"
+    static let nvidiaFeatureEnabled = "nvidia_feature_enabled"
+    static let cloudInferenceBaseURL = "nvidia_base_url"
+}
+
 enum SoniqueLLMProvider: String, CaseIterable, Identifiable {
     case ollama
     case nvidia

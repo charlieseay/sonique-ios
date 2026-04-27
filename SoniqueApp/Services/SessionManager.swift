@@ -191,6 +191,8 @@ class SessionManager: NSObject, ObservableObject {
         if !settings.apiKey.isEmpty {
             request.setValue(settings.apiKey, forHTTPHeaderField: "x-api-key")
         }
+        // Task #284: when CAAL accepts client routing hints, merge keys matching
+        // `LLMRoutingCAALKeys` + raw values from `SoniqueSettings` into this POST body.
         let body: [String: Any] = [
             "extended_session": settings.extendedSession
         ]
