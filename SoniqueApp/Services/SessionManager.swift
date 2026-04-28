@@ -15,6 +15,7 @@ class SessionManager: NSObject, ObservableObject {
     private var room: Room?
     private var healthCheckTask: Task<Void, Never>?
     private var interruptionObserver: NSObjectProtocol?
+    private var lastDisconnectAt: Date?
 
     override init() {
         super.init()
@@ -69,6 +70,15 @@ class SessionManager: NSObject, ObservableObject {
         guard sessionState == .idle else { return }
         sessionState = .connecting
 
+        // Give the previous room a moment to fully drain on the server side.
+        if let lastDisconnectAt {
+            let elapsed = Date().timeIntervalSince(lastDisconnectAt)
+            if elapsed < 2.5 {
+                let remaining = 2.5 - elapsed
+                try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
+            }
+        }
+
         do {
             let details = try await fetchConnectionDetails(settings: settings)
 
@@ -95,6 +105,7 @@ class SessionManager: NSObject, ObservableObject {
         guard sessionState == .active || sessionState == .connecting else { return }
         sessionState = .disconnecting
         await room?.disconnect()
+        lastDisconnectAt = Date()
         room = nil
         sessionState = .idle
         agentState = .idle
@@ -254,6 +265,7 @@ extension SessionManager: RoomDelegate {
             case .disconnected:
                 if case .disconnecting = self.sessionState { return }
                 if case .idle = self.sessionState { return }
+                self.lastDisconnectAt = Date()
                 self.sessionState = .error("Connection lost")
                 self.room = nil
                 self.agentState = .idle
