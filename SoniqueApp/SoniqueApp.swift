@@ -87,12 +87,21 @@ struct SoniqueApp: App {
 
 private struct RootView: View {
     @EnvironmentObject private var settings: SoniqueSettings
+    @EnvironmentObject private var network: NetworkMonitor
 
     var body: some View {
-        if settings.hasCompletedSetup {
-            HomeView()
-        } else {
-            OnboardingView()
+        Group {
+            if settings.hasCompletedSetup {
+                HomeView()
+            } else {
+                OnboardingView()
+            }
+        }
+        .onAppear {
+            network.reportCurrentState()
+        }
+        .onChange(of: settings.serverURL) { _, _ in
+            network.reportCurrentState()
         }
     }
 }
