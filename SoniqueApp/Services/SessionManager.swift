@@ -116,6 +116,7 @@ class SessionManager: NSObject, ObservableObject {
         firstUserSpeechAt = nil
         didPlayReadyChime = false
         activeBackendBaseURL = nil
+        NetworkMonitor.shared.sessionPreferredBaseURL = nil
         logger.info("connect_start")
 
         // Give the previous room a moment to fully drain on the server side.
@@ -249,6 +250,7 @@ class SessionManager: NSObject, ObservableObject {
         firstUserSpeechAt = nil
         didPlayReadyChime = false
         activeBackendBaseURL = nil
+        NetworkMonitor.shared.sessionPreferredBaseURL = nil
     }
 
     private func startConnectWatchdogs(settings: SoniqueSettings) {
@@ -379,6 +381,7 @@ class SessionManager: NSObject, ObservableObject {
     private func fetchConnectionDetails(settings: SoniqueSettings) async throws -> ConnectionDetails {
         let base = await resolveActiveURL(settings: settings)
         activeBackendBaseURL = base
+        NetworkMonitor.shared.sessionPreferredBaseURL = base
         guard let url = URL(string: "\(base)/api/connection-details") else {
             throw URLError(.badURL)
         }

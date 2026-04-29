@@ -48,6 +48,9 @@ final class NetworkMonitor: ObservableObject {
 
     static let shared = NetworkMonitor()
 
+    /// Same base URL as `/api/connection-details` for the active voice session. When set, every automatic POST (path changes, etc.) tries this host first so CAAL ingests state on the machine handling LiveKit.
+    var sessionPreferredBaseURL: String?
+
     @Published private(set) var connection: Connection = .none
     @Published private(set) var isExpensive: Bool = false
     @Published private(set) var isConstrained: Bool = false
@@ -98,13 +101,14 @@ final class NetworkMonitor: ObservableObject {
         if recoveredFromOffline {
             NotificationCenter.default.post(name: .soniqueNetworkBecameReachable, object: nil)
         }
-        reportCurrentState()
+        reportCurrentState(preferredBaseURL: sessionPreferredBaseURL)
     }
 
     func reportCurrentState(preferredBaseURL: String? = nil) {
         let status = qualityAssessment()
+        let preferred = preferredBaseURL ?? sessionPreferredBaseURL
         Task {
-            await postNetworkState(status: status, timestamp: Date(), preferredBaseURL: preferredBaseURL)
+            await postNetworkState(status: status, timestamp: Date(), preferredBaseURL: preferred)
         }
     }
 
