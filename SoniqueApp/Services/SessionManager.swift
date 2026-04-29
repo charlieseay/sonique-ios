@@ -298,22 +298,8 @@ class SessionManager: NSObject, ObservableObject {
         feedback.prepare()
         feedback.notificationOccurred(.success)
 
-        let audioSession = AVAudioSession.sharedInstance()
-        do {
-            try audioSession.setCategory(
-                .playAndRecord,
-                mode: .voiceChat,
-                options: [
-                    .defaultToSpeaker,
-                    .duckOthers,
-                    .allowBluetoothA2DP,
-                    .allowBluetoothHFP,
-                ]
-            )
-            try audioSession.setActive(true, options: [])
-        } catch {
-            logger.error("ready_chime_session_activate_failed: \(error.localizedDescription)")
-        }
+        // Do not call setCategory/setActive here. LiveKit's AudioManager owns the session after
+        // Room.connect; reconfiguring it breaks capture and remote agent audio while local chime still plays.
 
         if let data = makeReadyChimeWav(),
            let player = try? AVAudioPlayer(data: data, fileTypeHint: AVFileType.wav.rawValue) {
@@ -331,8 +317,6 @@ class SessionManager: NSObject, ObservableObject {
     private func kickAudioAfterNetworkRecovery() async {
         guard sessionState == .active, let room else { return }
         logger.info("kick_audio_after_network_recovery")
-        let audioSession = AVAudioSession.sharedInstance()
-        try? audioSession.setActive(true, options: [.notifyOthersOnDeactivation])
         do {
             try await room.localParticipant.setMicrophone(enabled: false)
             try await Task.sleep(for: .milliseconds(200))
