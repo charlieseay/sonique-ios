@@ -62,9 +62,13 @@ final class NetworkMonitor: ObservableObject {
             Task { @MainActor in self?.apply(path) }
         }
         monitor.start(queue: queue)
+        Task { @MainActor in
+            self.apply(self.monitor.currentPath)
+        }
     }
 
     private func apply(_ path: NWPath) {
+        let previous = connection
         let next: Connection
         if path.status != .satisfied {
             next = .none
@@ -85,18 +89,23 @@ final class NetworkMonitor: ObservableObject {
         if transitioned {
             lastTransitionAt = Date()
             NSLog("[NetworkMonitor] %@ → %@", connection.spoken, next.spoken)
-            connection = next
-            isExpensive = nextIsExpensive
-            isConstrained = nextIsConstrained
-            let status = qualityAssessment()
-            let timestamp = lastTransitionAt
-            Task {
-                await postNetworkState(status: status, timestamp: timestamp)
-            }
-            return
         }
+        let recoveredFromOffline =
+            previous == .none && next != .none && path.status == .satisfied
+        connection = next
         isExpensive = nextIsExpensive
         isConstrained = nextIsConstrained
+        if recoveredFromOffline {
+            NotificationCenter.default.post(name: .soniqueNetworkBecameReachable, object: nil)
+        }
+        reportCurrentState()
+    }
+
+    func reportCurrentState(preferredBaseURL: String? = nil) {
+        let status = qualityAssessment()
+        Task {
+            await postNetworkState(status: status, timestamp: Date(), preferredBaseURL: preferredBaseURL)
+        }
     }
 
     func qualityAssessment() -> QualityStatus {
@@ -126,30 +135,69 @@ final class NetworkMonitor: ObservableObject {
         }
     }
 
-    private func postNetworkState(status: QualityStatus, timestamp: Date) async {
-        let baseURL = settings.normalizedServerURL
-        guard !baseURL.isEmpty,
-              let url = URL(string: "\(baseURL)/api/network-state") else { return }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if !settings.apiKey.isEmpty {
-            request.setValue(settings.apiKey, forHTTPHeaderField: "x-api-key")
-        }
-
+    private func postNetworkState(status: QualityStatus, timestamp: Date, preferredBaseURL: String?) async {
         let payload: [String: Any] = [
             "connection": status.connection.apiValue,
             "isExpensive": status.isExpensive,
             "isConstrained": status.isConstrained,
             "timestamp": ISO8601DateFormatter().string(from: timestamp)
         ]
-        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
-
-        do {
-            _ = try await URLSession.shared.data(for: request)
-        } catch {
-            NSLog("[NetworkMonitor][debug] Failed POST /api/network-state: %@", error.localizedDescription)
+        let body = try? JSONSerialization.data(withJSONObject: payload)
+        let retries = [0.0, 0.8]
+        let baseURLs = candidateBaseURLs(preferredBaseURL: preferredBaseURL)
+        for baseURL in baseURLs {
+            guard let url = URL(string: "\(baseURL)/api/network-state") else { continue }
+            for delay in retries {
+                if delay > 0 {
+                    try? await Task.sleep(for: .seconds(delay))
+                }
+                var request = URLRequest(url: url)
+                request.httpMethod = "POST"
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                if !settings.apiKey.isEmpty {
+                    request.setValue(settings.apiKey, forHTTPHeaderField: "x-api-key")
+                }
+                request.httpBody = body
+                do {
+                    let (_, response) = try await URLSession.shared.data(for: request)
+                    let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+                    if (200..<300).contains(code) {
+                        return
+                    }
+                    NSLog("[NetworkMonitor][debug] POST /api/network-state returned status %d for %@", code, baseURL)
+                } catch {
+                    NSLog("[NetworkMonitor][debug] Failed POST /api/network-state to %@: %@", baseURL, error.localizedDescription)
+                }
+            }
         }
     }
+
+    private func candidateBaseURLs(preferredBaseURL: String?) -> [String] {
+        let local = settings.normalizedServerURL
+        let external = settings.normalizedExternalURL
+        let isPremium = PremiumManager.shared?.isPremium ?? false
+        var urls: [String] = []
+        if let preferredBaseURL {
+            let preferred = preferredBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            if !preferred.isEmpty {
+                urls.append(preferred)
+            }
+        }
+        if !local.isEmpty {
+            urls.append(local)
+        }
+        if isPremium, !external.isEmpty, external != local {
+            urls.append(external)
+        }
+        var deduped: [String] = []
+        for url in urls where !deduped.contains(url) {
+            deduped.append(url)
+        }
+        return deduped
+    }
+}
+
+extension Notification.Name {
+    /// Posted when NWPath returns from offline/unusable to a satisfied route (e.g. after airplane mode).
+    static let soniqueNetworkBecameReachable = Notification.Name("net.seayniclabs.sonique.networkReachable")
 }
