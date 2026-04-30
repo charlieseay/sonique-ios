@@ -25,8 +25,7 @@ struct SoniqueApp: App {
                 options: [
                     .defaultToSpeaker,
                     .allowBluetoothHFP,
-                    .allowBluetoothA2DP,
-                    .duckOthers  // Lower other audio, don't silence
+                    .allowBluetoothA2DP
                 ]
             )
             // Ensure the session is active before any audio operations

@@ -32,6 +32,7 @@ class SessionManager: NSObject, ObservableObject {
     private var lastBackendReadyChimeAt: Double = 0
     private var activeBackendBaseURL: String?
     private var micEnabledBeforeInterruption = true
+    private var lastAudioSessionActivationAt: Date = .distantPast
     private var readyChimePlayer: AVAudioPlayer?
     private var networkRecoveryObserver: NSObjectProtocol?
     private let logger = Logger(subsystem: "com.seayniclabs.sonique", category: "SessionManager")
@@ -116,7 +117,8 @@ class SessionManager: NSObject, ObservableObject {
                   let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else { return }
             Task { @MainActor in
                 self.logger.info("audio_route_changed reason=\(reason.rawValue)")
-                if self.sessionState == .active {
+                let shouldRecoverRoute = reason == .oldDeviceUnavailable || reason == .override || reason == .wakeFromSleep
+                if self.sessionState == .active && shouldRecoverRoute {
                     do {
                         try self.ensureAudioSessionActive()
                     } catch {
@@ -128,11 +130,15 @@ class SessionManager: NSObject, ObservableObject {
     }
 
     private func ensureAudioSessionActive() throws {
+        if Date().timeIntervalSince(lastAudioSessionActivationAt) < 0.8 {
+            return
+        }
+        lastAudioSessionActivationAt = Date()
         let audioSession = AVAudioSession.sharedInstance()
         try audioSession.setCategory(
             .playAndRecord,
             mode: .voiceChat,
-            options: [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP, .duckOthers]
+            options: [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP]
         )
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
         try audioSession.overrideOutputAudioPort(.speaker)
