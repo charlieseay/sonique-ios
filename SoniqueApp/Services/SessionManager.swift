@@ -141,7 +141,6 @@ class SessionManager: NSObject, ObservableObject {
             options: [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP]
         )
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-        try audioSession.overrideOutputAudioPort(.speaker)
     }
 
     // MARK: - Public API
@@ -203,7 +202,9 @@ class SessionManager: NSObject, ObservableObject {
             }
             sessionState = .active
             NetworkMonitor.shared.reportCurrentState(preferredBaseURL: activeBackendBaseURL)
-            playReadyChimeIfNeeded()
+            Task { [weak self] in
+                await self?.requestWake(settings: settings)
+            }
             startConnectWatchdogs(settings: settings)
             logger.info("connect_ok")
         } catch {
@@ -431,7 +432,12 @@ class SessionManager: NSObject, ObservableObject {
         // Task #284: when CAAL accepts client routing hints, merge keys matching
         // `LLMRoutingCAALKeys` + raw values from `SoniqueSettings` into this POST body.
         let body: [String: Any] = [
-            "extended_session": settings.extendedSession
+            "extended_session": settings.extendedSession,
+            "room_config": [
+                "agents": [
+                    ["agent_name": "caal"]
+                ]
+            ]
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         request.timeoutInterval = 10
@@ -447,6 +453,30 @@ class SessionManager: NSObject, ObservableObject {
             throw URLError(.badServerResponse)
         }
         return try JSONDecoder().decode(ConnectionDetails.self, from: data)
+    }
+
+    private func requestWake(settings: SoniqueSettings) async {
+        guard let base = activeBackendBaseURL.flatMap({ URL(string: $0) }) else { return }
+        let wakeURL = base.appendingPathComponent("api/wake")
+        var request = URLRequest(url: wakeURL, timeoutInterval: 4)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if !settings.apiKey.isEmpty {
+            request.setValue(settings.apiKey, forHTTPHeaderField: "x-api-key")
+        }
+        request.httpBody = try? JSONSerialization.data(withJSONObject: [
+            "room_name": "voice_assistant_room"
+        ])
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+            if code != 200 {
+                logger.error("wake_request_failed_http_\(code)")
+            }
+        } catch {
+            logger.error("wake_request_failed: \(error.localizedDescription)")
+        }
     }
 
     private func checkHealth(settings: SoniqueSettings) async {
@@ -499,9 +529,7 @@ class SessionManager: NSObject, ObservableObject {
             guard status.readyChimeAt > 0 else { return }
             if status.readyChimeAt > lastBackendReadyChimeAt {
                 lastBackendReadyChimeAt = status.readyChimeAt
-                if sessionState == .active || sessionState == .connecting {
-                    playReadyChimeIfNeeded()
-                }
+                // Ready chime is reserved for confirmed agent room entry only.
             }
         } catch {
             return
