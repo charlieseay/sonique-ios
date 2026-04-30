@@ -18,6 +18,7 @@ class SessionManager: NSObject, ObservableObject {
     private var room: Room?
     private var healthCheckTask: Task<Void, Never>?
     private var interruptionObserver: NSObjectProtocol?
+    private var routeChangeObserver: NSObjectProtocol?
     private var lastDisconnectAt: Date?
     private var connectWatchdogTask: Task<Void, Never>?
     private var firstAudioWatchdogTask: Task<Void, Never>?
@@ -38,6 +39,7 @@ class SessionManager: NSObject, ObservableObject {
     override init() {
         super.init()
         observeAudioInterruptions()
+        observeAudioRouteChanges()
         networkRecoveryObserver = NotificationCenter.default.addObserver(
             forName: .soniqueNetworkBecameReachable,
             object: nil,
@@ -55,6 +57,9 @@ class SessionManager: NSObject, ObservableObject {
         }
         if let interruptionObserver {
             NotificationCenter.default.removeObserver(interruptionObserver)
+        }
+        if let routeChangeObserver {
+            NotificationCenter.default.removeObserver(routeChangeObserver)
         }
     }
 
@@ -85,9 +90,8 @@ class SessionManager: NSObject, ObservableObject {
                     guard self.sessionState == .active else { return }
 
                     // Re-activate the audio session with proper options
-                    let audioSession = AVAudioSession.sharedInstance()
                     do {
-                        try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+                        try self.ensureAudioSessionActive()
                         try await self.room?.localParticipant.setMicrophone(enabled: self.micEnabledBeforeInterruption)
                     } catch {
                         self.logger.error("audio_interruption_end_resume_failed: \(error.localizedDescription)")
@@ -99,6 +103,39 @@ class SessionManager: NSObject, ObservableObject {
                 }
             }
         }
+    }
+
+    private func observeAudioRouteChanges() {
+        routeChangeObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self,
+                  let reasonValue = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
+                  let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else { return }
+            Task { @MainActor in
+                self.logger.info("audio_route_changed reason=\(reason.rawValue)")
+                if self.sessionState == .active {
+                    do {
+                        try self.ensureAudioSessionActive()
+                    } catch {
+                        self.logger.error("audio_route_recovery_failed: \(error.localizedDescription)")
+                    }
+                }
+            }
+        }
+    }
+
+    private func ensureAudioSessionActive() throws {
+        let audioSession = AVAudioSession.sharedInstance()
+        try audioSession.setCategory(
+            .playAndRecord,
+            mode: .voiceChat,
+            options: [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP, .duckOthers]
+        )
+        try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        try audioSession.overrideOutputAudioPort(.speaker)
     }
 
     // MARK: - Public API
@@ -118,6 +155,11 @@ class SessionManager: NSObject, ObservableObject {
         activeBackendBaseURL = nil
         NetworkMonitor.shared.sessionPreferredBaseURL = nil
         logger.info("connect_start")
+        do {
+            try ensureAudioSessionActive()
+        } catch {
+            logger.error("audio_preconnect_activation_failed: \(error.localizedDescription)")
+        }
 
         // Give the previous room a moment to fully drain on the server side.
         if let lastDisconnectAt {
@@ -143,6 +185,11 @@ class SessionManager: NSObject, ObservableObject {
             )
 
             try await newRoom.localParticipant.setMicrophone(enabled: true)
+            do {
+                try ensureAudioSessionActive()
+            } catch {
+                logger.error("audio_postconnect_activation_failed: \(error.localizedDescription)")
+            }
             micEnabledBeforeInterruption = true
             hasRemoteParticipant = !newRoom.remoteParticipants.isEmpty
             if hasRemoteParticipant {
@@ -572,6 +619,11 @@ extension SessionManager: RoomDelegate {
                 if self.sessionState != .active {
                     self.sessionState = .active
                 }
+                do {
+                    try self.ensureAudioSessionActive()
+                } catch {
+                    self.logger.error("audio_on_connected_activation_failed: \(error.localizedDescription)")
+                }
                 NetworkMonitor.shared.reportCurrentState(preferredBaseURL: self.activeBackendBaseURL)
             default:
                 break
@@ -583,6 +635,11 @@ extension SessionManager: RoomDelegate {
         Task { @MainActor in
             self.hasRemoteParticipant = true
             self.agentState = .listening
+            do {
+                try self.ensureAudioSessionActive()
+            } catch {
+                self.logger.error("audio_on_participant_activation_failed: \(error.localizedDescription)")
+            }
             self.playReadyChimeIfNeeded()
             self.logger.info("participant_seen")
         }
