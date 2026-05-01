@@ -135,6 +135,9 @@ class SessionManager: NSObject, ObservableObject {
         }
         lastAudioSessionActivationAt = Date()
         let audioSession = AVAudioSession.sharedInstance()
+        // LiveKit docs sometimes refer to disabling automatic session configuration; Apple’s
+        // AVAudioSession has no such property in current iOS SDKs — category + activation here
+        // remain the supported setup path for SoniqueApp.
         try audioSession.setCategory(
             .playAndRecord,
             mode: .voiceChat,
