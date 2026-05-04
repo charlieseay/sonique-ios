@@ -72,7 +72,7 @@ enum SoniqueFallbackPolicy: String, CaseIterable, Identifiable {
 }
 
 class SoniqueSettings: ObservableObject {
-    @AppStorage("serverURL") var serverURL: String = "http://localhost:8891" {
+    @AppStorage("serverURL") var serverURL: String = "" {
         didSet { objectWillChange.send() }
     }
     @AppStorage("apiKey") var apiKey: String = "" {

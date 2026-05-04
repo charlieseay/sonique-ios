@@ -160,9 +160,9 @@ struct SettingsView: View {
             settingsField(
                 label: "Local URL",
                 icon: "server.rack",
-                hint: "http://192.168.0.x:3000"
+                hint: "http://100.x.x.x:8891"
             ) {
-                TextField("http://192.168.0.x:3000", text: $serverURLDraft)
+                TextField("http://100.x.x.x:8891", text: $serverURLDraft)
                     .keyboardType(.URL)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
