@@ -490,7 +490,7 @@ class SessionManager: NSObject, ObservableObject {
         serverHealth.status = .checking
         do {
             let base = await resolveActiveURL(settings: settings)
-            guard let url = URL(string: "\(base)/api/settings") else {
+            guard let url = URL(string: "\(base)/health") else {
                 serverHealth.status = .offline
                 return
             }
