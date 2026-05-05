@@ -238,7 +238,7 @@ class SessionManager: NSObject, ObservableObject {
     func fetchProfile(settings: SoniqueSettings) async {
         guard settings.isConfigured else { return }
         let base = await resolveActiveURL(settings: settings)
-        guard let url = URL(string: "\(base)/api/assistant/profile") else { return }
+        guard let url = URL(string: "\(base)/assistant/profile") else { return }
         var req = URLRequest(url: url, timeoutInterval: 5)
         if !settings.apiKey.isEmpty { req.setValue(settings.apiKey, forHTTPHeaderField: "x-api-key") }
         do {
@@ -257,7 +257,7 @@ class SessionManager: NSObject, ObservableObject {
 
     func updateProfile(settings: SoniqueSettings, name: String? = nil, imageData: Data? = nil, imageExt: String? = nil) async throws {
         let base = await resolveActiveURL(settings: settings)
-        guard let url = URL(string: "\(base)/api/assistant/profile") else { return }
+        guard let url = URL(string: "\(base)/assistant/profile") else { return }
         var req = URLRequest(url: url)
         req.httpMethod = "PUT"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -460,7 +460,7 @@ class SessionManager: NSObject, ObservableObject {
 
     private func requestWake(settings: SoniqueSettings) async {
         guard let base = activeBackendBaseURL.flatMap({ URL(string: $0) }) else { return }
-        let wakeURL = base.appendingPathComponent("api/wake")
+        let wakeURL = base.appendingPathComponent("wake")
         var request = URLRequest(url: wakeURL, timeoutInterval: 4)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
