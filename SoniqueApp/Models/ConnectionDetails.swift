@@ -2,9 +2,9 @@ import Foundation
 
 struct ConnectionDetails: Decodable {
     let serverUrl: String
-    let roomName: String
-    let participantName: String
     let participantToken: String
+    let roomName: String?
+    let participantName: String?
 }
 
 struct ServerHealth {
