@@ -32,6 +32,7 @@ class SessionManager: NSObject, ObservableObject {
     private var lastBackendReadyChimeAt: Double = 0
     private var activeBackendBaseURL: String?
     private var micEnabledBeforeInterruption = true
+    private var isAgentSpeaking = false
     private var lastAudioSessionActivationAt: Date = .distantPast
     private var readyChimePlayer: AVAudioPlayer?
     private var networkRecoveryObserver: NSObjectProtocol?
@@ -87,6 +88,14 @@ class SessionManager: NSObject, ObservableObject {
                     }
 
                 case .ended:
+                    // Check iOS flag — if false, don't try to resume (e.g. Siri took over)
+                    let optionsValue = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
+                    let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+                    guard options.contains(.shouldResume) else {
+                        self.logger.info("audio_interruption_end_skip_resume: shouldResume=false")
+                        return
+                    }
+
                     // Audio session interruption ended — resume if still active
                     guard self.sessionState == .active else { return }
 
@@ -94,6 +103,7 @@ class SessionManager: NSObject, ObservableObject {
                     do {
                         try self.ensureAudioSessionActive()
                         try await self.room?.localParticipant.setMicrophone(enabled: self.micEnabledBeforeInterruption)
+                        self.logger.info("audio_interruption_end_resumed")
                     } catch {
                         self.logger.error("audio_interruption_end_resume_failed: \(error.localizedDescription)")
                         self.sessionState = .error("Audio interrupted. Tap to reconnect.")
@@ -135,15 +145,28 @@ class SessionManager: NSObject, ObservableObject {
         }
         lastAudioSessionActivationAt = Date()
         let audioSession = AVAudioSession.sharedInstance()
-        // LiveKit docs sometimes refer to disabling automatic session configuration; Apple’s
-        // AVAudioSession has no such property in current iOS SDKs — category + activation here
-        // remain the supported setup path for SoniqueApp.
+        let duckingOption: AVAudioSession.CategoryOptions = isAgentSpeaking ? .duckOthers : .mixWithOthers
         try audioSession.setCategory(
             .playAndRecord,
             mode: .voiceChat,
-            options: [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP]
+            options: [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP, duckingOption]
         )
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+    }
+
+    private func updateAudioDucking(speaking: Bool) {
+        guard speaking != isAgentSpeaking else { return }
+        isAgentSpeaking = speaking
+        let duckingOption: AVAudioSession.CategoryOptions = speaking ? .duckOthers : .mixWithOthers
+        do {
+            try AVAudioSession.sharedInstance().setCategory(
+                .playAndRecord,
+                mode: .voiceChat,
+                options: [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP, duckingOption]
+            )
+        } catch {
+            logger.error("audio_duck_update_failed: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Public API
@@ -638,6 +661,7 @@ extension SessionManager: RoomDelegate {
                 self.logger.info("first_audio_received")
             }
             self.agentState = agentSpeaking ? .speaking : .listening
+            self.updateAudioDucking(speaking: agentSpeaking)
         }
     }
 

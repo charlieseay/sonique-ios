@@ -18,17 +18,18 @@ struct SoniqueApp: App {
     private func configureAudioSession() {
         let audioSession = AVAudioSession.sharedInstance()
         do {
-            // Configure for voice chat with continuous playback
+            // Start with mixWithOthers so background audio (Music, podcasts) keeps playing.
+            // SessionManager switches to duckOthers when Cael is speaking and back when done.
             try audioSession.setCategory(
                 .playAndRecord,
                 mode: .voiceChat,
                 options: [
                     .defaultToSpeaker,
                     .allowBluetoothHFP,
-                    .allowBluetoothA2DP
+                    .allowBluetoothA2DP,
+                    .mixWithOthers
                 ]
             )
-            // Ensure the session is active before any audio operations
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
         } catch {
             print("Error configuring audio session: \(error)")
