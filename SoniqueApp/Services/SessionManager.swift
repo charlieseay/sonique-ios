@@ -445,6 +445,7 @@ class SessionManager: NSObject, ObservableObject {
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         request.timeoutInterval = 10
 
+        logger.info("fetchConnectionDetails: requesting from \(base, privacy: .public)/api/connection-details")
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
@@ -453,9 +454,22 @@ class SessionManager: NSObject, ObservableObject {
             throw SoniqueError.unauthorized
         }
         guard http.statusCode == 200 else {
+            logger.error("fetchConnectionDetails: HTTP \(http.statusCode, privacy: .public)")
+            if let responseString = String(data: data, encoding: .utf8) {
+                logger.error("fetchConnectionDetails response: \(responseString, privacy: .public)")
+            }
             throw URLError(.badServerResponse)
         }
-        return try JSONDecoder().decode(ConnectionDetails.self, from: data)
+
+        do {
+            return try JSONDecoder().decode(ConnectionDetails.self, from: data)
+        } catch {
+            logger.error("fetchConnectionDetails: decode failed: \(error.localizedDescription, privacy: .public)")
+            if let responseString = String(data: data, encoding: .utf8) {
+                logger.error("fetchConnectionDetails response was: \(responseString, privacy: .public)")
+            }
+            throw error
+        }
     }
 
     private func requestWake(settings: SoniqueSettings) async {
