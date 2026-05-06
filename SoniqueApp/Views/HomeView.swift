@@ -80,6 +80,19 @@ struct HomeView: View {
         .onDisappear {
             session.stopHealthChecks()
         }
+        .overlay {
+            if let image = session.screenCaptureImage {
+                ScreenCaptureOverlay(
+                    image: image,
+                    description: session.screenCaptureDescription
+                ) {
+                    session.screenCaptureImage = nil
+                    session.screenCaptureDescription = ""
+                }
+                .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                .animation(.easeInOut(duration: 0.22), value: session.screenCaptureImage != nil)
+            }
+        }
     }
 
     // MARK: - Sub-views
@@ -255,6 +268,62 @@ struct HomeView: View {
                     RoundedRectangle(cornerRadius: 16)
                         .strokeBorder(Color.soniqueOffline.opacity(0.3), lineWidth: 1)
                 )
+        }
+    }
+}
+
+// MARK: - Screen Capture Overlay
+
+struct ScreenCaptureOverlay: View {
+    let image: UIImage
+    let description: String
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.82)
+                .ignoresSafeArea()
+                .onTapGesture { onDismiss() }
+
+            VStack(spacing: 0) {
+                // Header bar
+                HStack {
+                    if !description.isEmpty {
+                        Text(description)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.75))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                    Spacer()
+                    Button(action: onDismiss) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundStyle(.white.opacity(0.8))
+                            .symbolRenderingMode(.hierarchical)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 14)
+
+                // Image — pinch-to-zoom via ScrollView
+                ScrollView([.horizontal, .vertical], showsIndicators: false) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: .infinity)
+                        .cornerRadius(10)
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 24)
+                }
+
+                // Dismiss hint
+                Text("Tap anywhere or say \"close\" to dismiss")
+                    .font(.caption2)
+                    .foregroundStyle(.white.opacity(0.4))
+                    .padding(.bottom, 20)
+            }
         }
     }
 }

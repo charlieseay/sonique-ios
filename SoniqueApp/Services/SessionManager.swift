@@ -14,6 +14,8 @@ class SessionManager: NSObject, ObservableObject {
     @Published var userAudioLevel: Float = 0.0
     @Published var profile: AssistantProfile?
     @Published var avatarData: Data?
+    @Published var screenCaptureImage: UIImage?
+    @Published var screenCaptureDescription: String = ""
 
     private var room: Room?
     private var healthCheckTask: Task<Void, Never>?
@@ -723,6 +725,40 @@ extension SessionManager: RoomDelegate {
     nonisolated func room(_ room: Room, participantDidDisconnect participant: RemoteParticipant) {
         Task { @MainActor in
             self.agentState = .idle
+        }
+    }
+
+    nonisolated func room(
+        _ room: Room,
+        participant: RemoteParticipant?,
+        didReceiveData data: Data,
+        forTopic topic: String,
+        encryptionType: EncryptionType
+    ) {
+        Task { @MainActor in
+            switch topic {
+            case "screen_capture":
+                guard
+                    let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                    let b64 = payload["image_b64"] as? String,
+                    let imageData = Data(base64Encoded: b64),
+                    let image = UIImage(data: imageData)
+                else {
+                    self.logger.warning("screen_capture: failed to decode payload")
+                    return
+                }
+                self.screenCaptureDescription = payload["description"] as? String ?? ""
+                self.screenCaptureImage = image
+                self.logger.info("screen_capture received: \(imageData.count) bytes")
+
+            case "screen_dismiss":
+                self.screenCaptureImage = nil
+                self.screenCaptureDescription = ""
+                self.logger.info("screen_dismiss received")
+
+            default:
+                break
+            }
         }
     }
 }
