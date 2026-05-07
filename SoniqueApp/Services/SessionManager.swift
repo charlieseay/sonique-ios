@@ -210,6 +210,11 @@ class SessionManager: NSObject, ObservableObject {
             newRoom.add(delegate: self)
             self.room = newRoom
 
+            // Disable LiveKit's automatic AVAudioSession reconfiguration — it defaults to
+            // .videoChat mode and overwrites our .voiceChat category, causing remote audio to
+            // go silent while the mic still captures. We own the session lifecycle explicitly.
+            AudioManager.shared.isAutomaticConfigurationEnabled = false
+
             let connectOptions = ConnectOptions(autoSubscribe: true)
             try await newRoom.connect(
                 url: details.serverUrl,
@@ -321,6 +326,8 @@ class SessionManager: NSObject, ObservableObject {
         firstAudioWatchdogTask?.cancel()
         disconnectRecoveryTask?.cancel()
         await room?.disconnect()
+        // Re-enable auto-config so the next connection cycle starts from a clean state
+        AudioManager.shared.isAutomaticConfigurationEnabled = true
         lastDisconnectAt = Date()
         room = nil
         sessionState = .idle
