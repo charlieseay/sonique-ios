@@ -40,6 +40,17 @@ class SessionManager: NSObject, ObservableObject {
     private var networkRecoveryObserver: NSObjectProtocol?
     private let logger = Logger(subsystem: "com.seayniclabs.sonique", category: "SessionManager")
 
+    private enum LiveKitDataTopic {
+        /// CAAL → Sonique `check_network` voice tool; see CAAL `data-channel-protocol` when published.
+        static let checkNetwork = "check_network"
+    }
+
+    private static let checkNetworkReplyISO8601: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
     override init() {
         super.init()
         observeAudioInterruptions()
@@ -213,7 +224,7 @@ class SessionManager: NSObject, ObservableObject {
             // Disable LiveKit's automatic AVAudioSession reconfiguration — it defaults to
             // .videoChat mode and overwrites our .voiceChat category, causing remote audio to
             // go silent while the mic still captures. We own the session lifecycle explicitly.
-            AudioManager.shared.isAutomaticConfigurationEnabled = false
+            AudioManager.shared.audioSession.isAutomaticConfigurationEnabled = false
 
             let connectOptions = ConnectOptions(autoSubscribe: true)
             try await newRoom.connect(
@@ -327,7 +338,7 @@ class SessionManager: NSObject, ObservableObject {
         disconnectRecoveryTask?.cancel()
         await room?.disconnect()
         // Re-enable auto-config so the next connection cycle starts from a clean state
-        AudioManager.shared.isAutomaticConfigurationEnabled = true
+        AudioManager.shared.audioSession.isAutomaticConfigurationEnabled = true
         lastDisconnectAt = Date()
         room = nil
         sessionState = .idle
@@ -584,6 +595,37 @@ class SessionManager: NSObject, ObservableObject {
             return
         }
     }
+
+    /// Publishes a JSON reply on topic `check_network` for CAAL's voice tool (see CAAL data-channel protocol).
+    private func respondToCheckNetworkRequest(room: Room, requestData: Data) async {
+        let status = NetworkMonitor.shared.qualityAssessment()
+        var payload: [String: Any] = [
+            "summary": status.summary,
+            "connection": status.connection.dataChannelConnectionValue,
+            "isExpensive": status.isExpensive,
+            "isConstrained": status.isConstrained,
+            "timestamp": Self.checkNetworkReplyISO8601.string(from: Date())
+        ]
+        if let obj = try? JSONSerialization.jsonObject(with: requestData) as? [String: Any] {
+            if let rid = obj["request_id"] as? String { payload["request_id"] = rid }
+            if let rid = obj["requestId"] as? String { payload["requestId"] = rid }
+        }
+        guard JSONSerialization.isValidJSONObject(payload),
+              let body = try? JSONSerialization.data(withJSONObject: payload)
+        else {
+            logger.error("check_network: failed to encode response")
+            return
+        }
+        do {
+            try await room.localParticipant.publish(
+                data: body,
+                options: DataPublishOptions(topic: LiveKitDataTopic.checkNetwork, reliable: true)
+            )
+            logger.info("check_network reply published")
+        } catch {
+            logger.error("check_network publish failed: \(error.localizedDescription)")
+        }
+    }
 }
 
 private extension SessionManager {
@@ -762,6 +804,9 @@ extension SessionManager: RoomDelegate {
                 self.screenCaptureImage = nil
                 self.screenCaptureDescription = ""
                 self.logger.info("screen_dismiss received")
+
+            case LiveKitDataTopic.checkNetwork:
+                await self.respondToCheckNetworkRequest(room: room, requestData: data)
 
             default:
                 break

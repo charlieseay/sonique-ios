@@ -44,6 +44,16 @@ final class NetworkMonitor: ObservableObject {
             case .none: return "none"
             }
         }
+
+        /// Labels for CAAL LiveKit `check_network` responses (`cellular` | `wifi` | `ethernet` | `unknown`).
+        var dataChannelConnectionValue: String {
+            switch self {
+            case .wifi: return "wifi"
+            case .cellular: return "cellular"
+            case .wired: return "ethernet"
+            case .other, .none: return "unknown"
+            }
+        }
     }
 
     static let shared = NetworkMonitor()
