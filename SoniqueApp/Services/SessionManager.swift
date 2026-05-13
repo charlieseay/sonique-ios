@@ -40,12 +40,14 @@ class SessionManager: NSObject, ObservableObject {
     private var networkRecoveryObserver: NSObjectProtocol?
     private let logger = Logger(subsystem: "com.seayniclabs.sonique", category: "SessionManager")
 
-    private enum LiveKitDataTopic {
-        /// CAAL → Sonique `check_network` voice tool; see CAAL `data-channel-protocol` when published.
-        static let checkNetwork = "check_network"
+    private enum LiveKitNetworkDataChannel {
+        /// Agent → iOS (`voice_agent._ios_network_query`); see `cael/docs/data-channel-protocol.md`.
+        static let requestTopic = "request_ios_network"
+        /// iOS → agent; consumed by `voice_agent` → `NetworkTools.build_live_response`.
+        static let resultTopic = "ios_network_result"
     }
 
-    private static let checkNetworkReplyISO8601: ISO8601DateFormatter = {
+    private static let iosNetworkResultISO8601: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return f
@@ -596,15 +598,15 @@ class SessionManager: NSObject, ObservableObject {
         }
     }
 
-    /// Publishes a JSON reply on topic `check_network` for CAAL's voice tool (see CAAL data-channel protocol).
-    private func respondToCheckNetworkRequest(room: Room, requestData: Data) async {
+    /// Publishes `ios_network_result` after CAAL sends `request_ios_network` (check_network voice tool).
+    private func respondToIOSNetworkRequest(room: Room, requestData: Data) async {
         let status = NetworkMonitor.shared.qualityAssessment()
         var payload: [String: Any] = [
             "summary": status.summary,
-            "connection": status.connection.dataChannelConnectionValue,
-            "isExpensive": status.isExpensive,
-            "isConstrained": status.isConstrained,
-            "timestamp": Self.checkNetworkReplyISO8601.string(from: Date())
+            "connection": status.connection.apiValue,
+            "is_expensive": status.isExpensive,
+            "is_constrained": status.isConstrained,
+            "timestamp": Self.iosNetworkResultISO8601.string(from: Date())
         ]
         if let obj = try? JSONSerialization.jsonObject(with: requestData) as? [String: Any] {
             if let rid = obj["request_id"] as? String { payload["request_id"] = rid }
@@ -613,17 +615,17 @@ class SessionManager: NSObject, ObservableObject {
         guard JSONSerialization.isValidJSONObject(payload),
               let body = try? JSONSerialization.data(withJSONObject: payload)
         else {
-            logger.error("check_network: failed to encode response")
+            logger.error("ios_network_result: failed to encode response")
             return
         }
         do {
             try await room.localParticipant.publish(
                 data: body,
-                options: DataPublishOptions(topic: LiveKitDataTopic.checkNetwork, reliable: true)
+                options: DataPublishOptions(topic: LiveKitNetworkDataChannel.resultTopic, reliable: true)
             )
-            logger.info("check_network reply published")
+            logger.info("ios_network_result published")
         } catch {
-            logger.error("check_network publish failed: \(error.localizedDescription)")
+            logger.error("ios_network_result publish failed: \(error.localizedDescription)")
         }
     }
 }
@@ -805,8 +807,8 @@ extension SessionManager: RoomDelegate {
                 self.screenCaptureDescription = ""
                 self.logger.info("screen_dismiss received")
 
-            case LiveKitDataTopic.checkNetwork:
-                await self.respondToCheckNetworkRequest(room: room, requestData: data)
+            case LiveKitNetworkDataChannel.requestTopic:
+                await self.respondToIOSNetworkRequest(room: room, requestData: data)
 
             default:
                 break

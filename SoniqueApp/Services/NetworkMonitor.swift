@@ -35,6 +35,7 @@ final class NetworkMonitor: ObservableObject {
             }
         }
 
+        /// Same strings CAAL expects on `ios_network_result.connection` (`docs/data-channel-protocol.md`).
         var apiValue: String {
             switch self {
             case .wifi: return "wifi"
@@ -42,16 +43,6 @@ final class NetworkMonitor: ObservableObject {
             case .wired: return "wired"
             case .other: return "other"
             case .none: return "none"
-            }
-        }
-
-        /// Labels for CAAL LiveKit `check_network` responses (`cellular` | `wifi` | `ethernet` | `unknown`).
-        var dataChannelConnectionValue: String {
-            switch self {
-            case .wifi: return "wifi"
-            case .cellular: return "cellular"
-            case .wired: return "ethernet"
-            case .other, .none: return "unknown"
             }
         }
     }
