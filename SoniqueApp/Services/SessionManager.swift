@@ -600,6 +600,15 @@ class SessionManager: NSObject, ObservableObject {
 
     /// Publishes `ios_network_result` after CAAL sends `request_ios_network` for the check_network voice tool.
     private func respondToIOSNetworkRequest(room: Room, requestData: Data) async {
+        let envelope = try? JSONSerialization.jsonObject(with: requestData) as? [String: Any]
+        if let obj = envelope {
+            let declaredTools = [obj["tool"], obj["type"]].compactMap { $0 as? String }
+            if !declaredTools.isEmpty, !declaredTools.contains("check_network") {
+                logger.info("ios_network_request ignored: topic envelope is not check_network")
+                return
+            }
+        }
+
         let status = NetworkMonitor.shared.qualityAssessment()
         var payload: [String: Any] = [
             "summary": status.summary,
@@ -611,7 +620,7 @@ class SessionManager: NSObject, ObservableObject {
             "is_constrained": status.isConstrained,
             "timestamp": Self.iosNetworkResultISO8601.string(from: Date())
         ]
-        if let obj = try? JSONSerialization.jsonObject(with: requestData) as? [String: Any] {
+        if let obj = envelope {
             if let rid = obj["request_id"] as? String { payload["request_id"] = rid }
             if let rid = obj["requestId"] as? String { payload["requestId"] = rid }
         }
