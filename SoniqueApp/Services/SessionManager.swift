@@ -41,7 +41,7 @@ class SessionManager: NSObject, ObservableObject {
     private let logger = Logger(subsystem: "com.seayniclabs.sonique", category: "SessionManager")
 
     private enum LiveKitNetworkDataChannel {
-        /// Agent → iOS (`voice_agent._ios_network_query`); see `cael/docs/data-channel-protocol.md`.
+        /// Agent → iOS for the `check_network` voice tool; see `cael/docs/data-channel-protocol.md`.
         static let requestTopic = "request_ios_network"
         /// iOS → agent; consumed by `voice_agent` → `NetworkTools.build_live_response`.
         static let resultTopic = "ios_network_result"
@@ -598,12 +598,15 @@ class SessionManager: NSObject, ObservableObject {
         }
     }
 
-    /// Publishes `ios_network_result` after CAAL sends `request_ios_network` (check_network voice tool).
+    /// Publishes `ios_network_result` after CAAL sends `request_ios_network` for the check_network voice tool.
     private func respondToIOSNetworkRequest(room: Room, requestData: Data) async {
         let status = NetworkMonitor.shared.qualityAssessment()
         var payload: [String: Any] = [
             "summary": status.summary,
-            "connection": status.connection.apiValue,
+            "connection": status.connection.checkNetworkValue,
+            "isExpensive": status.isExpensive,
+            "isConstrained": status.isConstrained,
+            // Temporary aliases while CAAL's protocol doc and parser finish moving to camelCase.
             "is_expensive": status.isExpensive,
             "is_constrained": status.isConstrained,
             "timestamp": Self.iosNetworkResultISO8601.string(from: Date())
