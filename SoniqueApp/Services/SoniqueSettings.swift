@@ -100,6 +100,9 @@ class SoniqueSettings: ObservableObject {
         didSet { objectWillChange.send() }
     }
     @AppStorage("hasCompletedSetup") var hasCompletedSetup: Bool = false
+    @AppStorage("wakeWordEnabled") var wakeWordEnabled: Bool = false {
+        didSet { objectWillChange.send() }
+    }
 
     /// Idle-screen summary line (prefs only; no effect on sessions until CAAL #284).
     var llmRoutingSummaryLine: String {

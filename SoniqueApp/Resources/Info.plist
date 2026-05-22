@@ -64,6 +64,8 @@
 	<string>Sonique uses the camera to scan the QR code from your base station for instant setup.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Sonique uses the microphone to listen to your voice and talk to your AI assistant.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Sonique uses on-device speech recognition to detect "Hey Cal" so you can start a session hands-free.</string>
 	<key>NSSiriUsageDescription</key>
 	<string>Sonique uses Siri to let you start a voice session hands-free, read your calendar, and send messages.</string>
 	<key>NSCalendarsUsageDescription</key>

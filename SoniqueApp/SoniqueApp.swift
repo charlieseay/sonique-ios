@@ -9,6 +9,7 @@ struct SoniqueApp: App {
     @StateObject private var session = SessionManager()
     @StateObject private var premium = PremiumManager()
     @StateObject private var network = NetworkMonitor.shared
+    @StateObject private var wakeWord = WakeWordDetector()
 
     init() {
         MobileAds.shared.start()
@@ -43,6 +44,7 @@ struct SoniqueApp: App {
                 .environmentObject(session)
                 .environmentObject(premium)
                 .environmentObject(network)
+                .environmentObject(wakeWord)
                 .preferredColorScheme(.dark)
                 // URL scheme: sonique://connect?local=...&external=...&key=... (new)
                 //             sonique://connect?url=...&key=...                  (legacy)

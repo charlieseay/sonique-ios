@@ -353,6 +353,15 @@ struct SettingsView: View {
                 }
             }
             .tint(Color.soniqueAccent2)
+
+            Toggle(isOn: $settings.wakeWordEnabled) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Hey Cal").foregroundStyle(Color.soniqueText)
+                    Text("Say 'Hey Cal' to start a session hands-free. Uses on-device speech recognition.")
+                        .font(.caption).foregroundStyle(Color.soniqueSubtext)
+                }
+            }
+            .tint(Color.soniqueAccent2)
         } header: {
             Text("Session").foregroundStyle(Color.soniqueSubtext)
         }

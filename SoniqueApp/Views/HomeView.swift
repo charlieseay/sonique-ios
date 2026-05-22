@@ -4,6 +4,7 @@ struct HomeView: View {
     @EnvironmentObject private var settings: SoniqueSettings
     @EnvironmentObject private var session: SessionManager
     @EnvironmentObject private var premium: PremiumManager
+    @EnvironmentObject private var wakeWord: WakeWordDetector
     @State private var showSettings = false
 
     var body: some View {
@@ -76,9 +77,34 @@ struct HomeView: View {
         }
         .onAppear {
             session.startHealthChecks(settings: settings)
+            wakeWord.onDetected = { [weak wakeWord = wakeWord, weak session = session] in
+                guard let session else { return }
+                wakeWord?.stop()
+                Task { await session.connect(settings: settings) }
+            }
+            if settings.wakeWordEnabled, settings.isConfigured, session.sessionState == .idle {
+                wakeWord.start()
+            }
         }
         .onDisappear {
             session.stopHealthChecks()
+            wakeWord.stop()
+        }
+        .onChange(of: session.sessionState) { _, newState in
+            if case .idle = newState, settings.wakeWordEnabled, settings.isConfigured {
+                wakeWord.start()
+            } else if case .idle = newState {
+                // not enabled — ensure stopped
+            } else {
+                wakeWord.stop()
+            }
+        }
+        .onChange(of: settings.wakeWordEnabled) { _, enabled in
+            if enabled, settings.isConfigured, session.sessionState == .idle {
+                wakeWord.start()
+            } else {
+                wakeWord.stop()
+            }
         }
         .overlay {
             if let image = session.screenCaptureImage {
