@@ -15,11 +15,12 @@ class ElevenLabsClient: NSObject, ObservableObject {
     private var audioPlayer: AVAudioPlayer?
 
     private let apiKey: String
-    private let agentId: String
+    private var voiceID: String
+    private var hasReceivedGreeting = false
 
-    init(apiKey: String, agentId: String = "default") {
+    init(apiKey: String, voiceID: String = Config.selectedVoice.rawValue) {
         self.apiKey = apiKey
-        self.agentId = agentId
+        self.voiceID = voiceID
         super.init()
     }
 
@@ -28,7 +29,11 @@ class ElevenLabsClient: NSObject, ObservableObject {
     func connect() {
         guard webSocketTask == nil else { return }
 
-        var request = URLRequest(url: URL(string: "wss://api.elevenlabs.io/v1/convai/conversation?agent_id=\(agentId)")!)
+        // Use selected voice ID
+        self.voiceID = Config.selectedVoice.rawValue
+        hasReceivedGreeting = false
+
+        var request = URLRequest(url: URL(string: "wss://api.elevenlabs.io/v1/text-to-speech/\(voiceID)/stream-input?model_id=eleven_turbo_v2")!)
         request.setValue(apiKey, forHTTPHeaderField: "xi-api-key")
 
         let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
@@ -109,6 +114,13 @@ class ElevenLabsClient: NSObject, ObservableObject {
 
             if type == "transcript" {
                 if let transcript = json["text"] as? String {
+                    // Skip the greeting
+                    if !hasReceivedGreeting && transcript.contains("I'm Cael") {
+                        hasReceivedGreeting = true
+                        print("[ElevenLabs] Skipped greeting")
+                        return
+                    }
+
                     lastTranscript = transcript
                     print("[ElevenLabs] Transcript: \(transcript)")
 
@@ -116,6 +128,12 @@ class ElevenLabsClient: NSObject, ObservableObject {
                     NotificationCenter.default.post(name: .elevenLabsTranscript, object: nil)
                 }
             } else if type == "audio" {
+                // Skip audio for greeting
+                if !hasReceivedGreeting {
+                    hasReceivedGreeting = true
+                    print("[ElevenLabs] Skipped greeting audio")
+                    return
+                }
                 // TODO: Decode base64 audio and play via AVAudioPlayer
                 print("[ElevenLabs] Received audio chunk")
             }

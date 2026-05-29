@@ -3,6 +3,8 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var voiceLoop = VoiceLoop()
     @State private var isHealthy = false
+    @State private var showVoicePicker = false
+    @State private var selectedVoice = Config.selectedVoice
 
     var body: some View {
         ZStack {
@@ -15,6 +17,25 @@ struct ContentView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 40) {
+                // Voice picker button
+                HStack {
+                    Spacer()
+                    Button(action: { showVoicePicker = true }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "person.wave.2.fill")
+                                .font(.caption)
+                            Text(selectedVoice.displayName)
+                                .font(.caption)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.white.opacity(0.2))
+                        .cornerRadius(16)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.trailing)
+                }
+
                 // Status
                 VStack(spacing: 8) {
                     Image(systemName: statusIcon)
@@ -84,6 +105,20 @@ struct ContentView: View {
         }
         .task {
             isHealthy = await voiceLoop.checkConnection()
+        }
+        .sheet(isPresented: $showVoicePicker) {
+            VoiceSelector(selectedVoice: $selectedVoice)
+        }
+        .onChange(of: selectedVoice) { _, newVoice in
+            Config.selectedVoice = newVoice
+            // Reconnect with new voice if active
+            if voiceLoop.isActive {
+                voiceLoop.stop()
+                Task {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    voiceLoop.start()
+                }
+            }
         }
     }
 
