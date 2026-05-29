@@ -1,7 +1,7 @@
 import Foundation
 import AVFoundation
 
-/// ElevenLabs WebSocket client for streaming STT/TTS
+/// ElevenLabs Conversational AI WebSocket client
 /// Handles bidirectional audio: mic → STT → text, text → TTS → speaker
 @MainActor
 class ElevenLabsClient: NSObject, ObservableObject {
@@ -12,16 +12,34 @@ class ElevenLabsClient: NSObject, ObservableObject {
 
     private var webSocketTask: URLSessionWebSocketTask?
     private var audioEngine: AVAudioEngine?
-    private var audioPlayer: AVAudioPlayer?
+    private var audioPlayerNode: AVAudioPlayerNode?
+    private var audioFormat: AVAudioFormat?
 
     private let apiKey: String
-    private var voiceID: String
-    private var hasReceivedGreeting = false
+    private var conversationID: String?
 
-    init(apiKey: String, voiceID: String = Config.selectedVoice.rawValue) {
+    init(apiKey: String) {
         self.apiKey = apiKey
-        self.voiceID = voiceID
         super.init()
+        setupAudioEngine()
+    }
+
+    // MARK: - Audio Engine Setup
+
+    private func setupAudioEngine() {
+        audioEngine = AVAudioEngine()
+        audioPlayerNode = AVAudioPlayerNode()
+
+        guard let engine = audioEngine, let playerNode = audioPlayerNode else { return }
+
+        engine.attach(playerNode)
+
+        // Use standard format for playback
+        audioFormat = AVAudioFormat(standardFormatWithSampleRate: 24000, channels: 1)
+
+        if let format = audioFormat {
+            engine.connect(playerNode, to: engine.mainMixerNode, format: format)
+        }
     }
 
     // MARK: - Connection
@@ -29,11 +47,11 @@ class ElevenLabsClient: NSObject, ObservableObject {
     func connect() {
         guard webSocketTask == nil else { return }
 
-        // Use selected voice ID
-        self.voiceID = Config.selectedVoice.rawValue
-        hasReceivedGreeting = false
+        // Use Conversational AI endpoint with selected voice
+        let voiceID = Config.selectedVoice.rawValue
+        let urlString = "wss://api.elevenlabs.io/v1/convai/conversation?agent_id=\(voiceID)"
 
-        var request = URLRequest(url: URL(string: "wss://api.elevenlabs.io/v1/text-to-speech/\(voiceID)/stream-input?model_id=eleven_turbo_v2")!)
+        var request = URLRequest(url: URL(string: urlString)!)
         request.setValue(apiKey, forHTTPHeaderField: "xi-api-key")
 
         let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
@@ -43,10 +61,11 @@ class ElevenLabsClient: NSObject, ObservableObject {
         receiveMessage()
 
         isConnected = true
-        print("[ElevenLabs] Connected")
+        print("[ElevenLabs] Connected to Conversational AI")
     }
 
     func disconnect() {
+        stopListening()
         webSocketTask?.cancel(with: .goingAway, reason: nil)
         webSocketTask = nil
         isConnected = false
@@ -57,13 +76,26 @@ class ElevenLabsClient: NSObject, ObservableObject {
 
     func startListening() {
         guard isConnected else { return }
+        guard let engine = audioEngine else { return }
 
-        // TODO: Start audio engine, capture mic, send PCM chunks via WebSocket
-        isListening = true
-        print("[ElevenLabs] Started listening")
+        do {
+            // Start audio engine for playback
+            if !engine.isRunning {
+                try engine.start()
+            }
+            audioPlayerNode?.play()
+
+            isListening = true
+            print("[ElevenLabs] Started listening")
+        } catch {
+            self.error = "Audio engine failed: \(error.localizedDescription)"
+            print("[ElevenLabs] Audio engine error: \(error)")
+        }
     }
 
     func stopListening() {
+        audioPlayerNode?.stop()
+        audioEngine?.stop()
         isListening = false
         print("[ElevenLabs] Stopped listening")
     }
@@ -71,13 +103,19 @@ class ElevenLabsClient: NSObject, ObservableObject {
     func sendText(_ text: String) {
         guard isConnected else { return }
 
-        // Send text message to trigger TTS response
-        let message = ["type": "text", "text": text]
-        guard let data = try? JSONSerialization.data(withJSONObject: message) else { return }
+        let message: [String: Any] = [
+            "type": "text_input",
+            "text": text
+        ]
 
-        webSocketTask?.send(.string(String(data: data, encoding: .utf8)!)) { error in
+        guard let data = try? JSONSerialization.data(withJSONObject: message),
+              let jsonString = String(data: data, encoding: .utf8) else { return }
+
+        webSocketTask?.send(.string(jsonString)) { error in
             if let error = error {
                 print("[ElevenLabs] Send error: \(error)")
+            } else {
+                print("[ElevenLabs] Sent: \(text)")
             }
         }
     }
@@ -91,7 +129,7 @@ class ElevenLabsClient: NSObject, ObservableObject {
             switch result {
             case .success(let message):
                 Task { @MainActor in
-                    self.handleMessage(message)
+                    await self.handleMessage(message)
                 }
                 self.receiveMessage()
 
@@ -104,47 +142,72 @@ class ElevenLabsClient: NSObject, ObservableObject {
         }
     }
 
-    private func handleMessage(_ message: URLSessionWebSocketTask.Message) {
+    private func handleMessage(_ message: URLSessionWebSocketTask.Message) async {
         switch message {
         case .string(let text):
             // Parse JSON response
             guard let data = text.data(using: .utf8),
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let type = json["type"] as? String else { return }
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
 
-            if type == "transcript" {
-                if let transcript = json["text"] as? String {
-                    // Skip the greeting
-                    if !hasReceivedGreeting && transcript.contains("I'm Cael") {
-                        hasReceivedGreeting = true
-                        print("[ElevenLabs] Skipped greeting")
-                        return
+            if let type = json["type"] as? String {
+                switch type {
+                case "conversation_initiation_metadata":
+                    if let convID = json["conversation_id"] as? String {
+                        conversationID = convID
+                        print("[ElevenLabs] Conversation ID: \(convID)")
                     }
 
-                    lastTranscript = transcript
-                    print("[ElevenLabs] Transcript: \(transcript)")
+                case "user_transcript":
+                    if let transcript = json["user_transcript"] as? String {
+                        lastTranscript = transcript
+                        print("[ElevenLabs] User said: \(transcript)")
 
-                    // Notify VoiceLoop
-                    NotificationCenter.default.post(name: .elevenLabsTranscript, object: nil)
+                        // Notify VoiceLoop
+                        NotificationCenter.default.post(name: .elevenLabsTranscript, object: nil)
+                    }
+
+                case "audio":
+                    // Audio response from AI
+                    if let audioBase64 = json["audio_event"] as? String {
+                        await playAudioChunk(base64: audioBase64)
+                    }
+
+                default:
+                    print("[ElevenLabs] Unknown type: \(type)")
                 }
-            } else if type == "audio" {
-                // Skip audio for greeting
-                if !hasReceivedGreeting {
-                    hasReceivedGreeting = true
-                    print("[ElevenLabs] Skipped greeting audio")
-                    return
-                }
-                // TODO: Decode base64 audio and play via AVAudioPlayer
-                print("[ElevenLabs] Received audio chunk")
             }
 
         case .data(let data):
-            // Binary audio data
-            print("[ElevenLabs] Received binary audio: \(data.count) bytes")
+            // Binary audio data (PCM)
+            await playAudioData(data)
 
         @unknown default:
             break
         }
+    }
+
+    // MARK: - Audio Playback
+
+    private func playAudioChunk(base64: String) async {
+        guard let audioData = Data(base64Encoded: base64) else { return }
+        await playAudioData(audioData)
+    }
+
+    private func playAudioData(_ data: Data) async {
+        guard let playerNode = audioPlayerNode,
+              let format = audioFormat else { return }
+
+        // Convert data to PCM buffer
+        let frameCount = UInt32(data.count) / format.streamDescription.pointee.mBytesPerFrame
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else { return }
+
+        buffer.frameLength = frameCount
+        data.withUnsafeBytes { ptr in
+            guard let baseAddress = ptr.baseAddress else { return }
+            memcpy(buffer.audioBufferList.pointee.mBuffers.mData, baseAddress, data.count)
+        }
+
+        playerNode.scheduleBuffer(buffer, completionHandler: nil)
     }
 }
 

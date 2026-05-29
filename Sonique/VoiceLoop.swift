@@ -19,10 +19,7 @@ class VoiceLoop: ObservableObject {
     private var isProcessing = false
 
     init() {
-        self.elevenLabs = ElevenLabsClient(
-            apiKey: Config.elevenlabsAPIKey,
-            agentId: Config.elevenlabsAgentID
-        )
+        self.elevenLabs = ElevenLabsClient(apiKey: Config.elevenlabsAPIKey)
 
         // Monitor transcript changes
         Task {
