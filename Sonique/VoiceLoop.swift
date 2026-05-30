@@ -54,7 +54,8 @@ class VoiceLoop: ObservableObject {
     private func observeTranscripts() async {
         // Watch for new transcripts from ElevenLabs
         for await _ in NotificationCenter.default.notifications(named: .elevenLabsTranscript) {
-            guard let transcript = elevenLabs.lastTranscript, !transcript.isEmpty else { continue }
+            let transcript = elevenLabs.lastTranscript
+            guard !transcript.isEmpty else { continue }
             guard !isProcessing else { continue }
 
             isProcessing = true
