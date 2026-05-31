@@ -16,6 +16,7 @@
 		EDAD47EA8D3B00AC2541F23A /* SoniqueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5D54884BF2700547B33C65E /* SoniqueApp.swift */; };
 		F38D40D58C58985E269E064B /* WebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D3A4DED83E36A55DDDCE959 /* WebSocketClient.swift */; };
 		FD354B38A1B5A35514512A28 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A793446A9BBB7A765178A683 /* ContentView.swift */; };
+		FF1A00000000000000ASSET1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FF1A00000000000000ASSET0 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 		CDEE4E65BD1368173EB33E93 /* VoiceSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VoiceSelector.swift; path = Sonique/VoiceSelector.swift; sourceTree = SOURCE_ROOT; };
 		D8F04A6A893C92D026BF8A2F /* VoiceLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VoiceLoop.swift; path = Sonique/VoiceLoop.swift; sourceTree = SOURCE_ROOT; };
 		E5D54884BF2700547B33C65E /* SoniqueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SoniqueApp.swift; path = Sonique/SoniqueApp.swift; sourceTree = SOURCE_ROOT; };
+		FF1A00000000000000ASSET0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Sonique/Resources/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +57,7 @@
 				D8F04A6A893C92D026BF8A2F /* VoiceLoop.swift */,
 				2D3A4DED83E36A55DDDCE959 /* WebSocketClient.swift */,
 				671A40B7929AC4785513019C /* HTTPClient.swift */,
+				FF1A00000000000000ASSET0 /* Assets.xcassets */,
 			);
 			sourceTree = "<group>";
 		};
@@ -128,6 +131,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FF1A00000000000000ASSET1 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -156,7 +160,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 36;
+				CURRENT_PROJECT_VERSION = 39;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -185,7 +189,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 36;
+				CURRENT_PROJECT_VERSION = 39;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
