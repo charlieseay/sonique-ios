@@ -24,6 +24,8 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Sonique needs microphone access to process your voice commands.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Sonique needs speech recognition to understand your voice commands.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

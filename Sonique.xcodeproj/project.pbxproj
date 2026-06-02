@@ -15,14 +15,14 @@
 		D1864FD5AF3143B3F0797457 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 671A40B7929AC4785513019C /* HTTPClient.swift */; };
 		EAC245018BD75F904B3DFA71 /* VoiceSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDEE4E65BD1368173EB33E93 /* VoiceSelector.swift */; };
 		EDAD47EA8D3B00AC2541F23A /* SoniqueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5D54884BF2700547B33C65E /* SoniqueApp.swift */; };
-		F38D40D58C58985E269E064B /* WebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D3A4DED83E36A55DDDCE959 /* WebSocketClient.swift */; };
 		FD354B38A1B5A35514512A28 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A793446A9BBB7A765178A683 /* ContentView.swift */; };
 		FF1A00000000000000ASSET1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FF1A00000000000000ASSET0 /* Assets.xcassets */; };
+		719D9B09B636AF5231895776 /* SpeechRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8E8E71EEE31D989E18DE004 /* SpeechRecognitionService.swift */; };
+		C3D2F48450249A7B5140E88E /* ElevenLabsTTSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D92114815965EB8C6A874BD /* ElevenLabsTTSClient.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		14CE437189C0E4421DAF830B /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Config.swift; path = Sonique/Config.swift; sourceTree = SOURCE_ROOT; };
-		2D3A4DED83E36A55DDDCE959 /* WebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WebSocketClient.swift; path = Sonique/WebSocketClient.swift; sourceTree = SOURCE_ROOT; };
 		3F73A4432FCE86A90057ED63 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3FA000000000000000000018 /* Sonique.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sonique.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FC595A32F998A2100BEFC6F /* Sonique.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Sonique.entitlements; sourceTree = "<group>"; };
@@ -32,6 +32,8 @@
 		D8F04A6A893C92D026BF8A2F /* VoiceLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VoiceLoop.swift; path = Sonique/VoiceLoop.swift; sourceTree = SOURCE_ROOT; };
 		E5D54884BF2700547B33C65E /* SoniqueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SoniqueApp.swift; path = Sonique/SoniqueApp.swift; sourceTree = SOURCE_ROOT; };
 		FF1A00000000000000ASSET0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Sonique/Resources/Assets.xcassets; sourceTree = SOURCE_ROOT; };
+		E8E8E71EEE31D989E18DE004 /* SpeechRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionService.swift; sourceTree = "<group>"; };
+		2D92114815965EB8C6A874BD /* ElevenLabsTTSClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevenLabsTTSClient.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,7 +60,6 @@
 				A793446A9BBB7A765178A683 /* ContentView.swift */,
 				CDEE4E65BD1368173EB33E93 /* VoiceSelector.swift */,
 				D8F04A6A893C92D026BF8A2F /* VoiceLoop.swift */,
-				2D3A4DED83E36A55DDDCE959 /* WebSocketClient.swift */,
 				671A40B7929AC4785513019C /* HTTPClient.swift */,
 				FF1A00000000000000ASSET0 /* Assets.xcassets */,
 			);
@@ -151,7 +152,6 @@
 				FD354B38A1B5A35514512A28 /* ContentView.swift in Sources */,
 				EAC245018BD75F904B3DFA71 /* VoiceSelector.swift in Sources */,
 				91314C8980E6AC4B72F59493 /* VoiceLoop.swift in Sources */,
-				F38D40D58C58985E269E064B /* WebSocketClient.swift in Sources */,
 				D1864FD5AF3143B3F0797457 /* HTTPClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

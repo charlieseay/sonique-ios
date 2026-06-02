@@ -2,11 +2,9 @@ import Foundation
 import AVFoundation
 
 /// Orchestrates the full voice assistant loop:
-/// 1. User speaks → mic
-/// 2. Audio → ElevenLabs WebSocket → STT transcript
-/// 3. Transcript → SoniqueBar HTTP API → command execution
-/// 4. Response text → ElevenLabs → TTS audio
-/// 5. TTS audio → speaker playback
+/// 1. User speaks → Apple Speech Recognition → transcript
+/// 2. Transcript → SoniqueBar HTTP API → command execution
+/// 3. Response text → ElevenLabs TTS → audio playback
 @MainActor
 class VoiceLoop: ObservableObject {
     @Published var isActive = false
@@ -14,9 +12,10 @@ class VoiceLoop: ObservableObject {
     @Published var lastResponse = ""
     @Published var error: String?
     @Published var isInitializing = false
+    @Published var isProcessing = false
 
-    private var elevenLabs: ElevenLabsClient?
-    private var isProcessing = false
+    private var speechRecognition: SpeechRecognitionService?
+    private var ttsClient: ElevenLabsTTSClient?
 
     init() {
         // Monitor transcript changes
@@ -30,36 +29,52 @@ class VoiceLoop: ObservableObject {
     func start() async {
         guard !isActive else { return }
 
-        // Fetch API key and initialize client if needed
-        if elevenLabs == nil {
+        // Initialize services if needed
+        if speechRecognition == nil {
             isInitializing = true
 
-            do {
-                let apiKey = try await Config.getAPIKey()
-                elevenLabs = ElevenLabsClient(apiKey: apiKey)
-                isInitializing = false
-            } catch {
-                self.error = "Failed to fetch API key: \(error.localizedDescription)"
+            // Request permissions
+            let sttService = SpeechRecognitionService()
+            let hasPermission = await sttService.requestPermission()
+
+            guard hasPermission else {
+                self.error = "Microphone or speech recognition permission denied"
                 isInitializing = false
                 return
             }
+
+            speechRecognition = sttService
+
+            // Initialize TTS client
+            do {
+                let apiKey = try await Config.getAPIKey()
+                ttsClient = ElevenLabsTTSClient(apiKey: apiKey)
+            } catch {
+                self.error = "Failed to initialize TTS: \(error.localizedDescription)"
+                isInitializing = false
+                return
+            }
+
+            isInitializing = false
         }
 
-        guard let client = elevenLabs else { return }
+        guard let stt = speechRecognition else { return }
 
-        client.connect()
-        client.startListening()
-        isActive = true
-
-        print("[VoiceLoop] Started")
+        // Start listening
+        do {
+            try stt.startListening()
+            isActive = true
+            print("[VoiceLoop] Started")
+        } catch {
+            self.error = "Failed to start listening: \(error.localizedDescription)"
+        }
     }
 
     func stop() {
         guard isActive else { return }
-        guard let client = elevenLabs else { return }
 
-        client.stopListening()
-        client.disconnect()
+        speechRecognition?.stopListening()
+        ttsClient?.stop()
         isActive = false
 
         print("[VoiceLoop] Stopped")
@@ -68,11 +83,9 @@ class VoiceLoop: ObservableObject {
     // MARK: - Voice Loop Pipeline
 
     private func observeTranscripts() async {
-        // Watch for new transcripts from ElevenLabs
-        for await _ in NotificationCenter.default.notifications(named: .elevenLabsTranscript) {
-            guard let client = elevenLabs else { continue }
-
-            let transcript = client.lastTranscript
+        // Watch for completed transcripts
+        for await notification in NotificationCenter.default.notifications(named: .speechTranscriptComplete) {
+            guard let transcript = notification.userInfo?["transcript"] as? String else { continue }
             guard !transcript.isEmpty else { continue }
             guard !isProcessing else { continue }
 
@@ -88,8 +101,10 @@ class VoiceLoop: ObservableObject {
 
                 print("[VoiceLoop] Response: \(response)")
 
-                // Send response back to ElevenLabs for TTS
-                client.sendText(response)
+                // Speak response via ElevenLabs TTS
+                if let tts = ttsClient {
+                    try await tts.speak(response, voice: Config.selectedVoice)
+                }
 
             } catch {
                 self.error = error.localizedDescription
@@ -110,8 +125,4 @@ class VoiceLoop: ObservableObject {
             return false
         }
     }
-}
-
-extension Notification.Name {
-    static let elevenLabsTranscript = Notification.Name("elevenLabsTranscript")
 }
