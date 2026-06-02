@@ -47,6 +47,11 @@ class ElevenLabsTTSClient: NSObject, ObservableObject {
     func speak(_ text: String, voice: ElevenLabsVoice = .josh) async throws {
         guard !text.isEmpty else { return }
 
+        // Configure audio session for playback
+        let audioSession = AVAudioSession.sharedInstance()
+        try audioSession.setCategory(.playback, mode: .default, options: [])
+        try audioSession.setActive(true)
+
         isPlaying = true
         print("[TTS] Speaking: \(text)")
 

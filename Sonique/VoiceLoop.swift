@@ -13,9 +13,14 @@ class VoiceLoop: ObservableObject {
     @Published var error: String?
     @Published var isInitializing = false
     @Published var isProcessing = false
+    @Published var debugLog: [String] = []
 
     private var speechRecognition: SpeechRecognitionService?
     private var ttsClient: ElevenLabsTTSClient?
+
+    var currentTranscript: String {
+        speechRecognition?.transcript ?? ""
+    }
 
     init() {
         // Monitor transcript changes
@@ -27,18 +32,27 @@ class VoiceLoop: ObservableObject {
     // MARK: - Control
 
     func start() async {
-        guard !isActive else { return }
+        guard !isActive else {
+            print("[VoiceLoop] Already active, ignoring")
+            return
+        }
+
+        debugLog.append("Starting...")
 
         // Initialize services if needed
         if speechRecognition == nil {
             isInitializing = true
+            debugLog.append("Initializing services...")
 
             // Request permissions
             let sttService = SpeechRecognitionService()
+            debugLog.append("Requesting permissions...")
             let hasPermission = await sttService.requestPermission()
+            debugLog.append("Permission: \(hasPermission)")
 
             guard hasPermission else {
-                self.error = "Microphone or speech recognition permission denied"
+                self.error = "Permissions denied"
+                debugLog.append("ERROR: Permissions denied")
                 isInitializing = false
                 return
             }
@@ -47,26 +61,36 @@ class VoiceLoop: ObservableObject {
 
             // Initialize TTS client
             do {
+                debugLog.append("Fetching API key...")
                 let apiKey = try await Config.getAPIKey()
+                debugLog.append("Initializing TTS...")
                 ttsClient = ElevenLabsTTSClient(apiKey: apiKey)
+                debugLog.append("TTS ready")
             } catch {
-                self.error = "Failed to initialize TTS: \(error.localizedDescription)"
+                self.error = "TTS init failed: \(error.localizedDescription)"
+                debugLog.append("ERROR: TTS - \(error.localizedDescription)")
                 isInitializing = false
                 return
             }
 
             isInitializing = false
+            debugLog.append("Services ready")
         }
 
-        guard let stt = speechRecognition else { return }
+        guard let stt = speechRecognition else {
+            debugLog.append("ERROR: No STT service")
+            return
+        }
 
         // Start listening
         do {
+            debugLog.append("Starting STT...")
             try stt.startListening()
             isActive = true
-            print("[VoiceLoop] Started")
+            debugLog.append("STT STARTED")
         } catch {
-            self.error = "Failed to start listening: \(error.localizedDescription)"
+            self.error = "Start failed: \(error.localizedDescription)"
+            debugLog.append("ERROR: \(error.localizedDescription)")
         }
     }
 

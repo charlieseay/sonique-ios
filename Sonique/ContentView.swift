@@ -58,6 +58,13 @@ struct ContentView: View {
                     Text(statusText)
                         .font(.headline)
                         .foregroundColor(.secondary)
+
+                    // Debug info - show live transcript
+                    if voiceLoop.isActive {
+                        Text("Live: '\(voiceLoop.currentTranscript)'")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                    }
                 }
 
                 // Microphone button
@@ -107,6 +114,22 @@ struct ContentView: View {
                     .padding(.horizontal)
                 }
 
+                // Debug log
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(Array(voiceLoop.debugLog.enumerated()), id: \.offset) { _, log in
+                            Text(log)
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundColor(.yellow)
+                        }
+                    }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.black.opacity(0.5))
+                }
+                .frame(height: 150)
+                .padding(.horizontal)
+
                 Spacer()
             }
             .padding()
@@ -130,6 +153,13 @@ struct ContentView: View {
                     await voiceLoop.start()
                 }
             }
+        }
+        .alert("Error", isPresented: .constant(voiceLoop.error != nil)) {
+            Button("OK") {
+                voiceLoop.error = nil
+            }
+        } message: {
+            Text(voiceLoop.error ?? "Unknown error")
         }
     }
 
