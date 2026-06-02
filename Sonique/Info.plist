@@ -23,9 +23,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Sonique uses your microphone to listen to your voice commands so you can control your smart home, query information, and interact with your personal assistant hands-free.</string>
+	<string>Sonique uses your microphone to capture your voice so you can issue voice commands to control smart home devices, ask questions, and manage tasks hands-free.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Sonique uses speech recognition to convert your spoken voice commands into text so the app can understand and respond to your requests, such as controlling your smart home devices, answering questions, and managing tasks.</string>
+	<string>Sonique uses speech recognition to convert your voice commands into text, enabling you to control smart home devices, query information, and interact with your personal assistant through natural voice input.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
