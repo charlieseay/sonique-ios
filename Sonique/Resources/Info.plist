@@ -19,7 +19,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>2.0.0</string>
 	<key>CFBundleVersion</key>
-	<string>43</string>
+	<string>44</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
@@ -51,7 +51,9 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Sonique does not use the camera. This permission is declared because an embedded advertising SDK references camera APIs.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Sonique needs microphone access for voice commands</string>
+	<string>Sonique uses your microphone to capture your voice so you can issue voice commands to control smart home devices, ask questions, and manage tasks hands-free.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Sonique uses speech recognition to convert your voice commands into text, enabling you to control smart home devices, query information, and interact with your personal assistant through natural voice input.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Sonique does not access photos. This permission is declared because an embedded advertising SDK references photo library APIs.</string>
 	<key>NSUserTrackingUsageDescription</key>
