@@ -111,13 +111,7 @@ class ElevenLabsTTSClient: NSObject, ObservableObject {
 
         // Play the buffer
         if !engine.isRunning {
-            do {
-                try engine.start()
-            } catch {
-                print("[TTS] Engine start error: \(error)")
-                isPlaying = false
-                return
-            }
+            try? engine.start()
         }
 
         playerNode.scheduleBuffer(buffer) { [weak self] in

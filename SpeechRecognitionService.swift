@@ -25,11 +25,7 @@ class SpeechRecognitionService: ObservableObject {
         }
 
         // Request microphone permission
-        let micStatus = await withCheckedContinuation { continuation in
-            AVAudioApplication.requestRecordPermission { granted in
-                continuation.resume(returning: granted)
-            }
-        }
+        let micStatus = await AVAudioApplication.requestRecordPermission()
         guard micStatus else {
             error = "Microphone permission denied"
             return false
