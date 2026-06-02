@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		23DA4ACE8CFA741DF5BD9C1B /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CE437189C0E4421DAF830B /* Config.swift */; };
+		3F73A4442FCE86A90057ED63 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F73A4432FCE86A90057ED63 /* SettingsView.swift */; };
 		3F8E06692F99DA5C00F7E36D /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 3F8E06682F99DA5C00F7E36D /* GoogleMobileAds */; };
 		3FA000000000000000000017 /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3FA000000000000000000016 /* LiveKit */; };
 		91314C8980E6AC4B72F59493 /* VoiceLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F04A6A893C92D026BF8A2F /* VoiceLoop.swift */; };
@@ -22,6 +23,7 @@
 /* Begin PBXFileReference section */
 		14CE437189C0E4421DAF830B /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Config.swift; path = Sonique/Config.swift; sourceTree = SOURCE_ROOT; };
 		2D3A4DED83E36A55DDDCE959 /* WebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WebSocketClient.swift; path = Sonique/WebSocketClient.swift; sourceTree = SOURCE_ROOT; };
+		3F73A4432FCE86A90057ED63 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3FA000000000000000000018 /* Sonique.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sonique.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FC595A32F998A2100BEFC6F /* Sonique.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Sonique.entitlements; sourceTree = "<group>"; };
 		671A40B7929AC4785513019C /* HTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HTTPClient.swift; path = Sonique/HTTPClient.swift; sourceTree = SOURCE_ROOT; };
@@ -48,6 +50,7 @@
 		3FA000000000000000000002 = {
 			isa = PBXGroup;
 			children = (
+				3F73A4432FCE86A90057ED63 /* SettingsView.swift */,
 				3FC595A32F998A2100BEFC6F /* Sonique.entitlements */,
 				3FA000000000000000000003 /* Products */,
 				E5D54884BF2700547B33C65E /* SoniqueApp.swift */,
@@ -143,6 +146,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EDAD47EA8D3B00AC2541F23A /* SoniqueApp.swift in Sources */,
+				3F73A4442FCE86A90057ED63 /* SettingsView.swift in Sources */,
 				23DA4ACE8CFA741DF5BD9C1B /* Config.swift in Sources */,
 				FD354B38A1B5A35514512A28 /* ContentView.swift in Sources */,
 				EAC245018BD75F904B3DFA71 /* VoiceSelector.swift in Sources */,
