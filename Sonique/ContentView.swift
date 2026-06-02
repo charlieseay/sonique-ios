@@ -4,6 +4,7 @@ struct ContentView: View {
     @StateObject private var voiceLoop = VoiceLoop()
     @State private var isHealthy = false
     @State private var showVoicePicker = false
+    @State private var showSettings = false
     @State private var selectedVoice = Config.selectedVoice
 
     var body: some View {
@@ -17,9 +18,21 @@ struct ContentView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 40) {
-                // Voice picker button
+                // Top bar with voice picker and settings
                 HStack {
+                    Button(action: { showSettings = true }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.caption)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.white.opacity(0.2))
+                            .cornerRadius(16)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.leading)
+
                     Spacer()
+
                     Button(action: { showVoicePicker = true }) {
                         HStack(spacing: 6) {
                             Image(systemName: "person.wave.2.fill")
@@ -103,6 +116,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showVoicePicker) {
             VoiceSelector(selectedVoice: $selectedVoice)
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView(selectedVoice: $selectedVoice)
         }
         .onChange(of: selectedVoice) { _, newVoice in
             Config.selectedVoice = newVoice

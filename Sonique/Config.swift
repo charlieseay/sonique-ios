@@ -39,11 +39,9 @@ enum Config {
     }
 
     /// SoniqueBar command server endpoint
-    /// Try LAN first for lower latency, fall back to Tailscale
+    /// Reads from UserDefaults (configurable in Settings)
     static var commandServerURL: String {
-        // TODO: Add reachability check for LAN vs Tailscale
-        // For now, prefer LAN when at home
-        return "http://192.168.0.221:8890"
+        UserDefaults.standard.string(forKey: "serverURL") ?? "http://192.168.0.221:8890"
     }
 
     /// Tailscale fallback URL
