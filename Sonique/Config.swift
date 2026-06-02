@@ -2,14 +2,52 @@ import Foundation
 
 enum Config {
     /// ElevenLabs API key for STT/TTS streaming
-    static let elevenlabsAPIKey = "534f60fb2e52d41c88f518c4cf0d6cf14788f34c565c8ecf46dbe5b56c82054e"
+    /// Fetched from SoniqueBar at runtime
+    private static var _cachedAPIKey: String?
+
+    static func getAPIKey() async throws -> String {
+        // Return cached key if available
+        if let cached = _cachedAPIKey {
+            return cached
+        }
+
+        // Fetch from SoniqueBar /config endpoint
+        guard let url = URL(string: "\(commandServerURL)/config") else {
+            throw ConfigError.invalidURL
+        }
+
+        let (data, response) = try await URLSession.shared.data(from: url)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            throw ConfigError.serverError
+        }
+
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let apiKey = json["elevenlabsAPIKey"] as? String else {
+            throw ConfigError.invalidResponse
+        }
+
+        _cachedAPIKey = apiKey
+        return apiKey
+    }
+
+    enum ConfigError: Error {
+        case invalidURL
+        case serverError
+        case invalidResponse
+    }
 
     /// SoniqueBar command server endpoint
-    /// Use Tailscale IP when away from home WiFi
-    static let commandServerURL = "http://100.122.13.35:8890"
+    /// Try LAN first for lower latency, fall back to Tailscale
+    static var commandServerURL: String {
+        // TODO: Add reachability check for LAN vs Tailscale
+        // For now, prefer LAN when at home
+        return "http://192.168.0.221:8890"
+    }
 
-    /// Character limit tracking (50,000/month)
-    static let characterLimit = 50_000
+    /// Tailscale fallback URL
+    static let tailscaleURL = "http://100.122.13.35:8890"
 
     /// UserDefaults key for selected voice
     static let voiceKey = "selectedVoice"

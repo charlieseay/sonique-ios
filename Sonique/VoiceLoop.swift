@@ -13,14 +13,12 @@ class VoiceLoop: ObservableObject {
     @Published var lastTranscript = ""
     @Published var lastResponse = ""
     @Published var error: String?
-    @Published var characterUsage = 0
+    @Published var isInitializing = false
 
-    private let elevenLabs: ElevenLabsClient
+    private var elevenLabs: ElevenLabsClient?
     private var isProcessing = false
 
     init() {
-        self.elevenLabs = ElevenLabsClient(apiKey: Config.elevenlabsAPIKey)
-
         // Monitor transcript changes
         Task {
             await observeTranscripts()
@@ -29,11 +27,28 @@ class VoiceLoop: ObservableObject {
 
     // MARK: - Control
 
-    func start() {
+    func start() async {
         guard !isActive else { return }
 
-        elevenLabs.connect()
-        elevenLabs.startListening()
+        // Fetch API key and initialize client if needed
+        if elevenLabs == nil {
+            isInitializing = true
+
+            do {
+                let apiKey = try await Config.getAPIKey()
+                elevenLabs = ElevenLabsClient(apiKey: apiKey)
+                isInitializing = false
+            } catch {
+                self.error = "Failed to fetch API key: \(error.localizedDescription)"
+                isInitializing = false
+                return
+            }
+        }
+
+        guard let client = elevenLabs else { return }
+
+        client.connect()
+        client.startListening()
         isActive = true
 
         print("[VoiceLoop] Started")
@@ -41,9 +56,10 @@ class VoiceLoop: ObservableObject {
 
     func stop() {
         guard isActive else { return }
+        guard let client = elevenLabs else { return }
 
-        elevenLabs.stopListening()
-        elevenLabs.disconnect()
+        client.stopListening()
+        client.disconnect()
         isActive = false
 
         print("[VoiceLoop] Stopped")
@@ -54,15 +70,14 @@ class VoiceLoop: ObservableObject {
     private func observeTranscripts() async {
         // Watch for new transcripts from ElevenLabs
         for await _ in NotificationCenter.default.notifications(named: .elevenLabsTranscript) {
-            let transcript = elevenLabs.lastTranscript
+            guard let client = elevenLabs else { continue }
+
+            let transcript = client.lastTranscript
             guard !transcript.isEmpty else { continue }
             guard !isProcessing else { continue }
 
             isProcessing = true
             lastTranscript = transcript
-
-            // Track character usage (input)
-            characterUsage += transcript.count
 
             print("[VoiceLoop] Transcript: \(transcript)")
 
@@ -71,13 +86,10 @@ class VoiceLoop: ObservableObject {
                 let response = try await HTTPClient.sendCommand(transcript)
                 lastResponse = response
 
-                // Track character usage (output)
-                characterUsage += response.count
-
                 print("[VoiceLoop] Response: \(response)")
 
                 // Send response back to ElevenLabs for TTS
-                elevenLabs.sendText(response)
+                client.sendText(response)
 
             } catch {
                 self.error = error.localizedDescription

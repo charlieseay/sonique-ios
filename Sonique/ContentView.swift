@@ -95,11 +95,6 @@ struct ContentView: View {
                 }
 
                 Spacer()
-
-                // Character usage
-                Text("\(voiceLoop.characterUsage) / 50,000 characters")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
             }
             .padding()
         }
@@ -116,7 +111,7 @@ struct ContentView: View {
                 voiceLoop.stop()
                 Task {
                     try? await Task.sleep(nanoseconds: 500_000_000)
-                    voiceLoop.start()
+                    await voiceLoop.start()
                 }
             }
         }
@@ -128,13 +123,18 @@ struct ContentView: View {
         if voiceLoop.isActive {
             voiceLoop.stop()
         } else {
-            voiceLoop.start()
+            Task {
+                await voiceLoop.start()
+            }
         }
     }
 
     // MARK: - UI State
 
     private var statusIcon: String {
+        if voiceLoop.isInitializing {
+            return "hourglass"
+        }
         if !isHealthy {
             return "exclamationmark.triangle.fill"
         }
@@ -142,6 +142,9 @@ struct ContentView: View {
     }
 
     private var statusColor: Color {
+        if voiceLoop.isInitializing {
+            return .blue
+        }
         if !isHealthy {
             return .orange
         }
@@ -149,6 +152,9 @@ struct ContentView: View {
     }
 
     private var statusText: String {
+        if voiceLoop.isInitializing {
+            return "Initializing..."
+        }
         if !isHealthy {
             return "Cannot reach SoniqueBar"
         }
