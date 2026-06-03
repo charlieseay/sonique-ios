@@ -13,13 +13,21 @@ class VoiceLoop: ObservableObject {
     @Published var error: String?
     @Published var isInitializing = false
     @Published var isProcessing = false
-    @Published var debugLog: [String] = []
+    @Published var debugLog: [String] = [] {
+        didSet {
+            objectWillChange.send()
+        }
+    }
 
-    private var speechRecognition: SpeechRecognitionService?
+    var speechRecognition: SpeechRecognitionService?
     private var ttsClient: ElevenLabsTTSClient?
 
     var currentTranscript: String {
         speechRecognition?.transcript ?? ""
+    }
+
+    var callbackCount: Int {
+        speechRecognition?.callbackCount ?? 0
     }
 
     init() {
@@ -85,12 +93,16 @@ class VoiceLoop: ObservableObject {
         // Start listening
         do {
             debugLog.append("Starting STT...")
+            objectWillChange.send()
             try stt.startListening()
             isActive = true
-            debugLog.append("STT STARTED")
+            debugLog.append("STT STARTED ✓")
+            objectWillChange.send()
         } catch {
             self.error = "Start failed: \(error.localizedDescription)"
             debugLog.append("ERROR: \(error.localizedDescription)")
+            debugLog.append("Full error: \(error)")
+            objectWillChange.send()
         }
     }
 

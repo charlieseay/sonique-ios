@@ -18,6 +18,17 @@ struct ContentView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 40) {
+                // Error banner
+                if let stt = voiceLoop.speechRecognition, !stt.lastError.isEmpty {
+                    Text(stt.lastError)
+                        .font(.caption)
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.red)
+                        .cornerRadius(8)
+                        .padding(.horizontal)
+                }
+
                 // Top bar with voice picker and settings
                 HStack {
                     Button(action: { showSettings = true }) {
@@ -59,11 +70,23 @@ struct ContentView: View {
                         .font(.headline)
                         .foregroundColor(.secondary)
 
-                    // Debug info - show live transcript
+                    // Debug info - ALWAYS show callback count
+                    Text("Callbacks: \(voiceLoop.callbackCount) | Active: \(voiceLoop.isActive ? "YES" : "NO")")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+
+                    // Show transcript and errors when active
                     if voiceLoop.isActive {
-                        Text("Live: '\(voiceLoop.currentTranscript)'")
-                            .font(.caption)
-                            .foregroundColor(.green)
+                        VStack(spacing: 4) {
+                            Text("Live: '\(voiceLoop.currentTranscript)'")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                            if let stt = voiceLoop.speechRecognition, !stt.lastError.isEmpty {
+                                Text("ERROR: \(stt.lastError)")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                            }
+                        }
                     }
                 }
 
@@ -114,20 +137,30 @@ struct ContentView: View {
                     .padding(.horizontal)
                 }
 
-                // Debug log
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 4) {
-                        ForEach(Array(voiceLoop.debugLog.enumerated()), id: \.offset) { _, log in
-                            Text(log)
-                                .font(.system(size: 10, design: .monospaced))
-                                .foregroundColor(.yellow)
+                // Debug log with file contents button
+                VStack(spacing: 8) {
+                    Button("Show Debug File") {
+                        if let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("debug.log"),
+                           let contents = try? String(contentsOf: url) {
+                            voiceLoop.debugLog = contents.components(separatedBy: "\n")
                         }
                     }
-                    .padding(8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.black.opacity(0.5))
+                    .buttonStyle(.bordered)
+
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(Array(voiceLoop.debugLog.enumerated()), id: \.offset) { _, log in
+                                Text(log)
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .foregroundColor(.yellow)
+                            }
+                        }
+                        .padding(8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.black.opacity(0.5))
+                    }
+                    .frame(height: 150)
                 }
-                .frame(height: 150)
                 .padding(.horizontal)
 
                 Spacer()
