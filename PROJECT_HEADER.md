@@ -60,12 +60,21 @@ open Sonique.xcodeproj
 # Cmd+R to build and run in simulator
 ```
 
-### For App Store
+### For App Store / TestFlight
+**CRITICAL:** Always use the automated script. Never manually invoke `xcodebuild` or export IPAs.
+
 ```bash
-# Xcode: Product → Archive → Organizer
-# Validate and distribute
-# Monitor rejection feedback; update ExportOptions.plist if needed
+cd ~/Projects/sonique-ios
+bash scripts/archive-and-upload.sh
 ```
+
+The script:
+- Archives with automatic provisioning (requires Xcode signed in with Apple ID)
+- Uploads directly to App Store Connect
+- Build appears in TestFlight within 10-15 minutes
+- No manual IPA handling required
+
+**Manual Xcode workflow NOT SUPPORTED** — CLI `xcodebuild` commands fail due to missing keychain authentication
 
 ### Testing
 - Test on real device for microphone + speech recognition
