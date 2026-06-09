@@ -190,16 +190,17 @@ class SpeechRecognitionService: ObservableObject {
                     if !result.isFinal {
                         if transcript == self?.lastTranscript && !transcript.isEmpty {
                             self?.sameTranscriptCount += 1
-                            sttLogger.info("Transcript stable (\(self?.sameTranscriptCount ?? 0)/\(self?.stabilityThreshold ?? 3)): '\(transcript)'")
+                            NSLog("[SONIQUE] VAD: Transcript stable (%d/%d): '%@'", self?.sameTranscriptCount ?? 0, self?.stabilityThreshold ?? 3, transcript)
 
                             // User done speaking - finalize
                             if let count = self?.sameTranscriptCount, let threshold = self?.stabilityThreshold, count >= threshold {
-                                sttLogger.info("✓ Stability threshold reached - finalizing utterance")
+                                NSLog("[SONIQUE] ✓ STABILITY THRESHOLD REACHED - Calling endAudio()")
                                 self?.recognitionRequest?.endAudio()
                                 // isFinal will be true in next callback
                             }
                         } else {
                             // Transcript changed - reset counter
+                            NSLog("[SONIQUE] VAD: Transcript changed from '%@' to '%@' - reset counter", self?.lastTranscript ?? "", transcript)
                             self?.lastTranscript = transcript
                             self?.sameTranscriptCount = 0
                         }
