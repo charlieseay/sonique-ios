@@ -192,9 +192,36 @@ class SpeechRecognitionService: ObservableObject {
                     sttLogger.error("Recognition error: \(error.localizedDescription)")
                     sttLogger.error("Error details - domain: \(errorDomain), code: \(errorCode)")
                     self?.lastError = fullError
+
+                    // Error 301 = recognition request canceled (60-second timeout or interruption)
+                    // Auto-restart if still listening
+                    if errorCode == 301 && errorDomain == "kLSRErrorDomain" {
+                        sttLogger.info("Error 301 detected - auto-restarting recognition")
+                        diagnostics.append("[\(Date())] Auto-restarting after Error 301")
+                        UserDefaults.standard.set(diagnostics, forKey: "SoniqueDiagnostics")
+
+                        // Clean up current session
+                        self?.recognitionTask?.cancel()
+                        self?.recognitionTask = nil
+                        self?.recognitionRequest = nil
+
+                        // Restart recognition after brief delay
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            do {
+                                try self?.startListening()
+                                sttLogger.info("✓ Recognition auto-restarted successfully")
+                            } catch {
+                                sttLogger.error("Failed to auto-restart: \(error.localizedDescription)")
+                                self?.error = "Failed to restart: \(error.localizedDescription)"
+                            }
+                        }
+                        return
+                    }
+
+                    // For other errors, show alert and stop
                     self?.error = fullError  // Show full error with domain and code
 
-                    // FORCE ALERT
+                    // FORCE ALERT for non-301 errors only
                     DispatchQueue.main.async {
                         let alert = UIAlertController(
                             title: "Speech Error",
