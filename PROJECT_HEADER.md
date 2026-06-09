@@ -16,6 +16,12 @@ SwiftUI app for iPhone/iPad that provides voice input/output interface to Soniqu
 
 ---
 
+## Current State
+
+Sonique iOS is a production SwiftUI app targeting iOS 17.0+, in App Store review cycle. Latest commit (65fd71d) updates SpeechRecognitionService. Clean repository (no uncommitted changes). Features voice input/output interface to Sonique backend, ElevenLabs TTS, speech recognition with Error 301 fix (reordered recognition task initialization before audio tap), Tailscale VPN toggle for network switching, and UserDefaults server config. Single-token auth (Phase 1); Authentik OIDC planned for Phase 2.
+
+---
+
 ## Last Decisions
 
 | Decision | Date | Rationale |
@@ -83,11 +89,13 @@ The script:
 
 ---
 
-## Current Phase
+## Next Steps
 
-**Phase 1:** App Store submission (fixing rejection-blocking issues)
+1. **[Priority: High]** Complete App Store review cycle — address any remaining submission feedback; ship Phase 1 to production.
 
-**Next:** Authentik OIDC + multi-account support (Phase 2)
+2. **[Priority: Med]** Phase 2 (Authentik OIDC) — implement multi-account support with device-specific registration; enable team access.
+
+3. **[Priority: Med]** Add offline mode — cache recent conversations and offline TTS; enable voice interaction without network connectivity.
 
 ---
 
