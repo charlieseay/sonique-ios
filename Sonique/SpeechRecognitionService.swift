@@ -20,6 +20,11 @@ class SpeechRecognitionService: ObservableObject {
     private var recognitionTask: SFSpeechRecognitionTask?
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
 
+    // Voice Activity Detection - track last speech time for auto-finalization
+    private var lastSpeechTime: Date?
+    private var silenceTimer: Timer?
+    private let silenceThreshold: TimeInterval = 1.5  // Finalize after 1.5s of silence
+
     // MARK: - Permission
 
     func requestPermission() async -> Bool {
@@ -253,12 +258,18 @@ class SpeechRecognitionService: ObservableObject {
         // NOW install tap AFTER task is created
         inputNode.removeTap(onBus: 0)
         var bufferCount = 0
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
             bufferCount += 1
             if bufferCount == 1 || bufferCount % 50 == 0 {
                 sttLogger.info("Audio buffer #\(bufferCount)")
             }
-            self.recognitionRequest?.append(buffer)
+            self?.recognitionRequest?.append(buffer)
+
+            // Voice Activity Detection - reset silence timer on each audio buffer
+            Task { @MainActor in
+                self?.lastSpeechTime = Date()
+                self?.resetSilenceTimer()
+            }
         }
         sttLogger.info("✓ Audio tap installed, audio will now flow to recognizer")
 
@@ -275,6 +286,9 @@ class SpeechRecognitionService: ObservableObject {
     }
 
     func stopListening() {
+        silenceTimer?.invalidate()
+        silenceTimer = nil
+
         audioEngine?.stop()
         audioEngine?.inputNode.removeTap(onBus: 0)
         recognitionRequest?.endAudio()
@@ -290,6 +304,49 @@ class SpeechRecognitionService: ObservableObject {
 
         isListening = false
         print("[SpeechRecognition] Stopped listening")
+    }
+
+    // MARK: - Voice Activity Detection
+
+    private func resetSilenceTimer() {
+        silenceTimer?.invalidate()
+
+        silenceTimer = Timer.scheduledTimer(withTimeInterval: silenceThreshold, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.handleSilenceDetected()
+            }
+        }
+    }
+
+    private func handleSilenceDetected() {
+        guard isListening else { return }
+
+        sttLogger.info("Silence detected - finalizing utterance")
+
+        // Finalize the current utterance by ending audio
+        // This will trigger isFinal=true in the recognition callback
+        recognitionRequest?.endAudio()
+
+        // Clean up recognition objects
+        recognitionTask?.cancel()
+        recognitionTask = nil
+        recognitionRequest = nil
+
+        // Remove audio tap
+        audioEngine?.inputNode.removeTap(onBus: 0)
+        audioEngine?.stop()
+
+        // Restart recognition immediately for next utterance (continuous listening)
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1s gap
+            if self.isListening {
+                do {
+                    try self.startListening()
+                } catch {
+                    sttLogger.error("Failed to restart after silence: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 }
 
