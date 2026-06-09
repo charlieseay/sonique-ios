@@ -20,11 +20,7 @@ class SpeechRecognitionService: ObservableObject {
     private var recognitionTask: SFSpeechRecognitionTask?
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
 
-    // Voice Activity Detection - transcript-based stability detection
-    private var lastTranscript: String = ""
-    private var sameTranscriptCount: Int = 0
-    private let stabilityThreshold: Int = 3  // 3 identical partial results = user done speaking
-    private var isRestarting = false  // Prevent double-restart on Error 301 during VAD
+    private var isRestarting = false  // Prevent double-restart on Error 301
 
     // MARK: - Permission
 
@@ -83,17 +79,18 @@ class SpeechRecognitionService: ObservableObject {
         let audioSession = AVAudioSession.sharedInstance()
         sttLogger.info("Setting up audio session...")
 
-        // Use .record with Bluetooth HFP (Hands-Free Profile) for headset mic
-        // NOTE: .allowBluetoothA2DP is NOT compatible with .record (playback only)
+        // Use .default mode to enable iOS built-in VAD (not .measurement!)
+        // .measurement = raw audio, no VAD
+        // .default = includes VAD and noise suppression
         try audioSession.setCategory(
             .record,
-            mode: .measurement,
+            mode: .default,
             options: [.allowBluetooth, .duckOthers]
         )
 
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
 
-        sttLogger.info("Audio session configured - Bluetooth HFP enabled for recording")
+        sttLogger.info("Audio session configured - mode: .default (VAD enabled), Bluetooth enabled")
 
         // Diagnostic: Check audio route
         let route = audioSession.currentRoute
@@ -185,29 +182,15 @@ class SpeechRecognitionService: ObservableObject {
                         try? data.append(to: url)
                     }
 
-                    // TRANSCRIPT-BASED VAD: Detect when user stops speaking
-                    // If we see the same transcript multiple times, user is done
-                    if !result.isFinal {
-                        if transcript == self?.lastTranscript && !transcript.isEmpty {
-                            self?.sameTranscriptCount += 1
-                            NSLog("[SONIQUE] VAD: Transcript stable (%d/%d): '%@'", self?.sameTranscriptCount ?? 0, self?.stabilityThreshold ?? 3, transcript)
-
-                            // User done speaking - finalize
-                            if let count = self?.sameTranscriptCount, let threshold = self?.stabilityThreshold, count >= threshold {
-                                NSLog("[SONIQUE] ✓ STABILITY THRESHOLD REACHED - Calling endAudio()")
-                                self?.recognitionRequest?.endAudio()
-                                // isFinal will be true in next callback
-                            }
-                        } else {
-                            // Transcript changed - reset counter
-                            NSLog("[SONIQUE] VAD: Transcript changed from '%@' to '%@' - reset counter", self?.lastTranscript ?? "", transcript)
-                            self?.lastTranscript = transcript
-                            self?.sameTranscriptCount = 0
-                        }
-                    }
-
-                    // If this is a final result, notify and restart for continuous listening
+                    // TRUST iOS BUILT-IN VAD - just wait for isFinal=true
+                    // iOS will set isFinal=true after ~1-2 seconds of silence
+                    // No custom VAD needed!
                     if result.isFinal {
+                        // Ignore empty final results
+                        guard !transcript.isEmpty else {
+                            sttLogger.info("Ignoring empty final result")
+                            return
+                        }
                         sttLogger.info("🔔 FINAL RESULT - Posting .speechTranscriptComplete notification")
                         NSLog("[SONIQUE] 🔔 Posting notification for transcript: %@", transcript)
                         NotificationCenter.default.post(
@@ -216,10 +199,6 @@ class SpeechRecognitionService: ObservableObject {
                             userInfo: ["transcript": transcript]
                         )
                         NSLog("[SONIQUE] 🔔 Notification posted successfully")
-
-                        // Reset VAD state
-                        self?.lastTranscript = ""
-                        self?.sameTranscriptCount = 0
 
                         // Mark as restarting to prevent Error 301 double-restart
                         self?.isRestarting = true
@@ -363,10 +342,6 @@ class SpeechRecognitionService: ObservableObject {
         recognitionTask = nil
         recognitionRequest = nil
         audioEngine = nil
-
-        // Reset VAD state
-        lastTranscript = ""
-        sameTranscriptCount = 0
 
         // Deactivate audio session so TTS can play
         let audioSession = AVAudioSession.sharedInstance()
