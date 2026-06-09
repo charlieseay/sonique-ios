@@ -49,8 +49,17 @@ class ElevenLabsTTSClient: NSObject, ObservableObject {
 
         // Configure audio session for playback
         let audioSession = AVAudioSession.sharedInstance()
-        try audioSession.setCategory(.playback, mode: .default, options: [])
+
+        // Use .playback with options for Bluetooth + volume control
+        try audioSession.setCategory(
+            .playback,
+            mode: .spokenAudio,  // Optimized for voice content
+            options: [.allowBluetooth, .allowBluetoothA2DP, .defaultToSpeaker, .mixWithOthers]
+        )
+
         try audioSession.setActive(true)
+
+        print("[TTS] Audio session configured - category: playback, mode: spokenAudio, Bluetooth enabled")
 
         isPlaying = true
         print("[TTS] Speaking: \(text)")

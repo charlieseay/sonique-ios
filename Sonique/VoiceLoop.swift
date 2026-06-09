@@ -119,35 +119,56 @@ class VoiceLoop: ObservableObject {
     // MARK: - Voice Loop Pipeline
 
     private func observeTranscripts() async {
+        print("[VoiceLoop] 🎧 Listening for .speechTranscriptComplete notifications...")
+
         // Watch for completed transcripts
         for await notification in NotificationCenter.default.notifications(named: .speechTranscriptComplete) {
-            guard let transcript = notification.userInfo?["transcript"] as? String else { continue }
-            guard !transcript.isEmpty else { continue }
-            guard !isProcessing else { continue }
+            print("[VoiceLoop] 🔔 Notification received!")
+
+            guard let transcript = notification.userInfo?["transcript"] as? String else {
+                print("[VoiceLoop] ⚠️ No transcript in notification")
+                continue
+            }
+
+            guard !transcript.isEmpty else {
+                print("[VoiceLoop] ⚠️ Empty transcript")
+                continue
+            }
+
+            if isProcessing {
+                print("[VoiceLoop] ⚠️ Already processing, skipping: '\(transcript)'")
+                continue
+            }
 
             isProcessing = true
             lastTranscript = transcript
 
-            print("[VoiceLoop] Transcript: \(transcript)")
+            print("[VoiceLoop] ✅ Processing transcript: '\(transcript)'")
 
             // Send to CommandServer
             do {
+                print("[VoiceLoop] 📡 Sending to SoniqueBar...")
                 let response = try await HTTPClient.sendCommand(transcript)
                 lastResponse = response
 
-                print("[VoiceLoop] Response: \(response)")
+                print("[VoiceLoop] ✅ Got response: '\(response)'")
 
                 // Speak response via ElevenLabs TTS
                 if let tts = ttsClient {
+                    print("[VoiceLoop] 🔊 Playing TTS...")
                     try await tts.speak(response, voice: Config.selectedVoice)
+                    print("[VoiceLoop] ✅ TTS complete")
+                } else {
+                    print("[VoiceLoop] ⚠️ No TTS client available")
                 }
 
             } catch {
                 self.error = error.localizedDescription
-                print("[VoiceLoop] Error: \(error)")
+                print("[VoiceLoop] ❌ Error: \(error)")
             }
 
             isProcessing = false
+            print("[VoiceLoop] ✅ Ready for next transcript")
         }
     }
 

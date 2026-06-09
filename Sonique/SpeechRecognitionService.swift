@@ -20,10 +20,11 @@ class SpeechRecognitionService: ObservableObject {
     private var recognitionTask: SFSpeechRecognitionTask?
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
 
-    // Voice Activity Detection - track last speech time for auto-finalization
-    private var lastSpeechTime: Date?
-    private var silenceTimer: Timer?
-    private let silenceThreshold: TimeInterval = 1.5  // Finalize after 1.5s of silence
+    // Voice Activity Detection - transcript-based stability detection
+    private var lastTranscript: String = ""
+    private var sameTranscriptCount: Int = 0
+    private let stabilityThreshold: Int = 3  // 3 identical partial results = user done speaking
+    private var isRestarting = false  // Prevent double-restart on Error 301 during VAD
 
     // MARK: - Permission
 
@@ -78,11 +79,21 @@ class SpeechRecognitionService: ObservableObject {
         recognitionTask?.cancel()
         recognitionTask = nil
 
-        // Setup audio session
+        // Setup audio session with Bluetooth support
         let audioSession = AVAudioSession.sharedInstance()
         sttLogger.info("Setting up audio session...")
-        try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+
+        // Use .record with Bluetooth HFP (Hands-Free Profile) for headset mic
+        // NOTE: .allowBluetoothA2DP is NOT compatible with .record (playback only)
+        try audioSession.setCategory(
+            .record,
+            mode: .measurement,
+            options: [.allowBluetooth, .duckOthers]
+        )
+
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+
+        sttLogger.info("Audio session configured - Bluetooth HFP enabled for recording")
 
         // Diagnostic: Check audio route
         let route = audioSession.currentRoute
@@ -174,14 +185,64 @@ class SpeechRecognitionService: ObservableObject {
                         try? data.append(to: url)
                     }
 
-                    // If this is a final result, notify
+                    // TRANSCRIPT-BASED VAD: Detect when user stops speaking
+                    // If we see the same transcript multiple times, user is done
+                    if !result.isFinal {
+                        if transcript == self?.lastTranscript && !transcript.isEmpty {
+                            self?.sameTranscriptCount += 1
+                            sttLogger.info("Transcript stable (\(self?.sameTranscriptCount ?? 0)/\(self?.stabilityThreshold ?? 3)): '\(transcript)'")
+
+                            // User done speaking - finalize
+                            if let count = self?.sameTranscriptCount, let threshold = self?.stabilityThreshold, count >= threshold {
+                                sttLogger.info("✓ Stability threshold reached - finalizing utterance")
+                                self?.recognitionRequest?.endAudio()
+                                // isFinal will be true in next callback
+                            }
+                        } else {
+                            // Transcript changed - reset counter
+                            self?.lastTranscript = transcript
+                            self?.sameTranscriptCount = 0
+                        }
+                    }
+
+                    // If this is a final result, notify and restart for continuous listening
                     if result.isFinal {
-                        sttLogger.info("Final result - posting notification")
+                        sttLogger.info("🔔 FINAL RESULT - Posting .speechTranscriptComplete notification")
+                        NSLog("[SONIQUE] 🔔 Posting notification for transcript: %@", transcript)
                         NotificationCenter.default.post(
                             name: .speechTranscriptComplete,
                             object: nil,
                             userInfo: ["transcript": transcript]
                         )
+                        NSLog("[SONIQUE] 🔔 Notification posted successfully")
+
+                        // Reset VAD state
+                        self?.lastTranscript = ""
+                        self?.sameTranscriptCount = 0
+
+                        // Mark as restarting to prevent Error 301 double-restart
+                        self?.isRestarting = true
+
+                        // Clean up this recognition session
+                        self?.recognitionTask?.cancel()
+                        self?.recognitionTask = nil
+                        self?.recognitionRequest = nil
+                        self?.audioEngine?.inputNode.removeTap(onBus: 0)
+                        self?.audioEngine?.stop()
+
+                        // Restart recognition for next utterance (continuous listening)
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s gap
+                            if let self = self, self.isListening {
+                                do {
+                                    try self.startListening()
+                                    sttLogger.info("✓ Recognition restarted for continuous listening")
+                                } catch {
+                                    sttLogger.error("Failed to restart after final: \(error.localizedDescription)")
+                                }
+                                self.isRestarting = false
+                            }
+                        }
                     }
                 }
 
@@ -199,19 +260,29 @@ class SpeechRecognitionService: ObservableObject {
                     self?.lastError = fullError
 
                     // Error 301 = recognition request canceled (60-second timeout or interruption)
-                    // Auto-restart if still listening
+                    // Auto-restart if still listening (skip if already restarting from VAD)
                     if errorCode == 301 && errorDomain == "kLSRErrorDomain" {
+                        guard let isRestarting = self?.isRestarting, !isRestarting else {
+                            sttLogger.info("Error 301 during VAD restart - ignoring")
+                            return
+                        }
+
                         sttLogger.info("Error 301 detected - auto-restarting recognition")
                         diagnostics.append("[\(Date())] Auto-restarting after Error 301")
                         UserDefaults.standard.set(diagnostics, forKey: "SoniqueDiagnostics")
+
+                        self?.isRestarting = true
 
                         // Clean up current session
                         self?.recognitionTask?.cancel()
                         self?.recognitionTask = nil
                         self?.recognitionRequest = nil
+                        self?.audioEngine?.inputNode.removeTap(onBus: 0)
+                        self?.audioEngine?.stop()
 
                         // Restart recognition after brief delay
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s
                             do {
                                 try self?.startListening()
                                 sttLogger.info("✓ Recognition auto-restarted successfully")
@@ -219,6 +290,7 @@ class SpeechRecognitionService: ObservableObject {
                                 sttLogger.error("Failed to auto-restart: \(error.localizedDescription)")
                                 self?.error = "Failed to restart: \(error.localizedDescription)"
                             }
+                            self?.isRestarting = false
                         }
                         return
                     }
@@ -265,11 +337,7 @@ class SpeechRecognitionService: ObservableObject {
             }
             self?.recognitionRequest?.append(buffer)
 
-            // Voice Activity Detection - reset silence timer on each audio buffer
-            Task { @MainActor in
-                self?.lastSpeechTime = Date()
-                self?.resetSilenceTimer()
-            }
+            // No VAD logic here - we use transcript stability detection instead
         }
         sttLogger.info("✓ Audio tap installed, audio will now flow to recognizer")
 
@@ -286,9 +354,6 @@ class SpeechRecognitionService: ObservableObject {
     }
 
     func stopListening() {
-        silenceTimer?.invalidate()
-        silenceTimer = nil
-
         audioEngine?.stop()
         audioEngine?.inputNode.removeTap(onBus: 0)
         recognitionRequest?.endAudio()
@@ -298,55 +363,16 @@ class SpeechRecognitionService: ObservableObject {
         recognitionRequest = nil
         audioEngine = nil
 
+        // Reset VAD state
+        lastTranscript = ""
+        sameTranscriptCount = 0
+
         // Deactivate audio session so TTS can play
         let audioSession = AVAudioSession.sharedInstance()
         try? audioSession.setActive(false, options: .notifyOthersOnDeactivation)
 
         isListening = false
         print("[SpeechRecognition] Stopped listening")
-    }
-
-    // MARK: - Voice Activity Detection
-
-    private func resetSilenceTimer() {
-        silenceTimer?.invalidate()
-
-        silenceTimer = Timer.scheduledTimer(withTimeInterval: silenceThreshold, repeats: false) { [weak self] _ in
-            Task { @MainActor in
-                self?.handleSilenceDetected()
-            }
-        }
-    }
-
-    private func handleSilenceDetected() {
-        guard isListening else { return }
-
-        sttLogger.info("Silence detected - finalizing utterance")
-
-        // Finalize the current utterance by ending audio
-        // This will trigger isFinal=true in the recognition callback
-        recognitionRequest?.endAudio()
-
-        // Clean up recognition objects
-        recognitionTask?.cancel()
-        recognitionTask = nil
-        recognitionRequest = nil
-
-        // Remove audio tap
-        audioEngine?.inputNode.removeTap(onBus: 0)
-        audioEngine?.stop()
-
-        // Restart recognition immediately for next utterance (continuous listening)
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1s gap
-            if self.isListening {
-                do {
-                    try self.startListening()
-                } catch {
-                    sttLogger.error("Failed to restart after silence: \(error.localizedDescription)")
-                }
-            }
-        }
     }
 }
 
