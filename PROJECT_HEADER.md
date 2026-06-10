@@ -22,6 +22,43 @@ Sonique iOS is a production SwiftUI app targeting iOS 17.0+, in App Store review
 
 ---
 
+## Assessment — 2026-06-10
+
+### Errors & Risks
+[CRIT] Voice pipeline is strictly sequential (listen → process → speak) instead of streaming; latency feels 2–3x slower than Claude iOS voice mode (3–5s vs <1s TTFA). No streaming LLM response handling (VoiceLoop.swift:149-159) means TTS doesn't start until full response received. Audio session `.default` mode in `.record` category (SpeechRecognitionService.swift:85-89) blocks live duplex + barge-in; OSStatus -50 bug indicates incompatibility with Bluetooth + `.default` mode combo.
+
+[HIGH] No interrupt handling (barge-in) — user cannot interrupt mid-response; feels unnatural vs Claude mode. No streaming transcripts — ElevenLabs cloud STT returns full transcript after ~1s silence, not word-by-word; eliminates early LLM inference. Audio session stays in `.record` mode, preventing `.voiceChat` echo cancellation for live duplex.
+
+[MED] ElevenLabs WebSocket dependency adds 500ms–1s cloud STT roundtrip; migrating to on-device (WhisperKit + Silero VAD) would halve initial latency. TTS not pipelined with LLM — synthesis doesn't start until full response text ready; streaming TTS could reduce TTFA by 1–2s.
+
+### Security
+✓ No secrets in code (API key fetched from SoniqueBar, not bundled). ✓ Microphone + speech recognition entitlements correct. ✓ Tailscale toggle properly isolated to UserDefaults.
+
+### Improvements
+1. Replace ElevenLabs cloud STT with WhisperKit (on-device, streaming) + Silero VAD (CoreML) → <400ms to first transcript (vs 500ms–1s cloud)
+2. Wire SoniqueBar to stream LLM responses (SSE or chunked) → detect sentence boundaries → start TTS on first sentence complete → TTFA <1s (vs 2–3s)
+3. Switch audio session to `.voiceChat` mode before TTS; enable barge-in (VAD-based interrupt) → interruptible responses (vs currently not interruptible)
+4. Add TTSQueue for parallel synthesis; implement interrupt logic to stop audio + cancel LLM stream + restart STT
+5. Phase 4: Add AVSpeechSynthesizer fallback for fast cached responses (<200ms TTFA for common phrases)
+
+**Full redesign spec:** See vault note `Voice Pipeline Redesign — 2026-06-10.md` (4-phase plan, latency budgets, component choices, risk analysis).
+
+### Cost
+Minimal: WhisperKit integration via CocoaPods; no new cloud service. Kokoro TTS optional (same interface as ElevenLabs). Time: ~8–10 days for full pipeline (4 phases).
+
+### Performance
+Current: TTFA 2–3s (speech → first audio). Redesigned: <1s TTFA. Full response latency unchanged (~3–5s), but user perceives improvement because audio starts immediately instead of waiting for LLM + TTS.
+
+### Verdict
+**D** (Poor) — Sequential architecture + cloud STT + no streaming LLM + no barge-in make this feel slow and unresponsive vs Claude iOS voice mode. Code quality is good (clean error handling, proper async/await), but architecture is fundamentally request-response, not streaming duplex. Redesign is critical for "feels like Claude" goal. Effort: medium (4 phases, ~8–10 days). Risk: medium (WhisperKit reliability on older iPhone models; Silero VAD tuning per device). Recommend phased rollout: Phase 1 (on-device VAD+ASR) → Phase 2 (streaming LLM) → Phase 3 (barge-in) → Phase 4 (fallbacks).
+
+---
+## Last Updated
+
+2026-06-10 (voice pipeline assessment)
+
+---
+
 ## Last Decisions
 
 | Decision | Date | Rationale |
