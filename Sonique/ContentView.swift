@@ -3,6 +3,8 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var voiceLoop = VoiceLoop()
     @ObservedObject private var profile = AssistantProfile.shared
+    @ObservedObject private var launchState = AppLaunchState.shared
+    @Environment(\.scenePhase) private var scenePhase
     @State private var isHealthy = false
     @State private var showDebug = false
     @State private var showVoicePicker = false
@@ -172,6 +174,15 @@ struct ContentView: View {
         .task {
             isHealthy = await voiceLoop.checkConnection()
             apiKey = (try? await Config.getAPIKey()) ?? ""
+            await maybeAutoStart()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                Task { await maybeAutoStart() }
+            }
+        }
+        .onChange(of: launchState.shouldAutoStartListening) { _, want in
+            if want { Task { await maybeAutoStart() } }
         }
         .sheet(isPresented: $showVoicePicker) {
             VoiceSelector(apiKey: apiKey, selectedVoiceID: $selectedVoiceID)
@@ -187,6 +198,13 @@ struct ContentView: View {
     }
 
     // MARK: - Actions
+
+    /// Auto-start listening when launched via the Siri Shortcut (StartListeningIntent).
+    private func maybeAutoStart() async {
+        guard launchState.shouldAutoStartListening, !voiceLoop.isActive else { return }
+        launchState.shouldAutoStartListening = false
+        await voiceLoop.start()
+    }
 
     private func toggleVoice() {
         if voiceLoop.isActive {

@@ -23,6 +23,11 @@ class VoiceLoop: ObservableObject {
     var sleepAfter: TimeInterval = 30
     private var sleepTimer: Task<Void, Never>?
 
+    /// Hard idle timeout — fully tears down the session (releases mic, closes connections)
+    /// to protect battery + data when left running unattended. Reset on every interaction.
+    var idleShutdownAfter: TimeInterval = 600   // 10 minutes
+    private var idleTimer: Task<Void, Never>?
+
     @Published private(set) var session: VoiceSession?
     private var sessionObservation: AnyCancellable?
     private var ttsClient: ElevenLabsTTSClient?
@@ -79,6 +84,7 @@ class VoiceLoop: ObservableObject {
             debugLog.append("STT STARTED ✓")
             // Ready cue: crescendo chime, then it's listening.
             SoundCues.shared.playReady()
+            armIdleTimer()
         } catch {
             self.error = "Start failed: \(error.localizedDescription)"
             debugLog.append("ERROR: \(error.localizedDescription)")
@@ -88,6 +94,8 @@ class VoiceLoop: ObservableObject {
 
     func stop() {
         guard isActive else { return }
+        cancelSleepTimer()
+        idleTimer?.cancel(); idleTimer = nil
         session?.stop()
         isActive = false
         isProcessing = false
@@ -121,6 +129,7 @@ class VoiceLoop: ObservableObject {
             }
 
             cancelSleepTimer()
+            armIdleTimer()   // any interaction resets the 10-min hard-shutdown clock
             isProcessing = true
             lastTranscript = request
             partialResponse = ""
@@ -175,6 +184,20 @@ class VoiceLoop: ObservableObject {
     private func cancelSleepTimer() {
         sleepTimer?.cancel()
         sleepTimer = nil
+    }
+
+    /// (Re)arm the hard idle-shutdown timer. After idleShutdownAfter with no interaction,
+    /// fully stop — releases the mic + audio session, closing everything to save battery/data.
+    private func armIdleTimer() {
+        idleTimer?.cancel()
+        guard idleShutdownAfter > 0 else { return }
+        idleTimer = Task { @MainActor [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(nanoseconds: UInt64(self.idleShutdownAfter * 1_000_000_000))
+            guard !Task.isCancelled, self.isActive, !self.isProcessing else { return }
+            FileTracer.log("[loop] idle \(Int(self.idleShutdownAfter))s → full shutdown")
+            self.stop()
+        }
     }
 
     private func processAndSpeak(_ transcript: String) async throws {
