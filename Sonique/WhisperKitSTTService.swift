@@ -24,11 +24,21 @@ class WhisperKitSTTService: ObservableObject {
     @Published var modelLoadProgress: Double = 0.0
     @Published var loadStatus: String = ""        // human-readable: what's happening now
     @Published var loadDetail: String = ""        // sub-line: ETA / instructions
+    @Published var liveRMS: Float = 0             // current mic RMS (for on-screen meter)
+    @Published var debugLines: [String] = []      // on-screen VAD/transcript trace
 
     // VAD parameters (tunable)
-    var vadSilenceThreshold: Float = 0.01       // RMS below this = silence
-    var vadSilenceDuration: TimeInterval = 1.4  // Seconds of silence to finalize
-    var vadMinSpeechDuration: TimeInterval = 0.4 // Min speech before we bother transcribing
+    // .voiceChat + .duckOthers attenuates input gain, so speech RMS sits low.
+    // 0.003 reliably catches normal speaking voice without tripping on room noise.
+    var vadSilenceThreshold: Float = 0.003      // RMS below this = silence
+    var vadSilenceDuration: TimeInterval = 1.2  // Seconds of silence to finalize
+    var vadMinSpeechDuration: TimeInterval = 0.3 // Min speech before we bother transcribing
+
+    private var peakRMSThisUtterance: Float = 0
+    private func dbg(_ s: String) {
+        debugLines.append(s)
+        if debugLines.count > 40 { debugLines.removeFirst(debugLines.count - 40) }
+    }
 
     private var whisperKit: WhisperKit?
     private var audioEngine: AVAudioEngine?
@@ -224,14 +234,19 @@ class WhisperKitSTTService: ObservableObject {
         let now = Date()
 
         Task { @MainActor in
+            liveRMS = rms
+
             if rms > vadSilenceThreshold {
                 // Speech detected
                 if !isSpeaking {
                     isSpeaking = true
                     speechStartTime = now
                     silenceStartTime = nil
+                    peakRMSThisUtterance = rms
+                    dbg("🎤 speech start (rms \(String(format: "%.4f", rms)))")
                     whisperLogger.info("VAD: speech started (RMS: \(String(format: "%.4f", rms)))")
                 }
+                peakRMSThisUtterance = max(peakRMSThisUtterance, rms)
                 silenceStartTime = nil
                 audioBuffer.append(contentsOf: samples)
 
@@ -256,9 +271,11 @@ class WhisperKitSTTService: ObservableObject {
                         if speechElapsed >= vadMinSpeechDuration && !audioBuffer.isEmpty && !isTranscribing {
                             let capturedBuffer = audioBuffer
                             audioBuffer = []
+                            dbg("⏹ end \(String(format: "%.1f", speechElapsed))s peak \(String(format: "%.4f", peakRMSThisUtterance)) — transcribing \(capturedBuffer.count) samp")
                             whisperLogger.info("VAD: end of speech (\(String(format: "%.1f", speechElapsed))s) — transcribing \(capturedBuffer.count) samples")
                             await transcribeBuffer(capturedBuffer)
                         } else {
+                            dbg("⏹ dropped (\(String(format: "%.1f", speechElapsed))s < min, or empty)")
                             audioBuffer = []
                         }
 
@@ -283,6 +300,31 @@ class WhisperKitSTTService: ObservableObject {
         return output
     }
 
+    /// True if the transcript is a Whisper non-speech hallucination (sound tags, lone
+    /// punctuation) rather than real spoken words. Whisper emits these on silent/garbled audio.
+    private func isHallucinatedNonSpeech(_ raw: String) -> Bool {
+        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.isEmpty { return true }
+
+        // Strip every (...), [...], *...* group; if nothing meaningful remains, it's a tag-only line.
+        let stripped = text
+            .replacingOccurrences(of: #"\([^)]*\)"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"\[[^\]]*\]"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"\*[^*]*\*"#, with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Remaining must contain at least one letter/number to count as real speech.
+        let hasAlphanumeric = stripped.rangeOfCharacter(from: .alphanumerics) != nil
+        if !hasAlphanumeric { return true }
+
+        // Known thank-you/subscribe hallucinations Whisper emits on silence.
+        let lower = stripped.lowercased()
+        let knownGarbage = ["thank you.", "thanks for watching.", "you", "."]
+        if knownGarbage.contains(lower) { return true }
+
+        return false
+    }
+
     // MARK: - Transcription
 
     private func transcribeBuffer(_ samples: [Float]) async {
@@ -294,9 +336,21 @@ class WhisperKitSTTService: ObservableObject {
             let text = results.first?.text.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
             self.callbackCount += 1
+            dbg("📝 transcript: '\(text)'")
             whisperLogger.info("Transcript #\(self.callbackCount): '\(text)'")
 
             guard !text.isEmpty else {
+                dbg("⚠️ empty transcript — nothing recognized")
+                isTranscribing = false
+                return
+            }
+
+            // Filter Whisper's non-speech hallucinations on near-silent/garbled audio:
+            // bracketed/parenthetical sound tags like "(sighs)", "[music]", "(sadly)",
+            // "*laughs*", and lone punctuation. These poison the LLM (the "why are you sad" loop).
+            if isHallucinatedNonSpeech(text) {
+                dbg("🚫 filtered non-speech: '\(text)'")
+                whisperLogger.info("Filtered Whisper non-speech hallucination: '\(text)'")
                 isTranscribing = false
                 return
             }

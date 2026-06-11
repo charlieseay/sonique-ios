@@ -122,21 +122,50 @@ struct ContentView: View {
 
                 Spacer()
 
-                // Debug log (hidden by default)
+                // Debug panel (hidden by default)
                 if showDebug {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 2) {
-                            ForEach(Array(voiceLoop.debugLog.suffix(30).enumerated()), id: \.offset) { _, line in
-                                Text(line)
+                    VStack(spacing: 4) {
+                        // Live mic level meter vs VAD threshold
+                        if voiceLoop.isActive, let stt = voiceLoop.speechRecognition {
+                            HStack(spacing: 6) {
+                                Text("mic")
                                     .font(.system(size: 9, design: .monospaced))
-                                    .foregroundColor(.green.opacity(0.8))
+                                    .foregroundColor(.white.opacity(0.5))
+                                GeometryReader { geo in
+                                    ZStack(alignment: .leading) {
+                                        Rectangle().fill(Color.white.opacity(0.1))
+                                        // level bar — scaled so 0.03 RMS ≈ full width
+                                        Rectangle()
+                                            .fill(stt.liveRMS > stt.vadSilenceThreshold ? Color.green : Color.gray)
+                                            .frame(width: min(geo.size.width, geo.size.width * CGFloat(stt.liveRMS / 0.03)))
+                                        // threshold marker
+                                        Rectangle().fill(Color.red)
+                                            .frame(width: 1)
+                                            .offset(x: geo.size.width * CGFloat(stt.vadSilenceThreshold / 0.03))
+                                    }
+                                }
+                                .frame(height: 10)
+                                Text(String(format: "%.4f", stt.liveRMS))
+                                    .font(.system(size: 9, design: .monospaced))
+                                    .foregroundColor(.white.opacity(0.5))
                             }
+                            .padding(.horizontal, 8)
                         }
-                        .padding(8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 2) {
+                                ForEach(Array(sttDebugLines.suffix(30).enumerated()), id: \.offset) { _, line in
+                                    Text(line)
+                                        .font(.system(size: 9, design: .monospaced))
+                                        .foregroundColor(.green.opacity(0.8))
+                                }
+                            }
+                            .padding(8)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .frame(height: 150)
+                        .background(Color.black.opacity(0.5))
                     }
-                    .frame(height: 160)
-                    .background(Color.black.opacity(0.5))
                 }
             }
         }
@@ -168,6 +197,11 @@ struct ContentView: View {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
         return "v\(v) (\(b))"
+    }
+
+    // Merge VoiceLoop's pipeline log with WhisperKit's VAD/transcript trace
+    private var sttDebugLines: [String] {
+        voiceLoop.debugLog + (voiceLoop.speechRecognition?.debugLines ?? [])
     }
 
     private var micButtonColor: Color {
