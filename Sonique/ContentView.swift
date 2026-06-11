@@ -213,7 +213,16 @@ struct ContentView: View {
                     .background(Color.black.opacity(0.5))
                 }
             }
+
+            // Ephemeral image artifact (Snapchat-style) — stays until X tapped or the
+            // conversation organically advances (VoiceLoop clears it on the next turn).
+            if let url = voiceLoop.artifactURL {
+                ArtifactOverlay(url: url) { voiceLoop.artifactURL = nil }
+                    .transition(.opacity)
+                    .zIndex(10)
+            }
         }
+        .animation(.easeInOut(duration: 0.25), value: voiceLoop.artifactURL)
         .animation(.easeInOut(duration: 0.2), value: voiceLoop.isActive)
         .animation(.easeInOut(duration: 0.2), value: voiceLoop.partialResponse)
         .task {

@@ -16,6 +16,7 @@ class VoiceLoop: ObservableObject {
     @Published var isProcessing = false
     @Published var isBargeInActive = false
     @Published var isAwake = false   // true = responding to all speech; false = needs wake word
+    @Published var artifactURL: URL? = nil   // ephemeral image to display (Snapchat-style)
     @Published var debugLog: [String] = []
 
     /// Seconds of no interaction after a reply before the assistant "sleeps" (then needs
@@ -140,6 +141,8 @@ class VoiceLoop: ObservableObject {
 
             cancelSleepTimer()
             armIdleTimer()   // any interaction resets the 10-min hard-shutdown clock
+            // New turn → dismiss any showing artifact (the conversation has organically moved on).
+            artifactURL = nil
             isProcessing = true
             lastTranscript = request
             partialResponse = ""
@@ -289,6 +292,12 @@ class VoiceLoop: ObservableObject {
 
         FileTracer.log("[http] streaming \(HTTPClient.activeBaseURL)/command/stream")
         for try await chunk in HTTPClient.sendCommandStreaming(transcript) {
+            // Artifact → show the image (ephemeral). No text on this chunk.
+            if let art = chunk.artifactURL, let url = URL(string: art) {
+                artifactURL = url
+                FileTracer.log("[loop] artifact → \(art)")
+                continue
+            }
             sentenceBuffer += chunk.text + " "
             fullResponse += chunk.text + " "
             partialResponse = fullResponse.trimmingCharacters(in: .whitespaces)

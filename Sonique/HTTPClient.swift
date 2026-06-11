@@ -3,6 +3,7 @@ import Foundation
 struct StreamChunk {
     let text: String
     let isFinal: Bool
+    var artifactURL: String? = nil   // image to display (ephemeral), if any
 }
 
 struct HTTPClient {
@@ -64,6 +65,14 @@ struct HTTPClient {
                             if json["done"] as? Bool == true {
                                 continuation.finish()
                                 return
+                            }
+                            // Artifact line → an image to display on the device.
+                            if let artifact = json["artifact"] as? [String: Any],
+                               artifact["type"] as? String == "image",
+                               let id = artifact["id"] as? String {
+                                let url = "\(HTTPClient.activeBaseURL)/artifact/\(id)"
+                                continuation.yield(StreamChunk(text: "", isFinal: false, artifactURL: url))
+                                continue
                             }
                             if let chunk = json["chunk"] as? String {
                                 let isFinal = json["is_final"] as? Bool ?? false
