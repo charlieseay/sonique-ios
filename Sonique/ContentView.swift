@@ -2,9 +2,11 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var voiceLoop = VoiceLoop()
+    @ObservedObject private var profile = AssistantProfile.shared
     @State private var isHealthy = false
     @State private var showDebug = false
     @State private var showVoicePicker = false
+    @State private var showAssistantSettings = false
     @State private var selectedVoiceID = Config.selectedVoiceID
     @State private var apiKey = ""
 
@@ -16,22 +18,33 @@ struct ContentView: View {
 
             VStack(spacing: 0) {
                 // Top bar
-                HStack(spacing: 16) {
-                    Text(appVersion)
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.3))
-                        .padding(.leading)
+                HStack(spacing: 14) {
+                    // Assistant identity — tap to rename / set photo
+                    Button(action: { showAssistantSettings = true }) {
+                        HStack(spacing: 7) {
+                            if let img = profile.photo {
+                                Image(uiImage: img).resizable().scaledToFill()
+                                    .frame(width: 26, height: 26).clipShape(Circle())
+                            } else {
+                                Circle().fill(Color.purple.opacity(0.4))
+                                    .frame(width: 26, height: 26)
+                                    .overlay(Image(systemName: "waveform").font(.system(size: 12)).foregroundColor(.white))
+                            }
+                            Text(profile.name)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.leading)
 
                     Spacer()
 
                     // Voice picker
                     Button(action: { showVoicePicker = true }) {
-                        HStack(spacing: 5) {
-                            Image(systemName: "waveform.circle")
-                            Text(Config.selectedVoiceName)
-                        }
-                        .font(.system(size: 13))
-                        .foregroundColor(.white.opacity(0.55))
+                        Image(systemName: "waveform.circle")
+                            .font(.system(size: 16))
+                            .foregroundColor(.white.opacity(0.55))
                     }
                     .buttonStyle(.plain)
 
@@ -162,6 +175,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showVoicePicker) {
             VoiceSelector(apiKey: apiKey, selectedVoiceID: $selectedVoiceID)
+        }
+        .sheet(isPresented: $showAssistantSettings) {
+            AssistantSettingsView()
         }
         .alert("Error", isPresented: .constant(voiceLoop.error != nil && !voiceLoop.isInitializing)) {
             Button("OK") { voiceLoop.error = nil }

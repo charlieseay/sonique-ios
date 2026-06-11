@@ -15,7 +15,13 @@ class VoiceLoop: ObservableObject {
     @Published var isInitializing = false
     @Published var isProcessing = false
     @Published var isBargeInActive = false
+    @Published var isAwake = false   // true = responding to all speech; false = needs wake word
     @Published var debugLog: [String] = []
+
+    /// Seconds of no interaction after a reply before the assistant "sleeps" (then needs
+    /// the wake word). 0 = never auto-sleep while the mic is on.
+    var sleepAfter: TimeInterval = 30
+    private var sleepTimer: Task<Void, Never>?
 
     @Published private(set) var session: VoiceSession?
     private var sessionObservation: AnyCancellable?
@@ -69,7 +75,10 @@ class VoiceLoop: ObservableObject {
             try vs.configure()
             try vs.start()
             isActive = true
+            isAwake = true
             debugLog.append("STT STARTED ✓")
+            // Ready cue: crescendo chime, then it's listening.
+            SoundCues.shared.playReady()
         } catch {
             self.error = "Start failed: \(error.localizedDescription)"
             debugLog.append("ERROR: \(error.localizedDescription)")
@@ -82,6 +91,9 @@ class VoiceLoop: ObservableObject {
         session?.stop()
         isActive = false
         isProcessing = false
+        isAwake = false
+        // Sleep cue: decrescendo chime — user will need the wake word next.
+        SoundCues.shared.playSleep()
     }
 
     // MARK: - Pipeline
@@ -92,14 +104,31 @@ class VoiceLoop: ObservableObject {
                   !transcript.isEmpty else { continue }
 
             if isProcessing { continue }  // ignore overlaps; barge-in handled by AEC + pause
+
+            // Wake-word gating: when asleep, only respond if the user said the assistant's
+            // name; strip it from the request. When awake, respond to everything.
+            var request = transcript
+            if !isAwake {
+                let wake = AssistantProfile.shared.wakeWord
+                guard let stripped = stripWakeWord(from: transcript, wake: wake) else {
+                    FileTracer.log("[loop] asleep, no wake word ('\(wake)') in '\(transcript)' — ignoring")
+                    continue
+                }
+                isAwake = true
+                SoundCues.shared.playReady()
+                request = stripped.isEmpty ? "Yes?" : stripped
+                FileTracer.log("[loop] woke on '\(wake)' → '\(request)'")
+            }
+
+            cancelSleepTimer()
             isProcessing = true
-            lastTranscript = transcript
+            lastTranscript = request
             partialResponse = ""
-            debugLog.append("You: \(transcript)")
-            FileTracer.log("[loop] transcript: '\(transcript)' → SoniqueBar")
+            debugLog.append("You: \(request)")
+            FileTracer.log("[loop] transcript: '\(request)' → SoniqueBar")
 
             do {
-                try await processAndSpeak(transcript)
+                try await processAndSpeak(request)
                 FileTracer.log("[loop] done: '\(lastResponse)'")
             } catch {
                 self.error = error.localizedDescription
@@ -108,7 +137,44 @@ class VoiceLoop: ObservableObject {
                 session?.endSpeaking()
             }
             isProcessing = false
+            // After a reply, arm the sleep timer — if no follow-up, go to sleep (needs wake word).
+            armSleepTimer()
         }
+    }
+
+    // MARK: - Wake word + sleep
+
+    /// Return the request with the wake word removed if present, else nil.
+    private func stripWakeWord(from text: String, wake: String) -> String? {
+        let lower = text.lowercased()
+        guard lower.contains(wake) else { return nil }
+        // Remove the wake word and common filler around it ("hey <wake>", "<wake>,").
+        var out = text
+        for variant in ["hey \(wake)", wake] {
+            if let range = out.lowercased().range(of: variant) {
+                out.removeSubrange(range)
+                break
+            }
+        }
+        return out.trimmingCharacters(in: CharacterSet(charactersIn: " ,.!?"))
+    }
+
+    private func armSleepTimer() {
+        cancelSleepTimer()
+        guard sleepAfter > 0 else { return }
+        sleepTimer = Task { @MainActor [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(nanoseconds: UInt64(self.sleepAfter * 1_000_000_000))
+            guard !Task.isCancelled, self.isActive, self.isAwake, !self.isProcessing else { return }
+            self.isAwake = false
+            SoundCues.shared.playSleep()
+            FileTracer.log("[loop] went to sleep — wake word required")
+        }
+    }
+
+    private func cancelSleepTimer() {
+        sleepTimer?.cancel()
+        sleepTimer = nil
     }
 
     private func processAndSpeak(_ transcript: String) async throws {
@@ -148,6 +214,9 @@ class VoiceLoop: ObservableObject {
 
         lastResponse = fullResponse.trimmingCharacters(in: .whitespaces)
         partialResponse = ""
+
+        // Grow the iCloud brain (mobile folder).
+        SoniqueBrain.shared.recordExchange(user: transcript, assistant: lastResponse)
 
         // Resume listening now that all audio has played.
         vs.endSpeaking()
