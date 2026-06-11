@@ -48,8 +48,8 @@ class WhisperKitSTTService: ObservableObject {
 
         do {
             whisperKit = try await WhisperKit(
-                modelFolder: nil,
                 model: "openai_whisper-small.en",
+                modelFolder: nil,
                 verbose: false,
                 logLevel: .none,
                 prewarm: true,
@@ -247,8 +247,8 @@ class WhisperKitSTTService: ObservableObject {
             let results = try await wk.transcribe(audioArray: samples)
             let text = results.first?.text.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
-            callbackCount += 1
-            whisperLogger.info("Transcript #\(callbackCount): '\(text)'")
+            self.callbackCount += 1
+            whisperLogger.info("Transcript #\(self.callbackCount): '\(text)'")
 
             guard !text.isEmpty else {
                 isTranscribing = false

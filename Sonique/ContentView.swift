@@ -3,202 +3,137 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var voiceLoop = VoiceLoop()
     @State private var isHealthy = false
-    @State private var showVoicePicker = false
-    @State private var showSettings = false
-    @State private var selectedVoice = Config.selectedVoice
+    @State private var showDebug = false
 
     var body: some View {
         ZStack {
-            // Background gradient
-            LinearGradient(
-                gradient: Gradient(colors: [.purple.opacity(0.3), .blue.opacity(0.3)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            // Background
+            Color(red: 0.08, green: 0.08, blue: 0.14)
+                .ignoresSafeArea()
 
-            VStack(spacing: 40) {
-                // Error banner
-                if let stt = voiceLoop.speechRecognition, !stt.lastError.isEmpty {
-                    Text(stt.lastError)
-                        .font(.caption)
-                        .foregroundColor(.white)
-                        .padding()
-                        .background(Color.red)
-                        .cornerRadius(8)
-                        .padding(.horizontal)
-                }
-
-                // Top bar with voice picker and settings
+            VStack(spacing: 0) {
+                // Top bar
                 HStack {
-                    Button(action: { showSettings = true }) {
-                        Image(systemName: "gearshape.fill")
-                            .font(.caption)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.white.opacity(0.2))
-                            .cornerRadius(16)
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.leading)
-
-                    Spacer()
-
                     Text(appVersion)
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.5))
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.3))
+                        .padding(.leading)
 
                     Spacer()
 
-                    Button(action: { showVoicePicker = true }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "person.wave.2.fill")
-                                .font(.caption)
-                            Text(selectedVoice.displayName)
-                                .font(.caption)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.white.opacity(0.2))
-                        .cornerRadius(16)
+                    Button(action: { showDebug.toggle() }) {
+                        Image(systemName: "ladybug")
+                            .font(.system(size: 14))
+                            .foregroundColor(.white.opacity(0.3))
                     }
                     .buttonStyle(.plain)
                     .padding(.trailing)
                 }
+                .padding(.top, 16)
 
-                // Status
-                VStack(spacing: 8) {
-                    Image(systemName: statusIcon)
-                        .font(.system(size: 40))
-                        .foregroundColor(statusColor)
+                Spacer()
 
-                    Text(statusText)
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-
-                    // Debug info - ALWAYS show callback count
-                    Text("Callbacks: \(voiceLoop.callbackCount) | Active: \(voiceLoop.isActive ? "YES" : "NO")")
-                        .font(.caption)
-                        .foregroundColor(.orange)
-
-                    // Show transcript and errors when active
-                    if voiceLoop.isActive {
-                        VStack(spacing: 4) {
-                            Text("Live: '\(voiceLoop.currentTranscript)'")
-                                .font(.caption)
-                                .foregroundColor(.green)
-                            if let stt = voiceLoop.speechRecognition, !stt.lastError.isEmpty {
-                                Text("ERROR: \(stt.lastError)")
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                            }
-                        }
+                // Model load progress (only shown once on first launch)
+                if let stt = voiceLoop.speechRecognition, !stt.isModelLoaded {
+                    VStack(spacing: 10) {
+                        Text("Loading voice model...")
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.7))
+                        ProgressView(value: stt.modelLoadProgress)
+                            .progressViewStyle(.linear)
+                            .frame(width: 200)
+                            .tint(.purple)
                     }
+                    .padding(.bottom, 40)
                 }
 
-                // Microphone button
+                // Response text (shows while speaking)
+                if !voiceLoop.partialResponse.isEmpty {
+                    Text(voiceLoop.partialResponse)
+                        .font(.title3)
+                        .foregroundColor(.white.opacity(0.9))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                        .padding(.bottom, 32)
+                        .transition(.opacity)
+                } else if !voiceLoop.lastResponse.isEmpty && !voiceLoop.isProcessing {
+                    Text(voiceLoop.lastResponse)
+                        .font(.title3)
+                        .foregroundColor(.white.opacity(0.6))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                        .padding(.bottom, 32)
+                        .transition(.opacity)
+                }
+
+                // What the user said
+                if !voiceLoop.lastTranscript.isEmpty {
+                    Text(voiceLoop.lastTranscript)
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.4))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                        .padding(.bottom, 16)
+                }
+
+                // Mic button
                 Button(action: toggleVoice) {
                     ZStack {
                         Circle()
-                            .fill(voiceLoop.isActive ? Color.red : Color.blue)
-                            .frame(width: 200, height: 200)
-                            .shadow(radius: 10)
+                            .fill(micButtonColor)
+                            .frame(width: 88, height: 88)
+                            .shadow(color: micButtonColor.opacity(0.5), radius: 20)
 
-                        Image(systemName: "mic.fill")
-                            .font(.system(size: 80))
-                            .foregroundColor(.white)
+                        if voiceLoop.isInitializing || voiceLoop.isProcessing {
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                                .tint(.white)
+                                .scaleEffect(1.2)
+                        } else {
+                            Image(systemName: voiceLoop.isActive ? "waveform" : "mic.fill")
+                                .font(.system(size: 32, weight: .medium))
+                                .foregroundColor(.white)
+                        }
                     }
                 }
                 .buttonStyle(.plain)
+                .disabled(voiceLoop.isInitializing)
 
-                // Transcript display
-                if !voiceLoop.lastTranscript.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("You said:")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                // Status label
+                Text(statusText)
+                    .font(.footnote)
+                    .foregroundColor(.white.opacity(0.4))
+                    .padding(.top, 16)
 
-                        Text(voiceLoop.lastTranscript)
-                            .font(.body)
-                            .padding()
-                            .background(Color.white.opacity(0.1))
-                            .cornerRadius(8)
-                    }
-                    .padding(.horizontal)
-                }
+                Spacer()
 
-                // Response display
-                if !voiceLoop.lastResponse.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Response:")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        Text(voiceLoop.lastResponse)
-                            .font(.body)
-                            .padding()
-                            .background(Color.white.opacity(0.1))
-                            .cornerRadius(8)
-                    }
-                    .padding(.horizontal)
-                }
-
-                // Debug log with file contents button
-                VStack(spacing: 8) {
-                    Button("Show Debug File") {
-                        if let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("debug.log"),
-                           let contents = try? String(contentsOf: url) {
-                            voiceLoop.debugLog = contents.components(separatedBy: "\n")
-                        }
-                    }
-                    .buttonStyle(.bordered)
-
+                // Debug log (hidden by default)
+                if showDebug {
                     ScrollView {
-                        VStack(alignment: .leading, spacing: 4) {
-                            ForEach(Array(voiceLoop.debugLog.enumerated()), id: \.offset) { _, log in
-                                Text(log)
-                                    .font(.system(size: 10, design: .monospaced))
-                                    .foregroundColor(.yellow)
+                        VStack(alignment: .leading, spacing: 2) {
+                            ForEach(Array(voiceLoop.debugLog.suffix(30).enumerated()), id: \.offset) { _, line in
+                                Text(line)
+                                    .font(.system(size: 9, design: .monospaced))
+                                    .foregroundColor(.green.opacity(0.8))
                             }
                         }
                         .padding(8)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.black.opacity(0.5))
                     }
-                    .frame(height: 150)
+                    .frame(height: 160)
+                    .background(Color.black.opacity(0.5))
                 }
-                .padding(.horizontal)
-
-                Spacer()
             }
-            .padding()
         }
+        .animation(.easeInOut(duration: 0.2), value: voiceLoop.isActive)
+        .animation(.easeInOut(duration: 0.2), value: voiceLoop.partialResponse)
         .task {
             isHealthy = await voiceLoop.checkConnection()
         }
-        .sheet(isPresented: $showVoicePicker) {
-            VoiceSelector(selectedVoice: $selectedVoice)
-        }
-        .sheet(isPresented: $showSettings) {
-            SettingsView(selectedVoice: $selectedVoice)
-        }
-        .onChange(of: selectedVoice) { _, newVoice in
-            Config.selectedVoice = newVoice
-            // Reconnect with new voice if active
-            if voiceLoop.isActive {
-                voiceLoop.stop()
-                Task {
-                    try? await Task.sleep(nanoseconds: 500_000_000)
-                    await voiceLoop.start()
-                }
-            }
-        }
-        .alert("Error", isPresented: .constant(voiceLoop.error != nil)) {
-            Button("OK") {
-                voiceLoop.error = nil
-            }
+        .alert("Error", isPresented: .constant(voiceLoop.error != nil && !voiceLoop.isInitializing)) {
+            Button("OK") { voiceLoop.error = nil }
         } message: {
-            Text(voiceLoop.error ?? "Unknown error")
+            Text(voiceLoop.error ?? "")
         }
     }
 
@@ -208,9 +143,7 @@ struct ContentView: View {
         if voiceLoop.isActive {
             voiceLoop.stop()
         } else {
-            Task {
-                await voiceLoop.start()
-            }
+            Task { await voiceLoop.start() }
         }
     }
 
@@ -222,34 +155,18 @@ struct ContentView: View {
         return "v\(v) (\(b))"
     }
 
-    private var statusIcon: String {
-        if voiceLoop.isInitializing {
-            return "hourglass"
-        }
-        if !isHealthy {
-            return "exclamationmark.triangle.fill"
-        }
-        return voiceLoop.isActive ? "waveform" : "moon.zzz.fill"
-    }
-
-    private var statusColor: Color {
-        if voiceLoop.isInitializing {
-            return .blue
-        }
-        if !isHealthy {
-            return .orange
-        }
-        return voiceLoop.isActive ? .green : .gray
+    private var micButtonColor: Color {
+        if voiceLoop.isProcessing { return .purple }
+        if voiceLoop.isActive { return Color(red: 0.9, green: 0.2, blue: 0.2) }
+        return Color(red: 0.3, green: 0.3, blue: 0.9)
     }
 
     private var statusText: String {
-        if voiceLoop.isInitializing {
-            return "Initializing..."
-        }
-        if !isHealthy {
-            return "Cannot reach SoniqueBar"
-        }
-        return voiceLoop.isActive ? "Listening..." : "Tap to start"
+        if !isHealthy { return "SoniqueBar unreachable" }
+        if voiceLoop.isInitializing { return "Loading..." }
+        if voiceLoop.isProcessing { return "Thinking..." }
+        if voiceLoop.isActive { return "Listening" }
+        return "Tap to speak"
     }
 }
 

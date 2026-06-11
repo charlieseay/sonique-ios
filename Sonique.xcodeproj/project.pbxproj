@@ -1,351 +1,742 @@
-// !$*UTF8*$!
-{
-	archiveVersion = 1;
-	classes = {
-	};
-	objectVersion = 56;
-	objects = {
-
-/* Begin PBXBuildFile section */
-		23DA4ACE8CFA741DF5BD9C1B /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CE437189C0E4421DAF830B /* Config.swift */; };
-		3F73A4442FCE86A90057ED63 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F73A4432FCE86A90057ED63 /* SettingsView.swift */; };
-		3F7FC6012FCF20CF00280E3B /* ElevenLabsTTSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7FC5FF2FCF20CF00280E3B /* ElevenLabsTTSClient.swift */; };
-		3F7FC6022FCF20CF00280E3B /* SpeechRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7FC6002FCF20CF00280E3B /* SpeechRecognitionService.swift */; };
-		3F8E06692F99DA5C00F7E36D /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 3F8E06682F99DA5C00F7E36D /* GoogleMobileAds */; };
-		AC1B00000000000000WK0001 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = AC1B00000000000000WK0002 /* WhisperKit */; };
-		3FA000000000000000000017 /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3FA000000000000000000016 /* LiveKit */; };
-		91314C8980E6AC4B72F59493 /* VoiceLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F04A6A893C92D026BF8A2F /* VoiceLoop.swift */; };
-		D1864FD5AF3143B3F0797457 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 671A40B7929AC4785513019C /* HTTPClient.swift */; };
-		EAC245018BD75F904B3DFA71 /* VoiceSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDEE4E65BD1368173EB33E93 /* VoiceSelector.swift */; };
-		EDAD47EA8D3B00AC2541F23A /* SoniqueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5D54884BF2700547B33C65E /* SoniqueApp.swift */; };
-		FD354B38A1B5A35514512A28 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A793446A9BBB7A765178A683 /* ContentView.swift */; };
-		FF1A00000000000000ASSET1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FF1A00000000000000ASSET0 /* Assets.xcassets */; };
-/* End PBXBuildFile section */
-
-/* Begin PBXFileReference section */
-		14CE437189C0E4421DAF830B /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Config.swift; path = Sonique/Config.swift; sourceTree = SOURCE_ROOT; };
-		3F73A4432FCE86A90057ED63 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		3F7FC5FF2FCF20CF00280E3B /* ElevenLabsTTSClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/ElevenLabsTTSClient.swift; sourceTree = "<group>"; };
-		3F7FC6002FCF20CF00280E3B /* SpeechRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SpeechRecognitionService.swift; sourceTree = "<group>"; };
-		3FA000000000000000000018 /* Sonique.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sonique.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		3FC595A32F998A2100BEFC6F /* Sonique.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Sonique.entitlements; sourceTree = "<group>"; };
-		671A40B7929AC4785513019C /* HTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HTTPClient.swift; path = Sonique/HTTPClient.swift; sourceTree = SOURCE_ROOT; };
-		A793446A9BBB7A765178A683 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = Sonique/ContentView.swift; sourceTree = SOURCE_ROOT; };
-		CDEE4E65BD1368173EB33E93 /* VoiceSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VoiceSelector.swift; path = Sonique/VoiceSelector.swift; sourceTree = SOURCE_ROOT; };
-		D8F04A6A893C92D026BF8A2F /* VoiceLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VoiceLoop.swift; path = Sonique/VoiceLoop.swift; sourceTree = SOURCE_ROOT; };
-		E5D54884BF2700547B33C65E /* SoniqueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SoniqueApp.swift; path = Sonique/SoniqueApp.swift; sourceTree = SOURCE_ROOT; };
-		FF1A00000000000000ASSET0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Sonique/Resources/Assets.xcassets; sourceTree = SOURCE_ROOT; };
-/* End PBXFileReference section */
-
-/* Begin PBXFrameworksBuildPhase section */
-		3FA00000000000000000000E /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				3F8E06692F99DA5C00F7E36D /* GoogleMobileAds in Frameworks */,
-				AC1B00000000000000WK0001 /* WhisperKit in Frameworks */,
-				3FA000000000000000000017 /* LiveKit in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXFrameworksBuildPhase section */
-
-/* Begin PBXGroup section */
-		3FA000000000000000000002 = {
-			isa = PBXGroup;
-			children = (
-				3F7FC5FF2FCF20CF00280E3B /* ElevenLabsTTSClient.swift */,
-				3F7FC6002FCF20CF00280E3B /* SpeechRecognitionService.swift */,
-				3F73A4432FCE86A90057ED63 /* SettingsView.swift */,
-				3FC595A32F998A2100BEFC6F /* Sonique.entitlements */,
-				3FA000000000000000000003 /* Products */,
-				E5D54884BF2700547B33C65E /* SoniqueApp.swift */,
-				14CE437189C0E4421DAF830B /* Config.swift */,
-				A793446A9BBB7A765178A683 /* ContentView.swift */,
-				CDEE4E65BD1368173EB33E93 /* VoiceSelector.swift */,
-				D8F04A6A893C92D026BF8A2F /* VoiceLoop.swift */,
-				671A40B7929AC4785513019C /* HTTPClient.swift */,
-				FF1A00000000000000ASSET0 /* Assets.xcassets */,
-			);
-			sourceTree = "<group>";
-		};
-		3FA000000000000000000003 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				3FA000000000000000000018 /* Sonique.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-/* End PBXGroup section */
-
-/* Begin PBXNativeTarget section */
-		3FA00000000000000000000B /* Sonique */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 3FA00000000000000000000F /* Build configuration list for PBXNativeTarget "Sonique" */;
-			buildPhases = (
-				3FA00000000000000000000C /* Sources */,
-				3FA00000000000000000000E /* Frameworks */,
-				3FA00000000000000000000D /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = Sonique;
-			productName = Sonique;
-			productReference = 3FA000000000000000000018 /* Sonique.app */;
-			productType = "com.apple.product-type.application";
-		};
-/* End PBXNativeTarget section */
-
-/* Begin PBXProject section */
-		3FA000000000000000000001 /* Project object */ = {
-			isa = PBXProject;
-			attributes = {
-				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1630;
-				LastUpgradeCheck = 1630;
-				TargetAttributes = {
-					3FA00000000000000000000B = {
-						CreatedOnToolsVersion = 16.3;
-					};
-				};
-			};
-			buildConfigurationList = 3FA000000000000000000012 /* Build configuration list for PBXProject "Sonique" */;
-			compatibilityVersion = "Xcode 14.0";
-			developmentRegion = en;
-			hasScannedForEncodings = 0;
-			knownRegions = (
-				en,
-				Base,
-			);
-			mainGroup = 3FA000000000000000000002;
-			packageReferences = (
-				AC1B00000000000000WK0003 /* XCRemoteSwiftPackageReference "WhisperKit" */,
-				3FA000000000000000000015 /* XCRemoteSwiftPackageReference "client-sdk-swift" */,
-				3F8E06672F99DA5C00F7E36D /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
-			);
-			productRefGroup = 3FA000000000000000000003 /* Products */;
-			projectDirPath = "";
-			projectRoot = "";
-			targets = (
-				3FA00000000000000000000B /* Sonique */,
-			);
-		};
-/* End PBXProject section */
-
-/* Begin PBXResourcesBuildPhase section */
-		3FA00000000000000000000D /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				FF1A00000000000000ASSET1 /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
-
-/* Begin PBXSourcesBuildPhase section */
-		3FA00000000000000000000C /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				EDAD47EA8D3B00AC2541F23A /* SoniqueApp.swift in Sources */,
-				3F73A4442FCE86A90057ED63 /* SettingsView.swift in Sources */,
-				3F7FC6012FCF20CF00280E3B /* ElevenLabsTTSClient.swift in Sources */,
-				3F7FC6022FCF20CF00280E3B /* SpeechRecognitionService.swift in Sources */,
-				23DA4ACE8CFA741DF5BD9C1B /* Config.swift in Sources */,
-				FD354B38A1B5A35514512A28 /* ContentView.swift in Sources */,
-				EAC245018BD75F904B3DFA71 /* VoiceSelector.swift in Sources */,
-				91314C8980E6AC4B72F59493 /* VoiceLoop.swift in Sources */,
-				D1864FD5AF3143B3F0797457 /* HTTPClient.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXSourcesBuildPhase section */
-
-/* Begin XCBuildConfiguration section */
-		3FA000000000000000000010 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 58;
-				DEVELOPMENT_TEAM = 7NSS5CJL9E;
-				EMBED_PACKAGE_FRAMEWORKS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Sonique/Resources/Info.plist;
-				INFOPLIST_PREPROCESS = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/PackageFrameworks",
-				);
-				LE_SWIFT_VERSION = 5.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.seayniclabs.sonique;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		3FA000000000000000000011 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 58;
-				DEVELOPMENT_TEAM = 7NSS5CJL9E;
-				EMBED_PACKAGE_FRAMEWORKS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Sonique/Resources/Info.plist;
-				INFOPLIST_PREPROCESS = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/PackageFrameworks",
-				);
-				LE_SWIFT_VERSION = 5.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.seayniclabs.sonique;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		3FA000000000000000000013 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSET_CATALOG_COMPILER_OPTIMIZATION = space;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = iphoneos;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-			};
-			name = Debug;
-		};
-		3FA000000000000000000014 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSET_CATALOG_COMPILER_OPTIMIZATION = space;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GCC_NO_COMMON_BLOCKS = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MTL_FAST_MATH = YES;
-				SDKROOT = iphoneos;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-/* End XCBuildConfiguration section */
-
-/* Begin XCConfigurationList section */
-		3FA00000000000000000000F /* Build configuration list for PBXNativeTarget "Sonique" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				3FA000000000000000000010 /* Debug */,
-				3FA000000000000000000011 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		3FA000000000000000000012 /* Build configuration list for PBXProject "Sonique" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				3FA000000000000000000013 /* Debug */,
-				3FA000000000000000000014 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-/* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		3F8E06672F99DA5C00F7E36D /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 13.2.0;
-			};
-		};
-		3FA000000000000000000015 /* XCRemoteSwiftPackageReference "client-sdk-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/livekit/client-sdk-swift";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
-			};
-		};
-		AC1B00000000000000WK0003 /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/argmaxinc/WhisperKit";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.9.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		3F8E06682F99DA5C00F7E36D /* GoogleMobileAds */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3F8E06672F99DA5C00F7E36D /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
-			productName = GoogleMobileAds;
-		};
-		3FA000000000000000000016 /* LiveKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3FA000000000000000000015 /* XCRemoteSwiftPackageReference "client-sdk-swift" */;
-			productName = LiveKit;
-		};
-		AC1B00000000000000WK0002 /* WhisperKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = AC1B00000000000000WK0003 /* XCRemoteSwiftPackageReference "WhisperKit" */;
-			productName = WhisperKit;
-		};
-/* End XCSwiftPackageProductDependency section */
-	};
-	rootObject = 3FA000000000000000000001 /* Project object */;
-}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>archiveVersion</key>
+	<string>1</string>
+	<key>classes</key>
+	<dict/>
+	<key>objectVersion</key>
+	<string>56</string>
+	<key>objects</key>
+	<dict>
+		<key>14CE437189C0E4421DAF830B</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>name</key>
+			<string>Config.swift</string>
+			<key>path</key>
+			<string>Sonique/Config.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>23DA4ACE8CFA741DF5BD9C1B</key>
+		<dict>
+			<key>fileRef</key>
+			<string>14CE437189C0E4421DAF830B</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>3F73A4432FCE86A90057ED63</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>SettingsView.swift</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+		</dict>
+		<key>3F73A4442FCE86A90057ED63</key>
+		<dict>
+			<key>fileRef</key>
+			<string>3F73A4432FCE86A90057ED63</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>3F7FC5FF2FCF20CF00280E3B</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>Sonique/ElevenLabsTTSClient.swift</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+		</dict>
+		<key>3F7FC6002FCF20CF00280E3B</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>Sonique/SpeechRecognitionService.swift</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+		</dict>
+		<key>3F7FC6012FCF20CF00280E3B</key>
+		<dict>
+			<key>fileRef</key>
+			<string>3F7FC5FF2FCF20CF00280E3B</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>3F7FC6022FCF20CF00280E3B</key>
+		<dict>
+			<key>fileRef</key>
+			<string>3F7FC6002FCF20CF00280E3B</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>3F8E06672F99DA5C00F7E36D</key>
+		<dict>
+			<key>isa</key>
+			<string>XCRemoteSwiftPackageReference</string>
+			<key>repositoryURL</key>
+			<string>https://github.com/googleads/swift-package-manager-google-mobile-ads</string>
+			<key>requirement</key>
+			<dict>
+				<key>kind</key>
+				<string>upToNextMajorVersion</string>
+				<key>minimumVersion</key>
+				<string>13.2.0</string>
+			</dict>
+		</dict>
+		<key>3F8E06682F99DA5C00F7E36D</key>
+		<dict>
+			<key>isa</key>
+			<string>XCSwiftPackageProductDependency</string>
+			<key>package</key>
+			<string>3F8E06672F99DA5C00F7E36D</string>
+			<key>productName</key>
+			<string>GoogleMobileAds</string>
+		</dict>
+		<key>3F8E06692F99DA5C00F7E36D</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>productRef</key>
+			<string>3F8E06682F99DA5C00F7E36D</string>
+		</dict>
+		<key>3FA000000000000000000001</key>
+		<dict>
+			<key>attributes</key>
+			<dict>
+				<key>BuildIndependentTargetsInParallel</key>
+				<string>1</string>
+				<key>LastSwiftUpdateCheck</key>
+				<string>1630</string>
+				<key>LastUpgradeCheck</key>
+				<string>1630</string>
+				<key>TargetAttributes</key>
+				<dict>
+					<key>3FA00000000000000000000B</key>
+					<dict>
+						<key>CreatedOnToolsVersion</key>
+						<string>16.3</string>
+					</dict>
+				</dict>
+			</dict>
+			<key>buildConfigurationList</key>
+			<string>3FA000000000000000000012</string>
+			<key>compatibilityVersion</key>
+			<string>Xcode 14.0</string>
+			<key>developmentRegion</key>
+			<string>en</string>
+			<key>hasScannedForEncodings</key>
+			<string>0</string>
+			<key>isa</key>
+			<string>PBXProject</string>
+			<key>knownRegions</key>
+			<array>
+				<string>en</string>
+				<string>Base</string>
+			</array>
+			<key>mainGroup</key>
+			<string>3FA000000000000000000002</string>
+			<key>packageReferences</key>
+			<array>
+				<string>AC1B00000000000000WK0003</string>
+				<string>3FA000000000000000000015</string>
+				<string>3F8E06672F99DA5C00F7E36D</string>
+			</array>
+			<key>productRefGroup</key>
+			<string>3FA000000000000000000003</string>
+			<key>projectDirPath</key>
+			<string></string>
+			<key>projectRoot</key>
+			<string></string>
+			<key>targets</key>
+			<array>
+				<string>3FA00000000000000000000B</string>
+			</array>
+		</dict>
+		<key>3FA000000000000000000002</key>
+		<dict>
+			<key>children</key>
+			<array>
+				<string>3F7FC5FF2FCF20CF00280E3B</string>
+				<string>3F7FC6002FCF20CF00280E3B</string>
+				<string>AC1B00100000000000WK10A</string>
+				<string>3F73A4432FCE86A90057ED63</string>
+				<string>3FC595A32F998A2100BEFC6F</string>
+				<string>3FA000000000000000000003</string>
+				<string>E5D54884BF2700547B33C65E</string>
+				<string>14CE437189C0E4421DAF830B</string>
+				<string>A793446A9BBB7A765178A683</string>
+				<string>CDEE4E65BD1368173EB33E93</string>
+				<string>D8F04A6A893C92D026BF8A2F</string>
+				<string>671A40B7929AC4785513019C</string>
+				<string>FF1A00000000000000ASSET0</string>
+			</array>
+			<key>isa</key>
+			<string>PBXGroup</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+		</dict>
+		<key>3FA000000000000000000003</key>
+		<dict>
+			<key>children</key>
+			<array>
+				<string>3FA000000000000000000018</string>
+			</array>
+			<key>isa</key>
+			<string>PBXGroup</string>
+			<key>name</key>
+			<string>Products</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+		</dict>
+		<key>3FA00000000000000000000B</key>
+		<dict>
+			<key>buildConfigurationList</key>
+			<string>3FA00000000000000000000F</string>
+			<key>buildPhases</key>
+			<array>
+				<string>3FA00000000000000000000C</string>
+				<string>3FA00000000000000000000E</string>
+				<string>3FA00000000000000000000D</string>
+			</array>
+			<key>buildRules</key>
+			<array/>
+			<key>dependencies</key>
+			<array/>
+			<key>isa</key>
+			<string>PBXNativeTarget</string>
+			<key>name</key>
+			<string>Sonique</string>
+			<key>productName</key>
+			<string>Sonique</string>
+			<key>productReference</key>
+			<string>3FA000000000000000000018</string>
+			<key>productType</key>
+			<string>com.apple.product-type.application</string>
+		</dict>
+		<key>3FA00000000000000000000C</key>
+		<dict>
+			<key>buildActionMask</key>
+			<string>2147483647</string>
+			<key>files</key>
+			<array>
+				<string>EDAD47EA8D3B00AC2541F23A</string>
+				<string>3F73A4442FCE86A90057ED63</string>
+				<string>3F7FC6012FCF20CF00280E3B</string>
+				<string>3F7FC6022FCF20CF00280E3B</string>
+				<string>AC1B00100000000000WK10B</string>
+				<string>23DA4ACE8CFA741DF5BD9C1B</string>
+				<string>FD354B38A1B5A35514512A28</string>
+				<string>EAC245018BD75F904B3DFA71</string>
+				<string>91314C8980E6AC4B72F59493</string>
+				<string>D1864FD5AF3143B3F0797457</string>
+			</array>
+			<key>isa</key>
+			<string>PBXSourcesBuildPhase</string>
+			<key>runOnlyForDeploymentPostprocessing</key>
+			<string>0</string>
+		</dict>
+		<key>3FA00000000000000000000D</key>
+		<dict>
+			<key>buildActionMask</key>
+			<string>2147483647</string>
+			<key>files</key>
+			<array>
+				<string>FF1A00000000000000ASSET1</string>
+			</array>
+			<key>isa</key>
+			<string>PBXResourcesBuildPhase</string>
+			<key>runOnlyForDeploymentPostprocessing</key>
+			<string>0</string>
+		</dict>
+		<key>3FA00000000000000000000E</key>
+		<dict>
+			<key>buildActionMask</key>
+			<string>2147483647</string>
+			<key>files</key>
+			<array>
+				<string>3F8E06692F99DA5C00F7E36D</string>
+				<string>AC1B00000000000000WK0001</string>
+				<string>3FA000000000000000000017</string>
+			</array>
+			<key>isa</key>
+			<string>PBXFrameworksBuildPhase</string>
+			<key>runOnlyForDeploymentPostprocessing</key>
+			<string>0</string>
+		</dict>
+		<key>3FA00000000000000000000F</key>
+		<dict>
+			<key>buildConfigurations</key>
+			<array>
+				<string>3FA000000000000000000010</string>
+				<string>3FA000000000000000000011</string>
+			</array>
+			<key>defaultConfigurationIsVisible</key>
+			<string>0</string>
+			<key>defaultConfigurationName</key>
+			<string>Release</string>
+			<key>isa</key>
+			<string>XCConfigurationList</string>
+		</dict>
+		<key>3FA000000000000000000010</key>
+		<dict>
+			<key>buildSettings</key>
+			<dict>
+				<key>ASSETCATALOG_COMPILER_APPICON_NAME</key>
+				<string>AppIcon</string>
+				<key>CODE_SIGN_ENTITLEMENTS</key>
+				<string>Sonique.entitlements</string>
+				<key>CURRENT_PROJECT_VERSION</key>
+				<string>58</string>
+				<key>DEVELOPMENT_TEAM</key>
+				<string>7NSS5CJL9E</string>
+				<key>EMBED_PACKAGE_FRAMEWORKS</key>
+				<string>YES</string>
+				<key>GENERATE_INFOPLIST_FILE</key>
+				<string>NO</string>
+				<key>INFOPLIST_FILE</key>
+				<string>Sonique/Resources/Info.plist</string>
+				<key>INFOPLIST_PREPROCESS</key>
+				<string>YES</string>
+				<key>IPHONEOS_DEPLOYMENT_TARGET</key>
+				<string>17.0</string>
+				<key>LD_RUNPATH_SEARCH_PATHS</key>
+				<array>
+					<string>$(inherited)</string>
+					<string>@executable_path/Frameworks</string>
+					<string>@executable_path/PackageFrameworks</string>
+				</array>
+				<key>LE_SWIFT_VERSION</key>
+				<string>5.0</string>
+				<key>MARKETING_VERSION</key>
+				<string>1.0</string>
+				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
+				<string>com.seayniclabs.sonique</string>
+				<key>PRODUCT_NAME</key>
+				<string>$(TARGET_NAME)</string>
+				<key>SDKROOT</key>
+				<string>iphoneos</string>
+				<key>SUPPORTED_PLATFORMS</key>
+				<string>iphoneos iphonesimulator</string>
+				<key>SWIFT_EMIT_LOC_STRINGS</key>
+				<string>YES</string>
+				<key>SWIFT_VERSION</key>
+				<string>5.0</string>
+				<key>TARGETED_DEVICE_FAMILY</key>
+				<string>1,2</string>
+			</dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Debug</string>
+		</dict>
+		<key>3FA000000000000000000011</key>
+		<dict>
+			<key>buildSettings</key>
+			<dict>
+				<key>ASSETCATALOG_COMPILER_APPICON_NAME</key>
+				<string>AppIcon</string>
+				<key>CODE_SIGN_ENTITLEMENTS</key>
+				<string>Sonique.entitlements</string>
+				<key>CURRENT_PROJECT_VERSION</key>
+				<string>58</string>
+				<key>DEVELOPMENT_TEAM</key>
+				<string>7NSS5CJL9E</string>
+				<key>EMBED_PACKAGE_FRAMEWORKS</key>
+				<string>YES</string>
+				<key>GENERATE_INFOPLIST_FILE</key>
+				<string>NO</string>
+				<key>INFOPLIST_FILE</key>
+				<string>Sonique/Resources/Info.plist</string>
+				<key>INFOPLIST_PREPROCESS</key>
+				<string>YES</string>
+				<key>IPHONEOS_DEPLOYMENT_TARGET</key>
+				<string>17.0</string>
+				<key>LD_RUNPATH_SEARCH_PATHS</key>
+				<array>
+					<string>$(inherited)</string>
+					<string>@executable_path/Frameworks</string>
+					<string>@executable_path/PackageFrameworks</string>
+				</array>
+				<key>LE_SWIFT_VERSION</key>
+				<string>5.0</string>
+				<key>MARKETING_VERSION</key>
+				<string>1.0</string>
+				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
+				<string>com.seayniclabs.sonique</string>
+				<key>PRODUCT_NAME</key>
+				<string>$(TARGET_NAME)</string>
+				<key>SDKROOT</key>
+				<string>iphoneos</string>
+				<key>SUPPORTED_PLATFORMS</key>
+				<string>iphoneos iphonesimulator</string>
+				<key>SWIFT_EMIT_LOC_STRINGS</key>
+				<string>YES</string>
+				<key>SWIFT_VERSION</key>
+				<string>5.0</string>
+				<key>TARGETED_DEVICE_FAMILY</key>
+				<string>1,2</string>
+			</dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Release</string>
+		</dict>
+		<key>3FA000000000000000000012</key>
+		<dict>
+			<key>buildConfigurations</key>
+			<array>
+				<string>3FA000000000000000000013</string>
+				<string>3FA000000000000000000014</string>
+			</array>
+			<key>defaultConfigurationIsVisible</key>
+			<string>0</string>
+			<key>defaultConfigurationName</key>
+			<string>Release</string>
+			<key>isa</key>
+			<string>XCConfigurationList</string>
+		</dict>
+		<key>3FA000000000000000000013</key>
+		<dict>
+			<key>buildSettings</key>
+			<dict>
+				<key>ALWAYS_SEARCH_USER_PATHS</key>
+				<string>NO</string>
+				<key>ASSET_CATALOG_COMPILER_OPTIMIZATION</key>
+				<string>space</string>
+				<key>CLANG_ANALYZER_NONNULL</key>
+				<string>YES</string>
+				<key>CLANG_CXX_LANGUAGE_STANDARD</key>
+				<string>gnu++20</string>
+				<key>CLANG_ENABLE_MODULES</key>
+				<string>YES</string>
+				<key>CLANG_ENABLE_OBJC_ARC</key>
+				<string>YES</string>
+				<key>COPY_PHASE_STRIP</key>
+				<string>NO</string>
+				<key>DEBUG_INFORMATION_FORMAT</key>
+				<string>dwarf</string>
+				<key>ENABLE_STRICT_OBJC_MSGSEND</key>
+				<string>YES</string>
+				<key>ENABLE_TESTABILITY</key>
+				<string>YES</string>
+				<key>GCC_C_LANGUAGE_STANDARD</key>
+				<string>gnu17</string>
+				<key>GCC_DYNAMIC_NO_PIC</key>
+				<string>NO</string>
+				<key>GCC_NO_COMMON_BLOCKS</key>
+				<string>YES</string>
+				<key>GCC_OPTIMIZATION_LEVEL</key>
+				<string>0</string>
+				<key>GCC_PREPROCESSOR_DEFINITIONS</key>
+				<array>
+					<string>DEBUG=1</string>
+					<string>$(inherited)</string>
+				</array>
+				<key>IPHONEOS_DEPLOYMENT_TARGET</key>
+				<string>17.0</string>
+				<key>MTL_ENABLE_DEBUG_INFO</key>
+				<string>INCLUDE_SOURCE</string>
+				<key>MTL_FAST_MATH</key>
+				<string>YES</string>
+				<key>ONLY_ACTIVE_ARCH</key>
+				<string>YES</string>
+				<key>SDKROOT</key>
+				<string>iphoneos</string>
+				<key>SWIFT_ACTIVE_COMPILATION_CONDITIONS</key>
+				<string>DEBUG</string>
+				<key>SWIFT_OPTIMIZATION_LEVEL</key>
+				<string>-Onone</string>
+			</dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Debug</string>
+		</dict>
+		<key>3FA000000000000000000014</key>
+		<dict>
+			<key>buildSettings</key>
+			<dict>
+				<key>ALWAYS_SEARCH_USER_PATHS</key>
+				<string>NO</string>
+				<key>ASSET_CATALOG_COMPILER_OPTIMIZATION</key>
+				<string>space</string>
+				<key>CLANG_ANALYZER_NONNULL</key>
+				<string>YES</string>
+				<key>CLANG_CXX_LANGUAGE_STANDARD</key>
+				<string>gnu++20</string>
+				<key>CLANG_ENABLE_MODULES</key>
+				<string>YES</string>
+				<key>CLANG_ENABLE_OBJC_ARC</key>
+				<string>YES</string>
+				<key>COPY_PHASE_STRIP</key>
+				<string>NO</string>
+				<key>DEBUG_INFORMATION_FORMAT</key>
+				<string>dwarf-with-dsym</string>
+				<key>ENABLE_NS_ASSERTIONS</key>
+				<string>NO</string>
+				<key>ENABLE_STRICT_OBJC_MSGSEND</key>
+				<string>YES</string>
+				<key>GCC_C_LANGUAGE_STANDARD</key>
+				<string>gnu17</string>
+				<key>GCC_NO_COMMON_BLOCKS</key>
+				<string>YES</string>
+				<key>IPHONEOS_DEPLOYMENT_TARGET</key>
+				<string>17.0</string>
+				<key>MTL_FAST_MATH</key>
+				<string>YES</string>
+				<key>SDKROOT</key>
+				<string>iphoneos</string>
+				<key>SWIFT_COMPILATION_MODE</key>
+				<string>wholemodule</string>
+				<key>SWIFT_OPTIMIZATION_LEVEL</key>
+				<string>-O</string>
+				<key>VALIDATE_PRODUCT</key>
+				<string>YES</string>
+			</dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Release</string>
+		</dict>
+		<key>3FA000000000000000000015</key>
+		<dict>
+			<key>isa</key>
+			<string>XCRemoteSwiftPackageReference</string>
+			<key>repositoryURL</key>
+			<string>https://github.com/livekit/client-sdk-swift</string>
+			<key>requirement</key>
+			<dict>
+				<key>kind</key>
+				<string>upToNextMajorVersion</string>
+				<key>minimumVersion</key>
+				<string>2.0.0</string>
+			</dict>
+		</dict>
+		<key>3FA000000000000000000016</key>
+		<dict>
+			<key>isa</key>
+			<string>XCSwiftPackageProductDependency</string>
+			<key>package</key>
+			<string>3FA000000000000000000015</string>
+			<key>productName</key>
+			<string>LiveKit</string>
+		</dict>
+		<key>3FA000000000000000000017</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>productRef</key>
+			<string>3FA000000000000000000016</string>
+		</dict>
+		<key>3FA000000000000000000018</key>
+		<dict>
+			<key>explicitFileType</key>
+			<string>wrapper.application</string>
+			<key>includeInIndex</key>
+			<string>0</string>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>path</key>
+			<string>Sonique.app</string>
+			<key>sourceTree</key>
+			<string>BUILT_PRODUCTS_DIR</string>
+		</dict>
+		<key>3FC595A32F998A2100BEFC6F</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>text.plist.entitlements</string>
+			<key>path</key>
+			<string>Sonique.entitlements</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+		</dict>
+		<key>671A40B7929AC4785513019C</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>name</key>
+			<string>HTTPClient.swift</string>
+			<key>path</key>
+			<string>Sonique/HTTPClient.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>91314C8980E6AC4B72F59493</key>
+		<dict>
+			<key>fileRef</key>
+			<string>D8F04A6A893C92D026BF8A2F</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>A793446A9BBB7A765178A683</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>name</key>
+			<string>ContentView.swift</string>
+			<key>path</key>
+			<string>Sonique/ContentView.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>AC1B00000000000000WK0001</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>productRef</key>
+			<string>AC1B00000000000000WK0002</string>
+		</dict>
+		<key>AC1B00000000000000WK0002</key>
+		<dict>
+			<key>isa</key>
+			<string>XCSwiftPackageProductDependency</string>
+			<key>package</key>
+			<string>AC1B00000000000000WK0003</string>
+			<key>productName</key>
+			<string>WhisperKit</string>
+		</dict>
+		<key>AC1B00000000000000WK0003</key>
+		<dict>
+			<key>isa</key>
+			<string>XCRemoteSwiftPackageReference</string>
+			<key>repositoryURL</key>
+			<string>https://github.com/argmaxinc/WhisperKit</string>
+			<key>requirement</key>
+			<dict>
+				<key>kind</key>
+				<string>upToNextMajorVersion</string>
+				<key>minimumVersion</key>
+				<string>0.9.0</string>
+			</dict>
+		</dict>
+		<key>AC1B00100000000000WK10A</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>Sonique/WhisperKitSTTService.swift</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+		</dict>
+		<key>AC1B00100000000000WK10B</key>
+		<dict>
+			<key>fileRef</key>
+			<string>AC1B00100000000000WK10A</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>CDEE4E65BD1368173EB33E93</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>name</key>
+			<string>VoiceSelector.swift</string>
+			<key>path</key>
+			<string>Sonique/VoiceSelector.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>D1864FD5AF3143B3F0797457</key>
+		<dict>
+			<key>fileRef</key>
+			<string>671A40B7929AC4785513019C</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>D8F04A6A893C92D026BF8A2F</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>name</key>
+			<string>VoiceLoop.swift</string>
+			<key>path</key>
+			<string>Sonique/VoiceLoop.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>E5D54884BF2700547B33C65E</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>name</key>
+			<string>SoniqueApp.swift</string>
+			<key>path</key>
+			<string>Sonique/SoniqueApp.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>EAC245018BD75F904B3DFA71</key>
+		<dict>
+			<key>fileRef</key>
+			<string>CDEE4E65BD1368173EB33E93</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>EDAD47EA8D3B00AC2541F23A</key>
+		<dict>
+			<key>fileRef</key>
+			<string>E5D54884BF2700547B33C65E</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>FD354B38A1B5A35514512A28</key>
+		<dict>
+			<key>fileRef</key>
+			<string>A793446A9BBB7A765178A683</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>FF1A00000000000000ASSET0</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>folder.assetcatalog</string>
+			<key>name</key>
+			<string>Assets.xcassets</string>
+			<key>path</key>
+			<string>Sonique/Resources/Assets.xcassets</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>FF1A00000000000000ASSET1</key>
+		<dict>
+			<key>fileRef</key>
+			<string>FF1A00000000000000ASSET0</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+	</dict>
+	<key>rootObject</key>
+	<string>3FA000000000000000000001</string>
+</dict>
+</plist>

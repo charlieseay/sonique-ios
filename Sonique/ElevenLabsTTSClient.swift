@@ -10,11 +10,43 @@ class ElevenLabsTTSClient: NSObject, ObservableObject {
     private var audioEngine: AVAudioEngine?
     private var audioPlayerNode: AVAudioPlayerNode?
     private let apiKey: String
+    private var sentenceQueue: [String] = []
+    private var isQueueRunning = false
+    var useSpeedMode = false  // AVSpeechSynthesizer fallback
 
     init(apiKey: String) {
         self.apiKey = apiKey
         super.init()
         setupAudioEngine()
+    }
+
+    // MARK: - Sentence Queue (streaming pipeline)
+
+    func enqueueSentence(_ sentence: String) {
+        sentenceQueue.append(sentence)
+        if !isQueueRunning {
+            Task { await processSentenceQueue() }
+        }
+    }
+
+    func interrupt() {
+        sentenceQueue.removeAll()
+        audioPlayerNode?.stop()
+        isPlaying = false
+        isQueueRunning = false
+    }
+
+    private func processSentenceQueue() async {
+        isQueueRunning = true
+        while !sentenceQueue.isEmpty {
+            let sentence = sentenceQueue.removeFirst()
+            do {
+                try await speak(sentence, voice: Config.selectedVoice)
+            } catch {
+                print("[TTS] Queue sentence error: \(error.localizedDescription)")
+            }
+        }
+        isQueueRunning = false
     }
 
     // MARK: - Audio Engine Setup
