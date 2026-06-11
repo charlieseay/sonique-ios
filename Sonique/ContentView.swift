@@ -4,6 +4,9 @@ struct ContentView: View {
     @StateObject private var voiceLoop = VoiceLoop()
     @State private var isHealthy = false
     @State private var showDebug = false
+    @State private var showVoicePicker = false
+    @State private var selectedVoiceID = Config.selectedVoiceID
+    @State private var apiKey = ""
 
     var body: some View {
         ZStack {
@@ -13,13 +16,24 @@ struct ContentView: View {
 
             VStack(spacing: 0) {
                 // Top bar
-                HStack {
+                HStack(spacing: 16) {
                     Text(appVersion)
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundColor(.white.opacity(0.3))
                         .padding(.leading)
 
                     Spacer()
+
+                    // Voice picker
+                    Button(action: { showVoicePicker = true }) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "waveform.circle")
+                            Text(Config.selectedVoiceName)
+                        }
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.55))
+                    }
+                    .buttonStyle(.plain)
 
                     Button(action: { showDebug.toggle() }) {
                         Image(systemName: "ladybug")
@@ -144,6 +158,10 @@ struct ContentView: View {
         .animation(.easeInOut(duration: 0.2), value: voiceLoop.partialResponse)
         .task {
             isHealthy = await voiceLoop.checkConnection()
+            apiKey = (try? await Config.getAPIKey()) ?? ""
+        }
+        .sheet(isPresented: $showVoicePicker) {
+            VoiceSelector(apiKey: apiKey, selectedVoiceID: $selectedVoiceID)
         }
         .alert("Error", isPresented: .constant(voiceLoop.error != nil && !voiceLoop.isInitializing)) {
             Button("OK") { voiceLoop.error = nil }

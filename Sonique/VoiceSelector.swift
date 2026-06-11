@@ -1,60 +1,95 @@
 import SwiftUI
 
-/// Voice selection UI matching Claude iOS style
+/// Dynamic voice picker — lists ElevenLabs' studio voices, samples each on tap
+/// (sample-before-select, like Claude/Gemini), and sets the active voice.
 struct VoiceSelector: View {
-    @Binding var selectedVoice: ElevenLabsVoice
+    let apiKey: String
+    @Binding var selectedVoiceID: String
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var catalog: VoiceCatalog
+
+    init(apiKey: String, selectedVoiceID: Binding<String>) {
+        self.apiKey = apiKey
+        self._selectedVoiceID = selectedVoiceID
+        self._catalog = StateObject(wrappedValue: VoiceCatalog(apiKey: apiKey))
+    }
 
     var body: some View {
         NavigationView {
-            List(ElevenLabsVoice.allCases) { voice in
-                Button(action: {
-                    selectedVoice = voice
-                    dismiss()
-                }) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(voice.displayName)
-                                .font(.headline)
-                            Text(voice.description)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+            Group {
+                if catalog.isLoading {
+                    ProgressView("Loading voices…")
+                } else if let err = catalog.error {
+                    VStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle")
+                        Text(err).font(.caption).foregroundColor(.secondary)
+                    }
+                } else {
+                    List(catalog.voices) { voice in
+                        HStack(spacing: 12) {
+                            // Sample button
+                            Button {
+                                if catalog.sampling == voice.id {
+                                    catalog.stopSample()
+                                } else {
+                                    catalog.playSample(voice)
+                                }
+                            } label: {
+                                Image(systemName: catalog.sampling == voice.id ? "stop.circle.fill" : "play.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(catalog.sampling == voice.id ? .red : .accentColor)
+                            }
+                            .buttonStyle(.plain)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(voice.displayName).font(.headline)
+                                if !voice.descriptor.isEmpty {
+                                    Text(voice.descriptor)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+
+                            Spacer()
+
+                            if selectedVoiceID == voice.id {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                            }
                         }
-
-                        Spacer()
-
-                        if selectedVoice == voice {
-                            Image(systemName: "checkmark")
-                                .foregroundColor(.blue)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            selectedVoiceID = voice.id
+                            Config.selectedVoiceID = voice.id
+                            Config.selectedVoiceName = voice.displayName
+                            catalog.stopSample()
+                            dismiss()
                         }
                     }
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
             }
-            .navigationTitle("Voice")
+            .navigationTitle("Choose a Voice")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+                    Button("Done") { catalog.stopSample(); dismiss() }
                 }
             }
+            .task { await catalog.load() }
+            .onDisappear { catalog.stopSample() }
         }
     }
 }
 
-/// Top 5 ElevenLabs voices - natural conversational English
+/// Curated fallback voices — used by the playback path when no dynamic ID is set.
 enum ElevenLabsVoice: String, CaseIterable, Identifiable {
-    case josh = "TxGEqnHWrfWFTfGW9XjX"        // Deep, clear American male
-    case rachel = "21m00Tcm4TlvDq8ikWAM"     // Calm, warm American female
-    case antoni = "ErXwobaYiN019PkySvjV"     // Natural, friendly American male
-    case bella = "EXAVITQu4vr4xnSDxMaL"      // Soft, clear American female
-    case adam = "pNInz6obpgDQGcFmaJgB"       // Confident, authoritative American male
+    case josh = "TxGEqnHWrfWFTfGW9XjX"
+    case rachel = "21m00Tcm4TlvDq8ikWAM"
+    case antoni = "ErXwobaYiN019PkySvjV"
+    case bella = "EXAVITQu4vr4xnSDxMaL"
+    case adam = "pNInz6obpgDQGcFmaJgB"
 
     var id: String { rawValue }
-
     var displayName: String {
         switch self {
         case .josh: return "Josh"
@@ -62,16 +97,6 @@ enum ElevenLabsVoice: String, CaseIterable, Identifiable {
         case .antoni: return "Antoni"
         case .bella: return "Bella"
         case .adam: return "Adam"
-        }
-    }
-
-    var description: String {
-        switch self {
-        case .josh: return "Deep, clear voice"
-        case .rachel: return "Calm, warm voice"
-        case .antoni: return "Natural, friendly voice"
-        case .bella: return "Soft, clear voice"
-        case .adam: return "Confident, authoritative voice"
         }
     }
 }

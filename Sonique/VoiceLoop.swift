@@ -147,7 +147,7 @@ class VoiceLoop: ObservableObject {
         guard let vs = session, let tts = ttsClient else { return }
         let clean = sentence.trimmingCharacters(in: .whitespaces)
         guard !clean.isEmpty else { return }
-        if let pcm = await tts.fetchPCM(clean, voice: Config.selectedVoice) {
+        if let pcm = await tts.fetchPCM(clean, voiceID: Config.selectedVoiceID) {
             await vs.playPCM(pcm)
         }
     }

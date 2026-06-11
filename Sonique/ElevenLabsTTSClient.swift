@@ -12,9 +12,9 @@ class ElevenLabsTTSClient: ObservableObject {
     }
 
     /// Returns raw PCM (pcm_24000, 16-bit LE mono) for the given text, or nil on failure.
-    func fetchPCM(_ text: String, voice: ElevenLabsVoice = .josh) async -> Data? {
+    func fetchPCM(_ text: String, voiceID: String) async -> Data? {
         guard !text.isEmpty else { return nil }
-        let url = URL(string: "https://api.elevenlabs.io/v1/text-to-speech/\(voice.rawValue)/stream?output_format=pcm_24000")!
+        let url = URL(string: "https://api.elevenlabs.io/v1/text-to-speech/\(voiceID)/stream?output_format=pcm_24000")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "xi-api-key")

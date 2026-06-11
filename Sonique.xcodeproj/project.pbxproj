@@ -176,6 +176,7 @@
 				<string>AC1B00100000000000WK10A</string>
 				<string>AC1B00100000000000FT01A</string>
 				<string>AC1B00100000000000VS01A</string>
+				<string>AC1B00100000000000VC01A</string>
 				<string>3F73A4432FCE86A90057ED63</string>
 				<string>3FC595A32F998A2100BEFC6F</string>
 				<string>3FA000000000000000000003</string>
@@ -243,6 +244,7 @@
 				<string>AC1B00100000000000WK10B</string>
 				<string>AC1B00100000000000FT01B</string>
 				<string>AC1B00100000000000VS01B</string>
+				<string>AC1B00100000000000VC01B</string>
 				<string>23DA4ACE8CFA741DF5BD9C1B</string>
 				<string>FD354B38A1B5A35514512A28</string>
 				<string>EAC245018BD75F904B3DFA71</string>
@@ -649,6 +651,24 @@
 		<dict>
 			<key>fileRef</key>
 			<string>AC1B00100000000000FT01A</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>AC1B00100000000000VC01A</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>Sonique/VoiceCatalog.swift</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+		</dict>
+		<key>AC1B00100000000000VC01B</key>
+		<dict>
+			<key>fileRef</key>
+			<string>AC1B00100000000000VC01A</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>

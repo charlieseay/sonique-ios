@@ -4,7 +4,6 @@ struct SettingsView: View {
     @AppStorage("serverURL") private var serverURL = "http://192.168.0.221:8890"
     @AppStorage("useTailscale") private var useTailscale = false
 
-    @Binding var selectedVoice: ElevenLabsVoice
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -31,31 +30,10 @@ struct SettingsView: View {
                 }
 
                 Section(header: Text("Voice")) {
-                    ForEach(ElevenLabsVoice.allCases) { voice in
-                        Button(action: {
-                            selectedVoice = voice
-                            Config.selectedVoice = voice
-                        }) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(voice.displayName)
-                                        .font(.headline)
-                                        .foregroundColor(.primary)
-                                    Text(voice.description)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-
-                                Spacer()
-
-                                if selectedVoice == voice {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
+                    LabeledContent("Current Voice", value: Config.selectedVoiceName)
+                    Text("Change the voice from the waveform button on the main screen.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
 
                 Section(header: Text("About")) {
