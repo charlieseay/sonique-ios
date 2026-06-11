@@ -9,6 +9,7 @@ struct ContentView: View {
     @State private var showDebug = false
     @State private var showVoicePicker = false
     @State private var showAssistantSettings = false
+    @State private var showReportSheet = false
     @State private var selectedVoiceID = Config.selectedVoiceID
     @State private var apiKey = ""
 
@@ -69,6 +70,37 @@ struct ContentView: View {
                     .accessibilityLabel("Toggle debug log")
                 }
                 .padding(.top, 8)
+
+                // Connection banner — friendly, explains why, offers help. Never an alert.
+                if !voiceLoop.connectionOK && !voiceLoop.connectionMessage.isEmpty {
+                    VStack(spacing: 8) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "wifi.exclamationmark")
+                                .foregroundColor(.orange)
+                            Text(voiceLoop.connectionMessage)
+                                .font(.footnote)
+                                .foregroundColor(.white.opacity(0.85))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        HStack(spacing: 10) {
+                            Button("Retry") {
+                                Task { await voiceLoop.checkConnection() }
+                            }
+                            .font(.footnote.weight(.semibold))
+                            Button("Connection settings") { showAssistantSettings = true }
+                                .font(.footnote)
+                            Button("Report a problem") { showReportSheet = true }
+                                .font(.footnote)
+                        }
+                        .foregroundColor(.white.opacity(0.7))
+                    }
+                    .padding(12)
+                    .background(Color.orange.opacity(0.12))
+                    .cornerRadius(12)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .transition(.opacity)
+                }
 
                 Spacer()
 
@@ -202,6 +234,10 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showAssistantSettings) {
             AssistantSettingsView()
+        }
+        .sheet(isPresented: $showReportSheet) {
+            DiagnosticsReportView(connectionOK: voiceLoop.connectionOK,
+                                  activeEndpoint: HTTPClient.activeBaseURL)
         }
         .alert("Error", isPresented: .constant(voiceLoop.error != nil && !voiceLoop.isInitializing)) {
             Button("OK") { voiceLoop.error = nil }

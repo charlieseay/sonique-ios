@@ -8,6 +8,9 @@ struct AssistantSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var draftName: String = ""
     @State private var photoItem: PhotosPickerItem?
+    @State private var lanURL: String = ""
+    @State private var tailscaleURL: String = ""
+    @State private var tailscaleOn: Bool = true
 
     var body: some View {
         NavigationView {
@@ -59,6 +62,33 @@ struct AssistantSettingsView: View {
                             .foregroundColor(.secondary)
                     }
                 }
+
+                Section(header: Text("Connection"),
+                        footer: Text("Sonique connects to SoniqueBar on your Mac. Use the local address on your home network, or turn on Tailscale fallback to reach it from anywhere.")) {
+                    HStack {
+                        Text("Mac (local)")
+                        Spacer()
+                        TextField(Config.defaultLANURL, text: $lanURL)
+                            .multilineTextAlignment(.trailing)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .keyboardType(.URL)
+                            .foregroundColor(.secondary)
+                    }
+                    Toggle("Tailscale fallback", isOn: $tailscaleOn)
+                    if tailscaleOn {
+                        HStack {
+                            Text("Tailscale")
+                            Spacer()
+                            TextField(Config.defaultTailscaleURL, text: $tailscaleURL)
+                                .multilineTextAlignment(.trailing)
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
+                                .keyboardType(.URL)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
             }
             .navigationTitle("Your Assistant")
             .navigationBarTitleDisplayMode(.inline)
@@ -67,7 +97,12 @@ struct AssistantSettingsView: View {
                     Button("Done") { commitName(); dismiss() }
                 }
             }
-            .onAppear { draftName = profile.name }
+            .onAppear {
+                draftName = profile.name
+                lanURL = Config.commandServerURL
+                tailscaleURL = Config.tailscaleURL
+                tailscaleOn = Config.tailscaleFallbackEnabled
+            }
             .onChange(of: photoItem) { _, newItem in
                 Task {
                     if let data = try? await newItem?.loadTransferable(type: Data.self),
@@ -82,5 +117,11 @@ struct AssistantSettingsView: View {
     private func commitName() {
         let trimmed = draftName.trimmingCharacters(in: .whitespacesAndNewlines)
         profile.name = trimmed.isEmpty ? "Sonique" : trimmed
+        // Persist connection settings too.
+        let lan = lanURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        Config.commandServerURL = lan.isEmpty ? Config.defaultLANURL : lan
+        let ts = tailscaleURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        Config.tailscaleURL = ts.isEmpty ? Config.defaultTailscaleURL : ts
+        Config.tailscaleFallbackEnabled = tailscaleOn
     }
 }

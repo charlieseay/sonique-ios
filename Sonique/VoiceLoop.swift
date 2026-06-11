@@ -339,8 +339,32 @@ class VoiceLoop: ObservableObject {
         return (sentences, remainder)
     }
 
-    func checkConnection() async -> Bool {
-        do { return try await HTTPClient.healthCheck() }
-        catch { self.error = "Cannot reach SoniqueBar: \(error.localizedDescription)"; return false }
+    @Published var connectionOK = true
+    @Published var connectionMessage = ""
+
+    /// Probe LAN then Tailscale. On failure, set a friendly, plain-language explanation
+    /// (shown on screen) — and speak it once if the user just tried to use it. Never alerts.
+    @discardableResult
+    func checkConnection(speakIfDown: Bool = false) async -> Bool {
+        let result = await HTTPClient.probeConnection()
+        connectionOK = result.reachable
+        if result.reachable {
+            connectionMessage = ""
+            FileTracer.log("[conn] reachable via \(result.endpoint ?? "?")")
+            return true
+        }
+
+        let assistant = AssistantProfile.shared.name
+        connectionMessage = "\(assistant) can't reach SoniqueBar on your Mac. "
+            + "Make sure the Mac is awake, SoniqueBar is running, and you're on the same "
+            + "network or connected to Tailscale."
+        FileTracer.log("[conn] UNREACHABLE — tried: \(result.triedEndpoints.joined(separator: ", "))")
+
+        if speakIfDown {
+            session?.beginSpeaking()
+            await speakSentence("I can't reach SoniqueBar on your Mac right now. Make sure it's awake and on the same network, or connected through Tailscale, then try again.")
+            session?.endSpeaking()
+        }
+        return false
     }
 }
