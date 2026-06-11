@@ -150,9 +150,11 @@ class VoiceLoop: ObservableObject {
                 try await processAndSpeak(request)
                 FileTracer.log("[loop] done: '\(lastResponse)'")
             } catch {
-                self.error = error.localizedDescription
+                // Never throw an app alert for a transient failure — speak a friendly,
+                // retryable message and keep listening.
                 debugLog.append("ERROR: \(error.localizedDescription)")
-                FileTracer.log("[loop] PIPELINE ERROR: \(error)")
+                FileTracer.log("[loop] PIPELINE ERROR (spoken, not alerted): \(error)")
+                await speakSentence("Sorry, I ran into an issue. Please try again.")
                 session?.endSpeaking()
             }
             isProcessing = false
