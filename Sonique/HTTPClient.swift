@@ -33,8 +33,16 @@ struct HTTPClient {
                     request.httpMethod = "POST"
                     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                     request.httpBody = try JSONSerialization.data(withJSONObject: ["text": text])
+                    // Agentic LLM calls run tool calls and can take 15-40s with no bytes
+                    // flowing — give the request + resource a generous window.
+                    request.timeoutInterval = 90
 
-                    let (bytes, response) = try await URLSession.shared.bytes(for: request)
+                    let config = URLSessionConfiguration.default
+                    config.timeoutIntervalForRequest = 90
+                    config.timeoutIntervalForResource = 120
+                    let session = URLSession(configuration: config)
+
+                    let (bytes, response) = try await session.bytes(for: request)
                     guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
                         // Fall back to non-streaming
                         let result = try await sendCommand(text)
