@@ -11,24 +11,22 @@ final class SoundCues {
     private var player: AVAudioPlayer?
     private init() {}
 
-    /// Ready: ascending three-note arpeggio that swells in.
+    /// Ready: two soft ascending notes — a gentle, quiet rise.
     func playReady() {
         let notes: [(freq: Double, start: Double, dur: Double)] = [
-            (523.25, 0.00, 0.18),   // C5
-            (659.25, 0.12, 0.18),   // E5
-            (783.99, 0.24, 0.30)    // G5
+            (587.33, 0.00, 0.16),   // D5
+            (880.00, 0.10, 0.26)    // A5 — soft perfect fifth up
         ]
-        play(buildChime(notes: notes, totalDuration: 0.60, crescendo: true))
+        play(buildChime(notes: notes, totalDuration: 0.40, crescendo: true))
     }
 
-    /// Sleep: descending three-note figure that fades out.
+    /// Sleep: two soft descending notes — a quiet settle.
     func playSleep() {
         let notes: [(freq: Double, start: Double, dur: Double)] = [
-            (659.25, 0.00, 0.18),   // E5
-            (523.25, 0.12, 0.18),   // C5
-            (392.00, 0.24, 0.34)    // G4
+            (880.00, 0.00, 0.16),   // A5
+            (587.33, 0.10, 0.30)    // D5 — gentle fall
         ]
-        play(buildChime(notes: notes, totalDuration: 0.62, crescendo: false))
+        play(buildChime(notes: notes, totalDuration: 0.44, crescendo: false))
     }
 
     // MARK: - Synthesis
@@ -36,7 +34,7 @@ final class SoundCues {
     private func play(_ data: Data) {
         do {
             let p = try AVAudioPlayer(data: data)
-            p.volume = 0.6
+            p.volume = 0.28   // subtle — soft background cue, not an alert
             player = p
             p.play()
         } catch {
@@ -59,10 +57,11 @@ final class SoundCues {
                 let idx = startIdx + i
                 guard idx < total else { break }
                 let t = Double(i) / sampleRate
-                // Per-note attack/decay envelope (avoids clicks).
-                let noteEnv = sin(Double.pi * Double(i) / Double(count))
+                // Soft attack/decay envelope (sin^2 = gentler than sin, no clicks).
+                let e = sin(Double.pi * Double(i) / Double(count))
+                let noteEnv = e * e
                 let s = sin(2 * Double.pi * note.freq * t) * noteEnv
-                samples[idx] += Float(s) * 0.5
+                samples[idx] += Float(s) * 0.35
             }
         }
 
