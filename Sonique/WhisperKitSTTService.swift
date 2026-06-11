@@ -44,25 +44,33 @@ class WhisperKitSTTService: ObservableObject {
 
     func loadModel() async {
         guard whisperKit == nil else { return }
-        whisperLogger.info("Loading WhisperKit model (small.en)...")
+
+        // Use the device-recommended default model rather than hardcoding small.en.
+        // On iPad this resolves to base.en — fast, low memory, no prewarm spike.
+        let modelName = "openai_whisper-base.en"
+        whisperLogger.info("Loading WhisperKit model (\(modelName))...")
+        modelLoadProgress = 0.1
 
         do {
-            whisperKit = try await WhisperKit(
-                model: "openai_whisper-small.en",
-                modelFolder: nil,
+            let config = WhisperKitConfig(
+                model: modelName,
                 verbose: false,
                 logLevel: .none,
-                prewarm: true,
+                prewarm: false,   // prewarm doubles peak memory during load — crashes on device
                 load: true,
                 download: true
             )
+            modelLoadProgress = 0.3
+            whisperKit = try await WhisperKit(config)
             isModelLoaded = true
             modelLoadProgress = 1.0
             whisperLogger.info("✓ WhisperKit model loaded")
         } catch {
-            self.error = "WhisperKit load failed: \(error.localizedDescription)"
-            lastError = self.error!
-            whisperLogger.error("WhisperKit load error: \(error.localizedDescription)")
+            let msg = "WhisperKit load failed: \(error.localizedDescription)"
+            self.error = msg
+            self.lastError = msg
+            modelLoadProgress = 0.0
+            whisperLogger.error("\(msg)")
         }
     }
 
