@@ -124,7 +124,17 @@ class VoiceLoop: ObservableObject {
                 }
                 isAwake = true
                 SoundCues.shared.playReady()
-                request = stripped.isEmpty ? "Yes?" : stripped
+                cancelSleepTimer()
+                armIdleTimer()
+                // Bare wake word, no command → just acknowledge with the chime and listen.
+                // Don't burn a 16s LLM round-trip on "Yes?". Arm sleep so it naps again if
+                // no follow-up comes.
+                if stripped.isEmpty {
+                    FileTracer.log("[loop] woke on '\(wake)' (bare) — listening for command")
+                    armSleepTimer()
+                    continue
+                }
+                request = stripped
                 FileTracer.log("[loop] woke on '\(wake)' → '\(request)'")
             }
 
