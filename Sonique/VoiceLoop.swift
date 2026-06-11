@@ -287,7 +287,7 @@ class VoiceLoop: ObservableObject {
         var sentenceBuffer = ""
         var fullResponse = ""
 
-        FileTracer.log("[http] streaming \(Config.commandServerURL)/command/stream")
+        FileTracer.log("[http] streaming \(HTTPClient.activeBaseURL)/command/stream")
         for try await chunk in HTTPClient.sendCommandStreaming(transcript) {
             sentenceBuffer += chunk.text + " "
             fullResponse += chunk.text + " "

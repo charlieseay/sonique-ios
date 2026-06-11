@@ -7,7 +7,7 @@ struct StreamChunk {
 
 struct HTTPClient {
     static func sendCommand(_ text: String) async throws -> String {
-        let url = URL(string: "\(Config.commandServerURL)/command")!
+        let url = URL(string: "\(HTTPClient.activeBaseURL)/command")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -28,7 +28,7 @@ struct HTTPClient {
         AsyncThrowingStream { continuation in
             Task {
                 do {
-                    let url = URL(string: "\(Config.commandServerURL)/command/stream")!
+                    let url = URL(string: "\(HTTPClient.activeBaseURL)/command/stream")!
                     var request = URLRequest(url: url)
                     request.httpMethod = "POST"
                     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
