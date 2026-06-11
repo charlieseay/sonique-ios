@@ -38,14 +38,37 @@ enum Config {
         case invalidResponse
     }
 
-    /// SoniqueBar command server endpoint
-    /// Reads from UserDefaults (configurable in Settings)
+    // MARK: - SoniqueBar endpoints (user-configurable)
+
+    static let defaultLANURL = "http://192.168.0.221:8890"
+    static let defaultTailscaleURL = "http://100.122.13.35:8890"
+
+    /// Primary endpoint (LAN by default). User-editable in Settings.
     static var commandServerURL: String {
-        UserDefaults.standard.string(forKey: "serverURL") ?? "http://192.168.0.221:8890"
+        get { UserDefaults.standard.string(forKey: "serverURL") ?? defaultLANURL }
+        set { UserDefaults.standard.set(newValue, forKey: "serverURL") }
     }
 
-    /// Tailscale fallback URL
-    static let tailscaleURL = "http://100.122.13.35:8890"
+    /// Tailscale endpoint — used as a fallback so Sonique works anywhere, not just LAN.
+    static var tailscaleURL: String {
+        get { UserDefaults.standard.string(forKey: "tailscaleURL") ?? defaultTailscaleURL }
+        set { UserDefaults.standard.set(newValue, forKey: "tailscaleURL") }
+    }
+
+    /// Whether to fall back to the Tailscale endpoint when the primary is unreachable.
+    static var tailscaleFallbackEnabled: Bool {
+        get { UserDefaults.standard.object(forKey: "tailscaleFallback") as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: "tailscaleFallback") }
+    }
+
+    /// Ordered endpoints to try: primary, then Tailscale (if enabled + distinct).
+    static var endpointsToTry: [String] {
+        var list = [commandServerURL]
+        if tailscaleFallbackEnabled, !tailscaleURL.isEmpty, tailscaleURL != commandServerURL {
+            list.append(tailscaleURL)
+        }
+        return list
+    }
 
     /// UserDefaults key for selected voice
     static let voiceKey = "selectedVoice"

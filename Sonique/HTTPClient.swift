@@ -81,13 +81,45 @@ struct HTTPClient {
         }
     }
 
+    /// The endpoint that last responded to a health check. The command/stream paths use
+    /// this so we keep talking to whichever endpoint (LAN or Tailscale) is reachable.
+    private(set) static var activeBaseURL: String = Config.commandServerURL
+
+    /// Result of a connection probe — for friendly UX.
+    struct ConnectionResult {
+        let reachable: Bool
+        let endpoint: String?       // which endpoint answered
+        let triedEndpoints: [String]
+    }
+
+    /// Try each configured endpoint (LAN, then Tailscale) and remember the first that
+    /// answers /health. Returns a structured result for the UI to explain failures.
+    static func probeConnection() async -> ConnectionResult {
+        let endpoints = Config.endpointsToTry
+        for base in endpoints {
+            if await isHealthy(base) {
+                activeBaseURL = base
+                return ConnectionResult(reachable: true, endpoint: base, triedEndpoints: endpoints)
+            }
+        }
+        return ConnectionResult(reachable: false, endpoint: nil, triedEndpoints: endpoints)
+    }
+
+    private static func isHealthy(_ base: String) async -> Bool {
+        guard let url = URL(string: "\(base)/health") else { return false }
+        var req = URLRequest(url: url)
+        req.timeoutInterval = 4   // fast probe — don't hang the UI on a dead endpoint
+        do {
+            let (data, response) = try await URLSession.shared.data(for: req)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  json["status"] as? String == "ok" else { return false }
+            return true
+        } catch { return false }
+    }
+
     static func healthCheck() async throws -> Bool {
-        let url = URL(string: "\(Config.commandServerURL)/health")!
-        let (data, response) = try await URLSession.shared.data(from: url)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200,
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              json["status"] as? String == "ok" else { return false }
-        return true
+        return await probeConnection().reachable
     }
 }
 
