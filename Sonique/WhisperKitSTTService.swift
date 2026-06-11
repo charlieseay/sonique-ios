@@ -22,6 +22,8 @@ class WhisperKitSTTService: ObservableObject {
     @Published var lastError: String = ""
     @Published var isModelLoaded = false
     @Published var modelLoadProgress: Double = 0.0
+    @Published var loadStatus: String = ""        // human-readable: what's happening now
+    @Published var loadDetail: String = ""        // sub-line: ETA / instructions
 
     // VAD parameters (tunable)
     var vadSilenceThreshold: Float = 0.01       // RMS below this = silence
@@ -42,33 +44,69 @@ class WhisperKitSTTService: ObservableObject {
 
     // MARK: - Setup
 
+    private let modelName = "openai_whisper-base.en"
+
     func loadModel() async {
         guard whisperKit == nil else { return }
-
-        // Use the device-recommended default model rather than hardcoding small.en.
-        // On iPad this resolves to base.en — fast, low memory, no prewarm spike.
-        let modelName = "openai_whisper-base.en"
-        whisperLogger.info("Loading WhisperKit model (\(modelName))...")
-        modelLoadProgress = 0.1
+        let model = modelName
+        whisperLogger.info("Loading WhisperKit model (\(model))...")
 
         do {
+            // Phase 1: Initialize WhisperKit shell (no download/load yet) so we can
+            // check whether the model is already on-device.
+            loadStatus = "Preparing voice model"
+            loadDetail = "Setting up speech recognition…"
+            modelLoadProgress = 0.02
+
             let config = WhisperKitConfig(
-                model: modelName,
+                model: model,
                 verbose: false,
                 logLevel: .none,
                 prewarm: false,   // prewarm doubles peak memory during load — crashes on device
-                load: true,
-                download: true
+                load: false,      // don't auto-load; we drive download + load with progress
+                download: false
             )
-            modelLoadProgress = 0.3
-            whisperKit = try await WhisperKit(config)
+            let wk = try await WhisperKit(config)
+
+            // Phase 2: Download the model with real progress. WhisperKit.download is a
+            // fast no-op if the model is already cached on-device (returns existing folder).
+            loadStatus = "Downloading voice model"
+            loadDetail = "≈70 MB · first launch only · keep WiFi on"
+            modelLoadProgress = 0.05
+
+            let modelFolderURL = try await WhisperKit.download(
+                variant: model,
+                progressCallback: { [weak self] progress in
+                    Task { @MainActor in
+                        guard let self else { return }
+                        // Download spans 0.05 → 0.80 of the bar
+                        let frac = progress.fractionCompleted
+                        self.modelLoadProgress = 0.05 + frac * 0.75
+                        let pct = Int(frac * 100)
+                        self.loadDetail = "≈70 MB · \(pct)% · keep WiFi on"
+                    }
+                }
+            )
+
+            // Phase 3: Load the model into memory.
+            loadStatus = "Loading voice model"
+            loadDetail = "Almost ready…"
+            modelLoadProgress = 0.85
+            wk.modelFolder = modelFolderURL
+            try await wk.loadModels()
+
+            whisperKit = wk
             isModelLoaded = true
             modelLoadProgress = 1.0
+            loadStatus = "Ready"
+            loadDetail = "Tap the mic and start speaking"
             whisperLogger.info("✓ WhisperKit model loaded")
         } catch {
-            let msg = "WhisperKit load failed: \(error.localizedDescription)"
+            let msg = "Voice model failed to load: \(error.localizedDescription)"
             self.error = msg
             self.lastError = msg
+            self.loadStatus = "Load failed"
+            self.loadDetail = "Tap to retry"
             modelLoadProgress = 0.0
             whisperLogger.error("\(msg)")
         }

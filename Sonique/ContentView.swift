@@ -33,20 +33,6 @@ struct ContentView: View {
 
                 Spacer()
 
-                // Model load progress (only shown once on first launch)
-                if let stt = voiceLoop.speechRecognition, !stt.isModelLoaded {
-                    VStack(spacing: 10) {
-                        Text("Loading voice model...")
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.7))
-                        ProgressView(value: stt.modelLoadProgress)
-                            .progressViewStyle(.linear)
-                            .frame(width: 200)
-                            .tint(.purple)
-                    }
-                    .padding(.bottom, 40)
-                }
-
                 // Response text (shows while speaking)
                 if !voiceLoop.partialResponse.isEmpty {
                     Text(voiceLoop.partialResponse)
@@ -56,7 +42,7 @@ struct ContentView: View {
                         .padding(.horizontal, 32)
                         .padding(.bottom, 32)
                         .transition(.opacity)
-                } else if !voiceLoop.lastResponse.isEmpty && !voiceLoop.isProcessing {
+                } else if !voiceLoop.lastResponse.isEmpty && !voiceLoop.isProcessing && !isLoadingModel {
                     Text(voiceLoop.lastResponse)
                         .font(.title3)
                         .foregroundColor(.white.opacity(0.6))
@@ -67,7 +53,7 @@ struct ContentView: View {
                 }
 
                 // What the user said
-                if !voiceLoop.lastTranscript.isEmpty {
+                if !voiceLoop.lastTranscript.isEmpty && !isLoadingModel {
                     Text(voiceLoop.lastTranscript)
                         .font(.subheadline)
                         .foregroundColor(.white.opacity(0.4))
@@ -76,15 +62,35 @@ struct ContentView: View {
                         .padding(.bottom, 16)
                 }
 
-                // Mic button
+                // Mic button with progress ring around it
                 Button(action: toggleVoice) {
                     ZStack {
+                        // Progress ring (only during model load)
+                        if isLoadingModel {
+                            Circle()
+                                .stroke(Color.white.opacity(0.12), lineWidth: 5)
+                                .frame(width: 108, height: 108)
+                            Circle()
+                                .trim(from: 0, to: loadProgress)
+                                .stroke(
+                                    Color.purple,
+                                    style: StrokeStyle(lineWidth: 5, lineCap: .round)
+                                )
+                                .frame(width: 108, height: 108)
+                                .rotationEffect(.degrees(-90))
+                                .animation(.easeInOut(duration: 0.3), value: loadProgress)
+                        }
+
                         Circle()
                             .fill(micButtonColor)
                             .frame(width: 88, height: 88)
                             .shadow(color: micButtonColor.opacity(0.5), radius: 20)
 
-                        if voiceLoop.isInitializing || voiceLoop.isProcessing {
+                        if isLoadingModel {
+                            Text("\(Int(loadProgress * 100))%")
+                                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                                .foregroundColor(.white)
+                        } else if voiceLoop.isProcessing {
                             ProgressView()
                                 .progressViewStyle(.circular)
                                 .tint(.white)
@@ -97,13 +103,22 @@ struct ContentView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .disabled(voiceLoop.isInitializing)
+                .disabled(isLoadingModel)
 
-                // Status label
-                Text(statusText)
-                    .font(.footnote)
-                    .foregroundColor(.white.opacity(0.4))
-                    .padding(.top, 16)
+                // Status + detail lines
+                VStack(spacing: 4) {
+                    Text(primaryStatus)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundColor(.white.opacity(0.7))
+                    if !secondaryStatus.isEmpty {
+                        Text(secondaryStatus)
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.4))
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .padding(.top, 16)
+                .padding(.horizontal, 32)
 
                 Spacer()
 
@@ -156,17 +171,43 @@ struct ContentView: View {
     }
 
     private var micButtonColor: Color {
+        if isLoadingModel { return .purple.opacity(0.7) }
         if voiceLoop.isProcessing { return .purple }
         if voiceLoop.isActive { return Color(red: 0.9, green: 0.2, blue: 0.2) }
         return Color(red: 0.3, green: 0.3, blue: 0.9)
     }
 
-    private var statusText: String {
-        if !isHealthy { return "SoniqueBar unreachable" }
-        if voiceLoop.isInitializing { return "Loading..." }
-        if voiceLoop.isProcessing { return "Thinking..." }
+    // Model is loading when STT exists but isn't loaded yet (or we're initializing it)
+    private var isLoadingModel: Bool {
+        if voiceLoop.isInitializing { return true }
+        if let stt = voiceLoop.speechRecognition, !stt.isModelLoaded { return true }
+        return false
+    }
+
+    private var loadProgress: Double {
+        voiceLoop.speechRecognition?.modelLoadProgress ?? 0
+    }
+
+    // Primary line: WhisperKit's own status during load, else the voice-loop state
+    private var primaryStatus: String {
+        if !isHealthy && !isLoadingModel { return "SoniqueBar unreachable" }
+        if isLoadingModel {
+            let s = voiceLoop.speechRecognition?.loadStatus ?? ""
+            return s.isEmpty ? "Preparing voice model" : s
+        }
+        if voiceLoop.isProcessing { return "Thinking…" }
         if voiceLoop.isActive { return "Listening" }
         return "Tap to speak"
+    }
+
+    // Secondary line: ETA / instructions during load
+    private var secondaryStatus: String {
+        if isLoadingModel {
+            return voiceLoop.speechRecognition?.loadDetail ?? ""
+        }
+        if !isHealthy { return "Check that SoniqueBar is running on the Mac" }
+        if voiceLoop.isActive { return "Speak naturally — pause when you're done" }
+        return ""
     }
 }
 
