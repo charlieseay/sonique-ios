@@ -12,6 +12,7 @@
 		3F7FC6012FCF20CF00280E3B /* ElevenLabsTTSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7FC5FF2FCF20CF00280E3B /* ElevenLabsTTSClient.swift */; };
 		3F7FC6022FCF20CF00280E3B /* SpeechRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7FC6002FCF20CF00280E3B /* SpeechRecognitionService.swift */; };
 		3F8E06692F99DA5C00F7E36D /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 3F8E06682F99DA5C00F7E36D /* GoogleMobileAds */; };
+		AC1B00000000000000WK0001 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = AC1B00000000000000WK0002 /* WhisperKit */; };
 		3FA000000000000000000017 /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3FA000000000000000000016 /* LiveKit */; };
 		91314C8980E6AC4B72F59493 /* VoiceLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F04A6A893C92D026BF8A2F /* VoiceLoop.swift */; };
 		D1864FD5AF3143B3F0797457 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 671A40B7929AC4785513019C /* HTTPClient.swift */; };
@@ -42,6 +43,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3F8E06692F99DA5C00F7E36D /* GoogleMobileAds in Frameworks */,
+				AC1B00000000000000WK0001 /* WhisperKit in Frameworks */,
 				3FA000000000000000000017 /* LiveKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -120,6 +122,7 @@
 			);
 			mainGroup = 3FA000000000000000000002;
 			packageReferences = (
+				AC1B00000000000000WK0003 /* XCRemoteSwiftPackageReference "WhisperKit" */,
 				3FA000000000000000000015 /* XCRemoteSwiftPackageReference "client-sdk-swift" */,
 				3F8E06672F99DA5C00F7E36D /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 			);
@@ -168,7 +171,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 48;
+				CURRENT_PROJECT_VERSION = 58;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -197,7 +200,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 48;
+				CURRENT_PROJECT_VERSION = 58;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -316,6 +319,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		AC1B00000000000000WK0003 /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/argmaxinc/WhisperKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -328,6 +339,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3FA000000000000000000015 /* XCRemoteSwiftPackageReference "client-sdk-swift" */;
 			productName = LiveKit;
+		};
+		AC1B00000000000000WK0002 /* WhisperKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AC1B00000000000000WK0003 /* XCRemoteSwiftPackageReference "WhisperKit" */;
+			productName = WhisperKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
