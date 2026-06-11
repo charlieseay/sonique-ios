@@ -44,6 +44,12 @@ struct ContentView: View {
 
                     Spacer()
 
+                    Text(appVersion)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.5))
+
+                    Spacer()
+
                     Button(action: { showVoicePicker = true }) {
                         HStack(spacing: 6) {
                             Image(systemName: "person.wave.2.fill")
@@ -209,6 +215,12 @@ struct ContentView: View {
     }
 
     // MARK: - UI State
+
+    private var appVersion: String {
+        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+        return "v\(v) (\(b))"
+    }
 
     private var statusIcon: String {
         if voiceLoop.isInitializing {
