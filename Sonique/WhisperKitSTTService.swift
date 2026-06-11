@@ -28,16 +28,18 @@ class WhisperKitSTTService: ObservableObject {
     @Published var debugLines: [String] = []      // on-screen VAD/transcript trace
 
     // VAD parameters (tunable)
-    // .voiceChat + .duckOthers attenuates input gain, so speech RMS sits low.
-    // 0.003 reliably catches normal speaking voice without tripping on room noise.
-    var vadSilenceThreshold: Float = 0.003      // RMS below this = silence
+    // Wired trace showed .voiceChat+.duckOthers attenuates mic ~10×: speech peaked at
+    // only 0.0024 RMS. Threshold dropped to 0.0008 + we apply input gain below.
+    var vadSilenceThreshold: Float = 0.0008     // RMS below this = silence
     var vadSilenceDuration: TimeInterval = 1.2  // Seconds of silence to finalize
     var vadMinSpeechDuration: TimeInterval = 0.3 // Min speech before we bother transcribing
+    var inputGain: Float = 8.0                  // Compensate for .voiceChat attenuation
 
     private var peakRMSThisUtterance: Float = 0
     private func dbg(_ s: String) {
         debugLines.append(s)
         if debugLines.count > 40 { debugLines.removeFirst(debugLines.count - 40) }
+        FileTracer.log("[STT] \(s)")
     }
 
     private var whisperKit: WhisperKit?
@@ -148,13 +150,20 @@ class WhisperKitSTTService: ObservableObject {
         whisperLogger.info("Configuring audio session (.playAndRecord, .voiceChat)...")
 
         let session = AVAudioSession.sharedInstance()
-        // .voiceChat enables AEC + live duplex — fixes OSStatus -50 by avoiding .record + .default conflict
+        // .voiceChat enables AEC + live duplex — fixes OSStatus -50 by avoiding .record + .default conflict.
+        // Dropped .duckOthers — it was attenuating mic input ~10× (wired trace: speech peaked 0.0024 RMS).
         try session.setCategory(
             .playAndRecord,
             mode: .voiceChat,
-            options: [.allowBluetooth, .defaultToSpeaker, .duckOthers]
+            options: [.allowBluetooth, .defaultToSpeaker]
         )
         try session.setActive(true, options: .notifyOthersOnDeactivation)
+
+        // Crank hardware input gain to max if the device exposes a settable gain.
+        if session.isInputGainSettable {
+            try? session.setInputGain(1.0)
+            whisperLogger.info("Input gain set to 1.0 (was \(session.inputGain))")
+        }
 
         whisperLogger.info("Audio session ready. Setting up engine...")
 
@@ -217,24 +226,41 @@ class WhisperKitSTTService: ObservableObject {
 
     // MARK: - Audio Processing + VAD
 
+    private var tapCount = 0
+    private var maxRMSSeen: Float = 0
+
     private func processAudioBuffer(_ buffer: AVAudioPCMBuffer, inputFormat: AVAudioFormat, targetFormat: AVAudioFormat) {
         guard let channelData = buffer.floatChannelData?[0] else { return }
         let frameCount = Int(buffer.frameLength)
 
         // Convert to 16kHz if needed
-        let samples: [Float]
+        var samples: [Float]
         if inputFormat.sampleRate != sampleRate {
             samples = downsample(channelData, frameCount: frameCount, fromRate: inputFormat.sampleRate, toRate: sampleRate)
         } else {
             samples = Array(UnsafeBufferPointer(start: channelData, count: frameCount))
         }
 
-        // RMS energy for VAD
+        // Apply input gain to compensate for .voiceChat attenuation, clamped to [-1, 1].
+        let gain = inputGain
+        if gain != 1.0 {
+            for i in samples.indices {
+                samples[i] = max(-1.0, min(1.0, samples[i] * gain))
+            }
+        }
+
+        // RMS energy for VAD (on the gained signal)
         let rms = sqrt(samples.map { $0 * $0 }.reduce(0, +) / Float(samples.count))
         let now = Date()
 
         Task { @MainActor in
             liveRMS = rms
+            tapCount += 1
+            maxRMSSeen = max(maxRMSSeen, rms)
+            // Heartbeat every ~50 taps (~1s) so we can SEE the tap is firing + peak level
+            if tapCount % 50 == 0 {
+                dbg("🔊 tap#\(tapCount) live \(String(format: "%.4f", rms)) peak \(String(format: "%.4f", maxRMSSeen))")
+            }
 
             if rms > vadSilenceThreshold {
                 // Speech detected

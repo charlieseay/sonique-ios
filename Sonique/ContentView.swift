@@ -124,48 +124,19 @@ struct ContentView: View {
 
                 // Debug panel (hidden by default)
                 if showDebug {
-                    VStack(spacing: 4) {
-                        // Live mic level meter vs VAD threshold
-                        if voiceLoop.isActive, let stt = voiceLoop.speechRecognition {
-                            HStack(spacing: 6) {
-                                Text("mic")
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 2) {
+                            ForEach(Array(sttDebugLines.suffix(30).enumerated()), id: \.offset) { _, line in
+                                Text(line)
                                     .font(.system(size: 9, design: .monospaced))
-                                    .foregroundColor(.white.opacity(0.5))
-                                GeometryReader { geo in
-                                    ZStack(alignment: .leading) {
-                                        Rectangle().fill(Color.white.opacity(0.1))
-                                        // level bar — scaled so 0.03 RMS ≈ full width
-                                        Rectangle()
-                                            .fill(stt.liveRMS > stt.vadSilenceThreshold ? Color.green : Color.gray)
-                                            .frame(width: min(geo.size.width, geo.size.width * CGFloat(stt.liveRMS / 0.03)))
-                                        // threshold marker
-                                        Rectangle().fill(Color.red)
-                                            .frame(width: 1)
-                                            .offset(x: geo.size.width * CGFloat(stt.vadSilenceThreshold / 0.03))
-                                    }
-                                }
-                                .frame(height: 10)
-                                Text(String(format: "%.4f", stt.liveRMS))
-                                    .font(.system(size: 9, design: .monospaced))
-                                    .foregroundColor(.white.opacity(0.5))
+                                    .foregroundColor(.green.opacity(0.8))
                             }
-                            .padding(.horizontal, 8)
                         }
-
-                        ScrollView {
-                            VStack(alignment: .leading, spacing: 2) {
-                                ForEach(Array(sttDebugLines.suffix(30).enumerated()), id: \.offset) { _, line in
-                                    Text(line)
-                                        .font(.system(size: 9, design: .monospaced))
-                                        .foregroundColor(.green.opacity(0.8))
-                                }
-                            }
-                            .padding(8)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .frame(height: 150)
-                        .background(Color.black.opacity(0.5))
+                        .padding(8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .frame(height: 150)
+                    .background(Color.black.opacity(0.5))
                 }
             }
         }
@@ -199,9 +170,9 @@ struct ContentView: View {
         return "v\(v) (\(b))"
     }
 
-    // Merge VoiceLoop's pipeline log with WhisperKit's VAD/transcript trace
+    // VoiceLoop's pipeline log (Apple STT has no separate trace array)
     private var sttDebugLines: [String] {
-        voiceLoop.debugLog + (voiceLoop.speechRecognition?.debugLines ?? [])
+        voiceLoop.debugLog
     }
 
     private var micButtonColor: Color {
@@ -211,34 +182,23 @@ struct ContentView: View {
         return Color(red: 0.3, green: 0.3, blue: 0.9)
     }
 
-    // Model is loading when STT exists but isn't loaded yet (or we're initializing it)
+    // Apple STT initializes near-instantly — only "loading" during permission/TTS setup.
     private var isLoadingModel: Bool {
-        if voiceLoop.isInitializing { return true }
-        if let stt = voiceLoop.speechRecognition, !stt.isModelLoaded { return true }
-        return false
+        voiceLoop.isInitializing
     }
 
-    private var loadProgress: Double {
-        voiceLoop.speechRecognition?.modelLoadProgress ?? 0
-    }
+    private var loadProgress: Double { voiceLoop.isInitializing ? 0.5 : 0 }
 
-    // Primary line: WhisperKit's own status during load, else the voice-loop state
     private var primaryStatus: String {
         if !isHealthy && !isLoadingModel { return "SoniqueBar unreachable" }
-        if isLoadingModel {
-            let s = voiceLoop.speechRecognition?.loadStatus ?? ""
-            return s.isEmpty ? "Preparing voice model" : s
-        }
+        if isLoadingModel { return "Starting…" }
         if voiceLoop.isProcessing { return "Thinking…" }
         if voiceLoop.isActive { return "Listening" }
         return "Tap to speak"
     }
 
-    // Secondary line: ETA / instructions during load
     private var secondaryStatus: String {
-        if isLoadingModel {
-            return voiceLoop.speechRecognition?.loadDetail ?? ""
-        }
+        if isLoadingModel { return "Setting up microphone" }
         if !isHealthy { return "Check that SoniqueBar is running on the Mac" }
         if voiceLoop.isActive { return "Speak naturally — pause when you're done" }
         return ""
