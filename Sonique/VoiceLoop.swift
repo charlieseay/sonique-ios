@@ -117,6 +117,17 @@ class VoiceLoop: ObservableObject {
         // Pause recognition while we fetch + speak. Engine + session stay live.
         vs.beginSpeaking()
 
+        // On-device native intents first — time/date/battery answered instantly by iOS,
+        // no round-trip to SoniqueBar (works offline).
+        if let native = NativeIntents.handle(transcript) {
+            FileTracer.log("[loop] native intent → '\(native)'")
+            lastTranscript = transcript
+            lastResponse = native
+            await speakSentence(native)
+            vs.endSpeaking()
+            return
+        }
+
         var sentenceBuffer = ""
         var fullResponse = ""
 
