@@ -20,45 +20,55 @@ struct ContentView: View {
 
             VStack(spacing: 0) {
                 // Top bar
-                HStack(spacing: 14) {
+                HStack(spacing: 8) {
                     // Assistant identity — tap to rename / set photo
                     Button(action: { showAssistantSettings = true }) {
                         HStack(spacing: 7) {
                             if let img = profile.photo {
                                 Image(uiImage: img).resizable().scaledToFill()
-                                    .frame(width: 26, height: 26).clipShape(Circle())
+                                    .frame(width: 28, height: 28).clipShape(Circle())
                             } else {
                                 Circle().fill(Color.purple.opacity(0.4))
-                                    .frame(width: 26, height: 26)
-                                    .overlay(Image(systemName: "waveform").font(.system(size: 12)).foregroundColor(.white))
+                                    .frame(width: 28, height: 28)
+                                    .overlay(Image(systemName: "waveform").font(.system(size: 13)).foregroundColor(.white))
                             }
                             Text(profile.name)
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.white.opacity(0.8))
+                                .font(.callout.weight(.medium))   // Dynamic Type
+                                .foregroundColor(.white.opacity(0.85))
                         }
+                        .frame(minHeight: 44)                     // HIG 44pt tap target
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .padding(.leading)
+                    .accessibilityLabel("Assistant settings")
+                    .accessibilityHint("Rename your assistant or set a photo")
 
                     Spacer()
 
                     // Voice picker
                     Button(action: { showVoicePicker = true }) {
                         Image(systemName: "waveform.circle")
-                            .font(.system(size: 16))
-                            .foregroundColor(.white.opacity(0.55))
+                            .font(.title3)
+                            .foregroundColor(.white.opacity(0.6))
+                            .frame(width: 44, height: 44)         // HIG 44pt
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Choose voice")
 
                     Button(action: { showDebug.toggle() }) {
                         Image(systemName: "ladybug")
-                            .font(.system(size: 14))
-                            .foregroundColor(.white.opacity(0.3))
+                            .font(.body)
+                            .foregroundColor(.white.opacity(0.35))
+                            .frame(width: 44, height: 44)         // HIG 44pt
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .padding(.trailing)
+                    .accessibilityLabel("Toggle debug log")
                 }
-                .padding(.top, 16)
+                .padding(.top, 8)
 
                 Spacer()
 
@@ -133,6 +143,9 @@ struct ContentView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(isLoadingModel)
+                .accessibilityLabel(voiceLoop.isActive ? "Stop listening" : "Start listening")
+                .accessibilityHint(voiceLoop.isActive ? "Double tap to stop" : "Double tap to talk to \(profile.name)")
+                .accessibilityAddTraits(.isButton)
 
                 // Status + detail lines
                 VStack(spacing: 4) {
@@ -207,6 +220,8 @@ struct ContentView: View {
     }
 
     private func toggleVoice() {
+        // Haptic confirmation for the primary action (HIG).
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         if voiceLoop.isActive {
             voiceLoop.stop()
         } else {

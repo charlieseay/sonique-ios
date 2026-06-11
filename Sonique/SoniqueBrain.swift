@@ -15,14 +15,22 @@ final class SoniqueBrain {
     private let device = "mobile"
     private let fm = FileManager.default
 
-    private init() { ensureStructure() }
+    private let containerID = "iCloud.com.seayniclabs.sonique"
+    private var cachedBase: URL?
 
-    /// iCloud base via this app's ubiquity container's Documents folder. Requires the
-    /// iCloud Documents entitlement; nil if unavailable (→ local fallback). When the
-    /// entitlement is added, this syncs to iCloud Drive under the app's folder.
-    private var iCloudBase: URL? {
-        guard let container = fm.url(forUbiquityContainerIdentifier: nil) else { return nil }
-        return container.appendingPathComponent("Documents/SoniqueProfiles")
+    private init() {
+        ensureStructure()  // local fallback immediately
+        // Resolve the shared ubiquity container OFF the main thread (Apple: it can block).
+        let id = containerID
+        let fmRef = fm
+        Task.detached(priority: .utility) {
+            let resolved = fmRef.url(forUbiquityContainerIdentifier: id)?
+                .appendingPathComponent("Documents/SoniqueProfiles")
+            await MainActor.run {
+                self.cachedBase = resolved
+                self.ensureStructure()
+            }
+        }
     }
 
     private var localFallback: URL {
@@ -30,7 +38,7 @@ final class SoniqueBrain {
             .appendingPathComponent("SoniqueProfiles")
     }
 
-    private var base: URL { iCloudBase ?? localFallback }
+    private var base: URL { cachedBase ?? localFallback }
     private var sharedDir: URL { base.appendingPathComponent("shared") }
     private var deviceDir: URL { base.appendingPathComponent(device) }
 
@@ -96,19 +104,32 @@ final class SoniqueBrain {
     // MARK: - Helpers
 
     private func readText(_ url: URL) -> String {
-        (try? String(contentsOf: url, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        // Trigger download for files another device wrote, then coordinated read.
+        if (try? url.checkResourceIsReachable()) != true {
+            try? fm.startDownloadingUbiquitousItem(at: url)
+        }
+        var result = ""
+        var coordError: NSError?
+        NSFileCoordinator().coordinate(readingItemAt: url, options: [], error: &coordError) { readURL in
+            result = (try? String(contentsOf: readURL, encoding: .utf8)) ?? ""
+        }
+        return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// Coordinated append — safe when both devices touch the same file.
     private func appendJSONL(_ obj: [String: Any], to url: URL) {
         guard let data = try? JSONSerialization.data(withJSONObject: obj),
               let line = String(data: data, encoding: .utf8) else { return }
         let entry = line + "\n"
-        if let handle = try? FileHandle(forWritingTo: url) {
-            handle.seekToEndOfFile()
-            if let d = entry.data(using: .utf8) { handle.write(d) }
-            try? handle.close()
-        } else {
-            try? entry.write(to: url, atomically: true, encoding: .utf8)
+        var coordError: NSError?
+        NSFileCoordinator().coordinate(writingItemAt: url, options: [], error: &coordError) { writeURL in
+            if let handle = try? FileHandle(forWritingTo: writeURL) {
+                handle.seekToEndOfFile()
+                if let d = entry.data(using: .utf8) { handle.write(d) }
+                try? handle.close()
+            } else {
+                try? entry.write(to: writeURL, atomically: true, encoding: .utf8)
+            }
         }
     }
 }
