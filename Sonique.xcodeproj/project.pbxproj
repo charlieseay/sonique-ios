@@ -323,7 +323,7 @@
 				<key>CODE_SIGN_ENTITLEMENTS</key>
 				<string>Sonique.entitlements</string>
 				<key>CURRENT_PROJECT_VERSION</key>
-				<string>58</string>
+				<string>60</string>
 				<key>DEVELOPMENT_TEAM</key>
 				<string>7NSS5CJL9E</string>
 				<key>EMBED_PACKAGE_FRAMEWORKS</key>
@@ -345,7 +345,7 @@
 				<key>LE_SWIFT_VERSION</key>
 				<string>5.0</string>
 				<key>MARKETING_VERSION</key>
-				<string>1.0</string>
+				<string>2.1.0</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
 				<string>com.seayniclabs.sonique</string>
 				<key>PRODUCT_NAME</key>
@@ -375,7 +375,7 @@
 				<key>CODE_SIGN_ENTITLEMENTS</key>
 				<string>Sonique.entitlements</string>
 				<key>CURRENT_PROJECT_VERSION</key>
-				<string>58</string>
+				<string>60</string>
 				<key>DEVELOPMENT_TEAM</key>
 				<string>7NSS5CJL9E</string>
 				<key>EMBED_PACKAGE_FRAMEWORKS</key>
@@ -397,7 +397,7 @@
 				<key>LE_SWIFT_VERSION</key>
 				<string>5.0</string>
 				<key>MARKETING_VERSION</key>
-				<string>1.0</string>
+				<string>2.1.0</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
 				<string>com.seayniclabs.sonique</string>
 				<key>PRODUCT_NAME</key>
