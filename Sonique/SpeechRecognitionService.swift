@@ -67,6 +67,9 @@ class SpeechRecognitionService: ObservableObject {
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .voiceChat,
                                 options: [.allowBluetooth, .defaultToSpeaker])
+        // Low-latency buffer (5ms) and 16kHz sample rate for speech recognition
+        try session.setPreferredIOBufferDuration(0.005)
+        try session.setPreferredSampleRate(16000.0)
         try session.setActive(true, options: .notifyOthersOnDeactivation)
         FileTracer.log("[STT] session ready (.playAndRecord/.voiceChat). on-device=\(recognizer.supportsOnDeviceRecognition)")
 
