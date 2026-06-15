@@ -41,7 +41,7 @@ enum Config {
     // MARK: - SoniqueBar endpoints (user-configurable)
 
     static let defaultLANURL = "http://192.168.0.221:8890"
-    static let defaultTailscaleURL = "http://100.122.13.35:8890"
+    static let defaultTailscaleURL = "http://100.122.13.35:8891"  // Bridge port for Tailscale
 
     /// Primary endpoint (LAN by default). User-editable in Settings.
     static var commandServerURL: String {
