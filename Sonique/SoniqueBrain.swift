@@ -89,10 +89,24 @@ final class SoniqueBrain {
         var selectedVoiceID: String?
         var selectedVoiceName: String?
         var permissionsGranted: PermissionState?
+        var discoveredCapabilities: DiscoveredCapabilities?
+        var lastCapabilityDiscovery: String?  // ISO8601 timestamp
 
         struct PermissionState: Codable {
             var speech: Bool
             var microphone: Bool
+        }
+
+        struct DiscoveredCapabilities: Codable {
+            var homeKitDevices: [String]?  // List of HomeKit accessory names
+            var mcpServers: [MCPServerInfo]?  // Available MCP servers
+            var availableAPIs: [String]?  // Available web APIs
+        }
+
+        struct MCPServerInfo: Codable {
+            var name: String
+            var endpoint: String
+            var capabilities: [String]
         }
     }
 
