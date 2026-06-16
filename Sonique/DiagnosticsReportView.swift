@@ -89,5 +89,8 @@ struct ShareSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
 }
 
-// Allow URL to drive .sheet(item:)
-extension URL: Identifiable { public var id: String { absoluteString } }
+// Wrapper to make URL work with .sheet(item:) without extending Foundation types
+struct IdentifiableURL: Identifiable {
+    let id = UUID()
+    let url: URL
+}

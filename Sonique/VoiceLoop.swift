@@ -159,7 +159,7 @@ class VoiceLoop: ObservableObject {
 
             // Wake-word gating: when asleep, only respond if the user said the assistant's
             // name; strip it from the request. When awake, respond to everything.
-            var request = transcript
+            let request: String
             if !isAwake {
                 let wake = AssistantProfile.shared.wakeWord
                 guard let stripped = stripWakeWord(from: transcript, wake: wake) else {
@@ -180,6 +180,8 @@ class VoiceLoop: ObservableObject {
                 }
                 request = stripped
                 FileTracer.log("[loop] woke on '\(wake)' → '\(request)'")
+            } else {
+                request = transcript
             }
 
             cancelSleepTimer()
@@ -236,7 +238,7 @@ class VoiceLoop: ObservableObject {
         }
 
         // Drop the matched word + a leading "hey" if present. Return the remainder.
-        var remaining = Array(words[(hitIndex + 1)...])
+        let remaining = Array(words[(hitIndex + 1)...])
         // (the wake word may have been preceded by "hey" — already excluded since we keep
         // only words after the hit)
         let result = remaining.joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: " ,.!?"))
@@ -255,7 +257,7 @@ class VoiceLoop: ObservableObject {
     /// A crude phonetic key: drop vowels (except leading), collapse common homophone
     /// consonants (c/k→k, q→k, ph/f→f, s/z→s), dedupe. "cael"→"kl", "kale"→"kl".
     private func phoneticKey(_ s: String) -> String {
-        var chars = Array(s.lowercased())
+        let chars = Array(s.lowercased())
         guard !chars.isEmpty else { return "" }
         var out = ""
         for (i, c) in chars.enumerated() {

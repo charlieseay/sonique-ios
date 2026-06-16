@@ -3,6 +3,7 @@ import PhotosUI
 
 /// Lets the user name their assistant (the name becomes the wake word) and set a
 /// profile photo. Default name is "Sonique"; Charlie sets his to "Cael".
+@MainActor
 struct AssistantSettingsView: View {
     @ObservedObject private var profile = AssistantProfile.shared
     @Environment(\.dismiss) private var dismiss

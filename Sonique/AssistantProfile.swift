@@ -35,7 +35,7 @@ final class AssistantProfile: ObservableObject {
     private func persist() {
         UserDefaults.standard.set(name, forKey: nameKey)
         guard let dir = Self.mobileDir() else { return }
-        let json: [String: Any] = ["name": name, "photo": photo != nil ? "photo.jpg" : nil as Any?]
+        let json: [String: Any] = ["name": name, "photo": photo != nil ? "photo.jpg" as Any : NSNull()]
         if let data = try? JSONSerialization.data(withJSONObject: json) {
             try? data.write(to: dir.appendingPathComponent("assistant.json"))
         }
