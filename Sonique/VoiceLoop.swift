@@ -170,6 +170,7 @@ class VoiceLoop: ObservableObject {
             // New turn → dismiss any showing artifact (the conversation has organically moved on).
             artifactURL = nil
             isProcessing = true
+            FileTracer.log("[loop] isProcessing = true")
             lastTranscript = request
             partialResponse = ""
             debugLog.append("You: \(request)")
@@ -187,6 +188,7 @@ class VoiceLoop: ObservableObject {
                 session?.endSpeaking()
             }
             isProcessing = false
+            FileTracer.log("[loop] isProcessing = false")
             // After a reply, arm the sleep timer — if no follow-up, go to sleep (needs wake word).
             armSleepTimer()
         }
