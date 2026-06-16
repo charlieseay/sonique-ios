@@ -123,7 +123,7 @@ class VoiceLoop: ObservableObject {
         vs.endSpeaking()       // Resume listening
         isProcessing = false
         partialResponse = ""
-        FileTracer.log("[vs] interrupted by user")
+        RemoteLogger.log("[vs] interrupted by user - playback stopped, resumed listening")
     }
 
     // MARK: - Pipeline
@@ -136,7 +136,7 @@ class VoiceLoop: ObservableObject {
             // Ignore duplicate transcripts (stale submissions from before speaking started)
             // Check this FIRST before barge-in logic
             if transcript == lastTranscript {
-                FileTracer.log("[loop] ignoring duplicate transcript '\(transcript)'")
+                RemoteLogger.log("[loop] ignoring duplicate transcript '\(transcript)'")
                 continue
             }
 
@@ -149,17 +149,18 @@ class VoiceLoop: ObservableObject {
                                    true  // Allow any speech to barge in
 
                 if shouldBargeIn {
-                    FileTracer.log("[loop] barge-in detected: '\(transcript)' - cancelling current task")
+                    RemoteLogger.log("[loop] BARGE-IN DETECTED: '\(transcript)' (isProcessing=true) - cancelling task")
                     processingTask?.cancel()
                     processingTask = nil
                     stopSpeaking()
 
                     // If it's just "stop" or "cancel", just stop talking and resume listening
                     if lower == "stop" || lower == "cancel" {
-                        FileTracer.log("[loop] stop/cancel - resuming listening")
+                        RemoteLogger.log("[loop] stop/cancel command - resuming listening (not processing new command)")
                         continue
                     }
                     // Otherwise fall through to process the new command
+                    RemoteLogger.log("[loop] barge-in with new command '\(transcript)' - will process")
                 } else {
                     continue
                 }
@@ -198,11 +199,10 @@ class VoiceLoop: ObservableObject {
             artifactURL = nil
             isProcessing = true
             objectWillChange.send()  // Force SwiftUI update
-            FileTracer.log("[loop] isProcessing = true")
+            RemoteLogger.log("[loop] START processing request: '\(request)' (isProcessing=true)")
             lastTranscript = request
             partialResponse = ""
             debugLog.append("You: \(request)")
-            FileTracer.log("[loop] transcript: '\(request)' → SoniqueBar")
 
             // Create cancellable task for processing
             processingTask = Task {
@@ -211,9 +211,9 @@ class VoiceLoop: ObservableObject {
 
             do {
                 try await processingTask!.value
-                FileTracer.log("[loop] done: '\(lastResponse)'")
+                RemoteLogger.log("[loop] COMPLETED processing: '\(lastResponse)'")
             } catch is CancellationError {
-                FileTracer.log("[loop] cancelled by barge-in")
+                RemoteLogger.log("[loop] CANCELLED by barge-in")
             } catch {
                 // Never throw an app alert for a transient failure — speak a friendly,
                 // retryable message and keep listening.
