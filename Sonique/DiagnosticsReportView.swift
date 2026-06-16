@@ -9,7 +9,7 @@ struct DiagnosticsReportView: View {
     let connectionOK: Bool
     let activeEndpoint: String
     @Environment(\.dismiss) private var dismiss
-    @State private var shareURL: URL?
+    @State private var shareURL: IdentifiableURL?
     @State private var note: String = ""
 
     var body: some View {
@@ -30,7 +30,9 @@ struct DiagnosticsReportView: View {
                 }
                 Section {
                     Button {
-                        shareURL = buildReport()
+                        if let url = buildReport() {
+                            shareURL = IdentifiableURL(url: url)
+                        }
                     } label: {
                         Label("Share with support", systemImage: "square.and.arrow.up")
                     }
@@ -43,8 +45,8 @@ struct DiagnosticsReportView: View {
                     Button("Done") { dismiss() }
                 }
             }
-            .sheet(item: $shareURL) { url in
-                ShareSheet(items: [url])
+            .sheet(item: $shareURL) { wrapper in
+                ShareSheet(items: [wrapper.url])
             }
         }
     }

@@ -114,6 +114,18 @@ class VoiceSession: NSObject, ObservableObject {
     private func beginRecognition(_ recognizer: SFSpeechRecognizer) {
         endRecognition()  // clean any prior pass
 
+        // Ensure engine is running before installing tap
+        if !engine.isRunning {
+            FileTracer.log("[vs] engine stopped - restarting before recognition")
+            do {
+                try engine.start()
+                FileTracer.log("[vs] engine restarted")
+            } catch {
+                FileTracer.log("[vs] ERROR: engine start failed: \(error.localizedDescription)")
+                return
+            }
+        }
+
         let req = SFSpeechAudioBufferRecognitionRequest()
         req.shouldReportPartialResults = true
         if recognizer.supportsOnDeviceRecognition { req.requiresOnDeviceRecognition = true }
@@ -123,11 +135,17 @@ class VoiceSession: NSObject, ObservableObject {
         let input = engine.inputNode
         let format = input.outputFormat(forBus: 0)
         input.removeTap(onBus: 0)
-        input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
-            // Don't feed the recognizer while Sonique is speaking (belt-and-suspenders
-            // on top of AEC) so a residual echo can't be transcribed.
-            guard let self, !self.isSpeakingNow() else { return }
-            self.request?.append(buffer)
+        do {
+            input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
+                // Always feed the recognizer - AEC handles echo cancellation.
+                // This allows barge-in commands like "stop" to be heard while speaking.
+                guard let self else { return }
+                self.request?.append(buffer)
+            }
+            FileTracer.log("[vs] tap installed, recognition active")
+        } catch {
+            FileTracer.log("[vs] ERROR: installTap failed: \(error.localizedDescription)")
+            return
         }
 
         task = recognizer.recognitionTask(with: req) { [weak self] result, error in
@@ -144,11 +162,27 @@ class VoiceSession: NSObject, ObservableObject {
                 if let error {
                     let ns = error as NSError
                     self.lastError = "\(ns.domain) \(ns.code)"
+
+                    // Error 1110 = "No speech detected" - this is NORMAL after ~1s silence.
+                    // Don't restart, just wait for the next audio input.
+                    if ns.code == 1110 {
+                        FileTracer.log("[vs] silence timeout (1110) - waiting for speech")
+                        return
+                    }
+
+                    FileTracer.log("[vs] ERROR: recognition failed: \(ns.domain) \(ns.code) - \(error.localizedDescription)")
                     if !self.lastStablePartial.isEmpty {
                         self.submit(self.lastStablePartial)
                     } else {
-                        // 1110/301 silence — restart the recognition pass only (engine stays up).
-                        if self.isListening && !self.isSpeaking {
+                        // 301 or other errors — restart the recognition pass
+                        guard self.isListening && !self.isSpeaking else {
+                            FileTracer.log("[vs] skipping restart: isListening=\(self.isListening) isSpeaking=\(self.isSpeaking)")
+                            return
+                        }
+                        FileTracer.log("[vs] restarting recognition after error")
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
+                            guard self.isListening else { return }
                             self.beginRecognition(recognizer)
                         }
                     }
@@ -195,6 +229,9 @@ class VoiceSession: NSObject, ObservableObject {
     func beginSpeaking() {
         isSpeaking = true
         endpointTimer?.cancel(); endpointTimer = nil
+        // Clear the transcript buffer so we don't re-submit the previous utterance
+        transcript = ""
+        lastStablePartial = ""
         // Keep recognition running - AEC will prevent speaker output from being heard as input
         FileTracer.log("[vs] begin speaking (recognition active for barge-in, AEC enabled)")
     }
@@ -233,7 +270,16 @@ class VoiceSession: NSObject, ObservableObject {
         isSpeaking = false
         guard isListening, let r = recognizer else { return }
         FileTracer.log("[vs] end speaking → resume recognition")
-        beginRecognition(r)
+        // Cancel the old task AND remove the tap to clear any buffered audio
+        task?.cancel()
+        task = nil
+        engine.inputNode.removeTap(onBus: 0)
+        // Small delay to ensure tap is fully removed before reinstalling
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            guard self.isListening else { return }
+            self.beginRecognition(r)
+        }
     }
 
     /// Stop playback immediately (for voice barge-in / interrupt)

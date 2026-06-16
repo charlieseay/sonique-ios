@@ -64,15 +64,30 @@ struct HTTPClient {
                     let batteryLevel = await MainActor.run { Int(UIDevice.current.batteryLevel * 100) }
                     let batteryState = await MainActor.run { UIDevice.current.batteryState }
                     let isCharging = (batteryState == .charging || batteryState == .full)
+
+                    let profile = await MainActor.run { AssistantProfile.shared }
                     let payload: [String: Any] = [
                         "text": text,
                         "device": [
                             "battery_percent": batteryLevel,
                             "is_charging": isCharging
+                        ],
+                        "identity": [
+                            "name": profile.name,
+                            "wake_word": profile.wakeWord,
+                            "skills": profile.skills
                         ]
                     ]
                     #else
-                    let payload: [String: Any] = ["text": text]
+                    let profile = await MainActor.run { AssistantProfile.shared }
+                    let payload: [String: Any] = [
+                        "text": text,
+                        "identity": [
+                            "name": profile.name,
+                            "wake_word": profile.wakeWord,
+                            "skills": profile.skills
+                        ]
+                    ]
                     #endif
 
                     request.httpBody = try JSONSerialization.data(withJSONObject: payload)

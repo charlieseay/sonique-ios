@@ -30,6 +30,76 @@ final class AssistantProfile: ObservableObject {
         name.lowercased().split(separator: " ").first.map(String.init) ?? name.lowercased()
     }
 
+    /// Skills manifest - capabilities exposed to the LLM
+    var skills: [[String: Any]] {
+        [
+            ["category": "Time & Calendar", "skills": [
+                "Current time and date",
+                "Calendar events and meetings",
+                "Create/update calendar events"
+            ]],
+            ["category": "System Control", "skills": [
+                "Open/close applications",
+                "System volume control",
+                "Display brightness",
+                "Screenshot capture"
+            ]],
+            ["category": "Home Automation", "skills": [
+                "Control lights (on/off, brightness, color)",
+                "Query device status",
+                "Scene activation",
+                "HomeKit and Home Assistant integration"
+            ]],
+            ["category": "Knowledge & Memory", "skills": [
+                "Search Obsidian vault notes",
+                "Read/append to daily note",
+                "Create new notes",
+                "Query conversation history",
+                "Team knowledge base access (NotebookLM)"
+            ]],
+            ["category": "Communication", "skills": [
+                "Send Slack messages",
+                "Read Slack channels",
+                "Email composition (future)",
+                "SMS/iMessage (future)"
+            ]],
+            ["category": "Infrastructure & DevOps", "skills": [
+                "Check Docker container status",
+                "Start/stop/restart containers",
+                "View service logs",
+                "Helmsman queue management",
+                "Service health checks"
+            ]],
+            ["category": "Web & Research", "skills": [
+                "Web search",
+                "Fetch and summarize URLs",
+                "Weather information",
+                "General knowledge queries"
+            ]],
+            ["category": "Vision & Analysis", "skills": [
+                "Analyze screenshots",
+                "Describe images",
+                "Visual question answering",
+                "Camera capture (future)"
+            ]],
+            ["category": "File Operations", "skills": [
+                "Find files",
+                "List directory contents",
+                "Read file contents",
+                "File management (future)"
+            ]]
+        ]
+    }
+
+    /// Skills manifest as JSON string for HTTP payload
+    var skillsJSON: String {
+        guard let data = try? JSONSerialization.data(withJSONObject: skills),
+              let json = String(data: data, encoding: .utf8) else {
+            return "[]"
+        }
+        return json
+    }
+
     // MARK: - Persistence
 
     private func persist() {

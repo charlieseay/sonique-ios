@@ -133,6 +133,13 @@ class VoiceLoop: ObservableObject {
             guard let transcript = notification.userInfo?["transcript"] as? String,
                   !transcript.isEmpty else { continue }
 
+            // Ignore duplicate transcripts (stale submissions from before speaking started)
+            // Check this FIRST before barge-in logic
+            if transcript == lastTranscript {
+                FileTracer.log("[loop] ignoring duplicate transcript '\(transcript)'")
+                continue
+            }
+
             // Barge-in: if user speaks during processing, cancel the current task and start fresh
             if isProcessing {
                 let lower = transcript.lowercased()
@@ -147,8 +154,9 @@ class VoiceLoop: ObservableObject {
                     processingTask = nil
                     stopSpeaking()
 
-                    // If it's just "stop" or "cancel", don't process it as a command
+                    // If it's just "stop" or "cancel", just stop talking and resume listening
                     if lower == "stop" || lower == "cancel" {
+                        FileTracer.log("[loop] stop/cancel - resuming listening")
                         continue
                     }
                     // Otherwise fall through to process the new command
@@ -384,7 +392,12 @@ class VoiceLoop: ObservableObject {
 
     private func speakSentence(_ sentence: String) async {
         guard let vs = session, let tts = ttsClient else { return }
-        let clean = sentence.trimmingCharacters(in: .whitespaces)
+        var clean = sentence.trimmingCharacters(in: .whitespaces)
+        // Strip markdown formatting so TTS doesn't read "asterisk asterisk"
+        clean = clean.replacingOccurrences(of: "**", with: "")  // Bold
+        clean = clean.replacingOccurrences(of: "*", with: "")   // Italic
+        clean = clean.replacingOccurrences(of: "`", with: "")   // Code
+        clean = clean.replacingOccurrences(of: "_", with: "")   // Underscore emphasis
         guard !clean.isEmpty else { return }
         if let pcm = await tts.fetchPCM(clean, voiceID: Config.selectedVoiceID) {
             await vs.playPCM(pcm)
