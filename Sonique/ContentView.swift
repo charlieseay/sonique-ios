@@ -104,38 +104,18 @@ struct ContentView: View {
 
                 Spacer()
 
-                // Response text (shows while speaking)
-                if !voiceLoop.partialResponse.isEmpty {
-                    Text(voiceLoop.partialResponse)
-                        .font(.title3)
-                        .foregroundColor(.white.opacity(0.9))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
-                        .padding(.bottom, 32)
-                        .transition(.opacity)
-                } else if !voiceLoop.lastResponse.isEmpty && !voiceLoop.isProcessing && !isLoadingModel {
-                    Text(voiceLoop.lastResponse)
-                        .font(.title3)
-                        .foregroundColor(.white.opacity(0.6))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
-                        .padding(.bottom, 32)
-                        .transition(.opacity)
-                }
-
-                // What the user said
-                if !voiceLoop.lastTranscript.isEmpty && !isLoadingModel {
-                    Text(voiceLoop.lastTranscript)
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.4))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
-                        .padding(.bottom, 16)
-                }
-
-                // Mic button with progress ring around it
+                // Mic button with animated state indicator
                 Button(action: toggleVoice) {
                     ZStack {
+                        // Animated state rings
+                        if voiceLoop.isProcessing {
+                            // Thinking: pulsing purple rings
+                            PulsingRings(color: .purple, count: 3)
+                        } else if voiceLoop.isActive {
+                            // Listening: pulsing blue rings
+                            PulsingRings(color: .blue, count: 2)
+                        }
+
                         // Progress ring (only during model load)
                         if isLoadingModel {
                             Circle()
@@ -152,20 +132,17 @@ struct ContentView: View {
                                 .animation(.easeInOut(duration: 0.3), value: loadProgress)
                         }
 
+                        // Main button
                         Circle()
                             .fill(micButtonColor)
                             .frame(width: 88, height: 88)
                             .shadow(color: micButtonColor.opacity(0.5), radius: 20)
 
+                        // Icon
                         if isLoadingModel {
                             Text("\(Int(loadProgress * 100))%")
                                 .font(.system(size: 20, weight: .semibold, design: .rounded))
                                 .foregroundColor(.white)
-                        } else if voiceLoop.isProcessing {
-                            ProgressView()
-                                .progressViewStyle(.circular)
-                                .tint(.white)
-                                .scaleEffect(1.2)
                         } else {
                             Image(systemName: voiceLoop.isActive ? "waveform" : "mic.fill")
                                 .font(.system(size: 32, weight: .medium))
@@ -314,6 +291,42 @@ struct ContentView: View {
         if !isHealthy { return "Check that SoniqueBar is running on the Mac" }
         if voiceLoop.isActive { return "Speak naturally — pause when you're done" }
         return ""
+    }
+}
+
+/// Animated pulsing rings around the mic button to show state
+struct PulsingRings: View {
+    let color: Color
+    let count: Int
+    @State private var animationValues: [CGFloat]
+
+    init(color: Color, count: Int) {
+        self.color = color
+        self.count = count
+        _animationValues = State(initialValue: Array(repeating: 0, count: count))
+    }
+
+    var body: some View {
+        ZStack {
+            ForEach(0..<count, id: \.self) { index in
+                Circle()
+                    .stroke(color.opacity(0.3), lineWidth: 2)
+                    .frame(width: 88 + CGFloat(index * 30), height: 88 + CGFloat(index * 30))
+                    .scaleEffect(animationValues[index])
+                    .opacity(1.0 - animationValues[index])
+            }
+        }
+        .onAppear {
+            for index in 0..<count {
+                withAnimation(
+                    .easeInOut(duration: 1.5)
+                    .repeatForever(autoreverses: false)
+                    .delay(Double(index) * 0.3)
+                ) {
+                    animationValues[index] = 1
+                }
+            }
+        }
     }
 }
 
