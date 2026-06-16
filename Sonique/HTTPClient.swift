@@ -1,4 +1,7 @@
 import Foundation
+#if os(iOS)
+import UIKit
+#endif
 
 struct StreamChunk {
     let text: String
@@ -12,7 +15,24 @@ struct HTTPClient {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONSerialization.data(withJSONObject: ["text": text])
+
+        #if os(iOS)
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        let batteryLevel = Int(UIDevice.current.batteryLevel * 100)
+        let batteryState = UIDevice.current.batteryState
+        let isCharging = (batteryState == .charging || batteryState == .full)
+        let payload: [String: Any] = [
+            "text": text,
+            "device": [
+                "battery_percent": batteryLevel,
+                "is_charging": isCharging
+            ]
+        ]
+        #else
+        let payload: [String: Any] = ["text": text]
+        #endif
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
@@ -33,7 +53,25 @@ struct HTTPClient {
                     var request = URLRequest(url: url)
                     request.httpMethod = "POST"
                     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                    request.httpBody = try JSONSerialization.data(withJSONObject: ["text": text])
+
+                    // Include device battery level
+                    #if os(iOS)
+                    UIDevice.current.isBatteryMonitoringEnabled = true
+                    let batteryLevel = Int(UIDevice.current.batteryLevel * 100)
+                    let batteryState = UIDevice.current.batteryState
+                    let isCharging = (batteryState == .charging || batteryState == .full)
+                    let payload: [String: Any] = [
+                        "text": text,
+                        "device": [
+                            "battery_percent": batteryLevel,
+                            "is_charging": isCharging
+                        ]
+                    ]
+                    #else
+                    let payload: [String: Any] = ["text": text]
+                    #endif
+
+                    request.httpBody = try JSONSerialization.data(withJSONObject: payload)
                     // Agentic LLM calls run tool calls and can take 15-40s with no bytes
                     // flowing — give the request + resource a generous window.
                     request.timeoutInterval = 90
