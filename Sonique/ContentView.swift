@@ -201,6 +201,7 @@ struct ContentView: View {
         }
         .animation(.easeInOut(duration: 0.25), value: voiceLoop.artifactURL)
         .animation(.easeInOut(duration: 0.2), value: voiceLoop.isActive)
+        .animation(.easeInOut(duration: 0.2), value: voiceLoop.isProcessing)
         .animation(.easeInOut(duration: 0.2), value: voiceLoop.partialResponse)
         .task {
             isHealthy = await voiceLoop.checkConnection()
@@ -244,7 +245,11 @@ struct ContentView: View {
     private func toggleVoice() {
         // Haptic confirmation for the primary action (HIG).
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        if voiceLoop.isActive {
+        if voiceLoop.isProcessing {
+            // Interrupt long response - stop speaking and resume listening
+            voiceLoop.stopSpeaking()
+        } else if voiceLoop.isActive {
+            // Stop the whole session
             voiceLoop.stop()
         } else {
             Task { await voiceLoop.start() }

@@ -105,6 +105,16 @@ class VoiceLoop: ObservableObject {
         SoundCues.shared.playSleep()
     }
 
+    /// Stop speaking immediately and resume listening (barge-in / interrupt)
+    func stopSpeaking() {
+        guard let vs = session, isProcessing else { return }
+        vs.stopPlayback()      // Stop TTS playback immediately
+        vs.endSpeaking()       // Resume listening
+        isProcessing = false
+        partialResponse = ""
+        FileTracer.log("[vs] interrupted by user")
+    }
+
     // MARK: - Pipeline
 
     private func observeTranscripts() async {
@@ -112,7 +122,23 @@ class VoiceLoop: ObservableObject {
             guard let transcript = notification.userInfo?["transcript"] as? String,
                   !transcript.isEmpty else { continue }
 
-            if isProcessing { continue }  // ignore overlaps; barge-in handled by AEC + pause
+            // Barge-in: if user says "stop", "cancel", or wake word during response, interrupt
+            if isProcessing {
+                let lower = transcript.lowercased()
+                if lower.contains("stop") || lower.contains("cancel") ||
+                   lower.contains(AssistantProfile.shared.wakeWord.lowercased()) {
+                    FileTracer.log("[loop] barge-in detected: '\(transcript)'")
+                    stopSpeaking()
+                    // Fall through to process the new command if wake word was said
+                    if !lower.contains("stop") && !lower.contains("cancel") {
+                        // Continue processing below as new command
+                    } else {
+                        continue  // Just stop, don't process "stop" as a command
+                    }
+                } else {
+                    continue  // Ignore other speech during processing
+                }
+            }
 
             // Wake-word gating: when asleep, only respond if the user said the assistant's
             // name; strip it from the request. When awake, respond to everything.
