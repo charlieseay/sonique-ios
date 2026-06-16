@@ -175,6 +175,12 @@ struct ContentView: View {
 
                 Spacer()
 
+                // Version number
+                Text(appVersion)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.25))
+                    .padding(.bottom, 8)
+
                 // Debug panel (hidden by default)
                 if showDebug {
                     ScrollView {

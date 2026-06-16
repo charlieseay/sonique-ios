@@ -78,6 +78,44 @@ final class SoniqueBrain {
         enforceQuota()
     }
 
+    // MARK: - Preferences (iCloud-backed, survives reinstalls)
+
+    private var prefsURL: URL { deviceDir.appendingPathComponent("preferences.json") }
+
+    struct Preferences: Codable {
+        var serverURL: String?
+        var tailscaleURL: String?
+        var tailscaleFallbackEnabled: Bool?
+        var selectedVoiceID: String?
+        var selectedVoiceName: String?
+        var permissionsGranted: PermissionState?
+
+        struct PermissionState: Codable {
+            var speech: Bool
+            var microphone: Bool
+        }
+    }
+
+    func loadPreferences() -> Preferences {
+        let text = readText(prefsURL)
+        guard !text.isEmpty,
+              let data = text.data(using: .utf8),
+              let prefs = try? JSONDecoder().decode(Preferences.self, from: data) else {
+            return Preferences()
+        }
+        return prefs
+    }
+
+    func savePreferences(_ prefs: Preferences) {
+        guard let data = try? JSONEncoder().encode(prefs),
+              let json = String(data: data, encoding: .utf8) else { return }
+
+        var coordError: NSError?
+        NSFileCoordinator().coordinate(writingItemAt: prefsURL, options: [], error: &coordError) { writeURL in
+            try? json.write(to: writeURL, atomically: true, encoding: .utf8)
+        }
+    }
+
     // MARK: - Quota
 
     private func enforceQuota() {
