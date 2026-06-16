@@ -32,6 +32,12 @@ enum NativeIntents {
             return batteryStatus()
         }
 
+        // --- Storage / free space (device-only, unless "Mac" specified) ---
+        if lower.matchesAny(["free space", "storage", "how much space", "disk space"]) &&
+           !lower.contains("mac") && !lower.contains("computer") {
+            return storageStatus()
+        }
+
         return nil  // not a local intent → send to SoniqueBar
     }
 
@@ -59,6 +65,22 @@ enum NativeIntents {
         let state = UIDevice.current.batteryState
         let charging = (state == .charging || state == .full) ? ", and it's charging" : ""
         return "Battery is at \(pct) percent\(charging)."
+    }
+
+    @MainActor
+    private static func storageStatus() -> String {
+        guard let path = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first else {
+            return "I couldn't check storage."
+        }
+        guard let values = try? URL(fileURLWithPath: path).resourceValues(forKeys: [.volumeAvailableCapacityKey, .volumeTotalCapacityKey]),
+              let available = values.volumeAvailableCapacity,
+              let total = values.volumeTotalCapacity else {
+            return "I couldn't read storage info."
+        }
+        let availGB = Double(available) / 1_000_000_000
+        let totalGB = Double(total) / 1_000_000_000
+        let usedGB = totalGB - availGB
+        return String(format: "You have %.1f gigs free out of %.0f total. Used %.1f gigs so far.", availGB, totalGB, usedGB)
     }
 }
 

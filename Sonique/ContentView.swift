@@ -111,9 +111,11 @@ struct ContentView: View {
                         if voiceLoop.isProcessing {
                             // Thinking: pulsing purple rings
                             PulsingRings(color: .purple, count: 3)
+                                .id("processing")
                         } else if voiceLoop.isActive {
                             // Listening: pulsing blue rings
                             PulsingRings(color: .blue, count: 2)
+                                .id("listening")
                         }
 
                         // Progress ring (only during model load)
