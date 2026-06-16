@@ -66,7 +66,7 @@ class SpeechRecognitionService: ObservableObject {
         // without any manual gain.
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .voiceChat,
-                                options: [.allowBluetooth, .defaultToSpeaker])
+                                options: [.allowBluetoothHFP, .defaultToSpeaker])
         // Low-latency buffer (5ms) and 16kHz sample rate for speech recognition
         try session.setPreferredIOBufferDuration(0.005)
         try session.setPreferredSampleRate(16000.0)

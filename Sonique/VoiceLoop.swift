@@ -54,11 +54,19 @@ class VoiceLoop: ObservableObject {
         if session == nil {
             isInitializing = true
             let vs = VoiceSession()
-            guard await vs.requestPermission() else {
-                error = "Microphone or speech permission denied"
-                debugLog.append("ERROR: permission denied")
-                isInitializing = false
-                return
+
+            // Check iCloud preferences first to avoid redundant permission prompts
+            let prefs = SoniqueBrain.shared.loadPreferences()
+            let needsPermission = prefs.permissionsGranted?.speech != true ||
+                                  prefs.permissionsGranted?.microphone != true
+
+            if needsPermission {
+                guard await vs.requestPermission() else {
+                    error = "Microphone or speech permission denied"
+                    debugLog.append("ERROR: permission denied")
+                    isInitializing = false
+                    return
+                }
             }
             session = vs
             sessionObservation = vs.objectWillChange.sink { [weak self] _ in

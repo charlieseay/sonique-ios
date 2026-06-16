@@ -45,6 +45,15 @@ class VoiceSession: NSObject, ObservableObject {
             AVAudioApplication.requestRecordPermission { c.resume(returning: $0) }
         }
         guard mic else { error = "Microphone permission denied"; return false }
+
+        // Save permission state to iCloud
+        var prefs = SoniqueBrain.shared.loadPreferences()
+        prefs.permissionsGranted = SoniqueBrain.Preferences.PermissionState(
+            speech: true,
+            microphone: true
+        )
+        SoniqueBrain.shared.savePreferences(prefs)
+
         return true
     }
 
@@ -54,7 +63,7 @@ class VoiceSession: NSObject, ObservableObject {
     func configure() throws {
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .voiceChat,
-                                options: [.allowBluetooth, .allowBluetoothA2DP, .defaultToSpeaker])
+                                options: [.allowBluetoothHFP, .allowBluetoothA2DP, .defaultToSpeaker])
         try session.setActive(true, options: .notifyOthersOnDeactivation)
         FileTracer.log("[vs] session active (.playAndRecord/.voiceChat)")
 

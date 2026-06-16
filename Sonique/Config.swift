@@ -38,27 +38,70 @@ enum Config {
         case invalidResponse
     }
 
-    // MARK: - SoniqueBar endpoints (user-configurable)
+    // MARK: - SoniqueBar endpoints (user-configurable, iCloud-backed)
 
     static let defaultLANURL = "http://192.168.0.221:8890"
     static let defaultTailscaleURL = "http://100.122.13.35:8890"  // SoniqueBar via Tailscale
 
+    @MainActor
+    private static var prefs: SoniqueBrain.Preferences {
+        get { SoniqueBrain.shared.loadPreferences() }
+        set { SoniqueBrain.shared.savePreferences(newValue) }
+    }
+
     /// Primary endpoint (LAN by default). User-editable in Settings.
     static var commandServerURL: String {
-        get { UserDefaults.standard.string(forKey: "serverURL") ?? defaultLANURL }
-        set { UserDefaults.standard.set(newValue, forKey: "serverURL") }
+        get {
+            Task { @MainActor in
+                prefs.serverURL ?? defaultLANURL
+            }
+            // Synchronous fallback for non-async contexts
+            return UserDefaults.standard.string(forKey: "serverURL") ?? defaultLANURL
+        }
+        set {
+            Task { @MainActor in
+                var p = prefs
+                p.serverURL = newValue
+                prefs = p
+            }
+            UserDefaults.standard.set(newValue, forKey: "serverURL")  // Ephemeral cache
+        }
     }
 
     /// Tailscale endpoint — used as a fallback so Sonique works anywhere, not just LAN.
     static var tailscaleURL: String {
-        get { UserDefaults.standard.string(forKey: "tailscaleURL") ?? defaultTailscaleURL }
-        set { UserDefaults.standard.set(newValue, forKey: "tailscaleURL") }
+        get {
+            Task { @MainActor in
+                prefs.tailscaleURL ?? defaultTailscaleURL
+            }
+            return UserDefaults.standard.string(forKey: "tailscaleURL") ?? defaultTailscaleURL
+        }
+        set {
+            Task { @MainActor in
+                var p = prefs
+                p.tailscaleURL = newValue
+                prefs = p
+            }
+            UserDefaults.standard.set(newValue, forKey: "tailscaleURL")
+        }
     }
 
     /// Whether to fall back to the Tailscale endpoint when the primary is unreachable.
     static var tailscaleFallbackEnabled: Bool {
-        get { UserDefaults.standard.object(forKey: "tailscaleFallback") as? Bool ?? true }
-        set { UserDefaults.standard.set(newValue, forKey: "tailscaleFallback") }
+        get {
+            Task { @MainActor in
+                prefs.tailscaleFallbackEnabled ?? true
+            }
+            return UserDefaults.standard.object(forKey: "tailscaleFallback") as? Bool ?? true
+        }
+        set {
+            Task { @MainActor in
+                var p = prefs
+                p.tailscaleFallbackEnabled = newValue
+                prefs = p
+            }
+            UserDefaults.standard.set(newValue, forKey: "tailscaleFallback")
+        }
     }
 
     /// Ordered endpoints to try: primary, then Tailscale (if enabled + distinct).
@@ -88,12 +131,36 @@ enum Config {
 
     /// Active voice ID (string) — set by the dynamic picker. Falls back to the enum.
     static var selectedVoiceID: String {
-        get { UserDefaults.standard.string(forKey: voiceKey) ?? ElevenLabsVoice.adam.rawValue }
-        set { UserDefaults.standard.set(newValue, forKey: voiceKey) }
+        get {
+            Task { @MainActor in
+                prefs.selectedVoiceID ?? ElevenLabsVoice.adam.rawValue
+            }
+            return UserDefaults.standard.string(forKey: voiceKey) ?? ElevenLabsVoice.adam.rawValue
+        }
+        set {
+            Task { @MainActor in
+                var p = prefs
+                p.selectedVoiceID = newValue
+                prefs = p
+            }
+            UserDefaults.standard.set(newValue, forKey: voiceKey)
+        }
     }
 
     static var selectedVoiceName: String {
-        get { UserDefaults.standard.string(forKey: voiceNameKey) ?? "Adam" }
-        set { UserDefaults.standard.set(newValue, forKey: voiceNameKey) }
+        get {
+            Task { @MainActor in
+                prefs.selectedVoiceName ?? "Adam"
+            }
+            return UserDefaults.standard.string(forKey: voiceNameKey) ?? "Adam"
+        }
+        set {
+            Task { @MainActor in
+                var p = prefs
+                p.selectedVoiceName = newValue
+                prefs = p
+            }
+            UserDefaults.standard.set(newValue, forKey: voiceNameKey)
+        }
     }
 }

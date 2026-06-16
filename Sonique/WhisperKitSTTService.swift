@@ -155,7 +155,7 @@ class WhisperKitSTTService: ObservableObject {
         try session.setCategory(
             .playAndRecord,
             mode: .voiceChat,
-            options: [.allowBluetooth, .defaultToSpeaker]
+            options: [.allowBluetoothHFP, .defaultToSpeaker]
         )
         try session.setActive(true, options: .notifyOthersOnDeactivation)
 

@@ -17,9 +17,11 @@ struct HTTPClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         #if os(iOS)
-        UIDevice.current.isBatteryMonitoringEnabled = true
-        let batteryLevel = Int(UIDevice.current.batteryLevel * 100)
-        let batteryState = UIDevice.current.batteryState
+        await MainActor.run {
+            UIDevice.current.isBatteryMonitoringEnabled = true
+        }
+        let batteryLevel = await MainActor.run { Int(UIDevice.current.batteryLevel * 100) }
+        let batteryState = await MainActor.run { UIDevice.current.batteryState }
         let isCharging = (batteryState == .charging || batteryState == .full)
         let payload: [String: Any] = [
             "text": text,
@@ -56,9 +58,11 @@ struct HTTPClient {
 
                     // Include device battery level
                     #if os(iOS)
-                    UIDevice.current.isBatteryMonitoringEnabled = true
-                    let batteryLevel = Int(UIDevice.current.batteryLevel * 100)
-                    let batteryState = UIDevice.current.batteryState
+                    await MainActor.run {
+                        UIDevice.current.isBatteryMonitoringEnabled = true
+                    }
+                    let batteryLevel = await MainActor.run { Int(UIDevice.current.batteryLevel * 100) }
+                    let batteryState = await MainActor.run { UIDevice.current.batteryState }
                     let isCharging = (batteryState == .charging || batteryState == .full)
                     let payload: [String: Any] = [
                         "text": text,
