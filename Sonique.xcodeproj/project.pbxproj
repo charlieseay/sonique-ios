@@ -306,6 +306,7 @@
 				<string>EAC245018BD75F904B3DFA71</string>
 				<string>91314C8980E6AC4B72F59493</string>
 				<string>D1864FD5AF3143B3F0797457</string>
+				<string>A838F9E82DF44648B93F486C</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -662,6 +663,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>A838F9E82DF44648B93F486C</key>
+		<dict>
+			<key>fileRef</key>
+			<string>DBE6BB31F45A485BAF13A5ED</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>AC1B00000000000000WK0001</key>
 		<dict>
 			<key>isa</key>
@@ -940,6 +948,17 @@
 			<string>Sonique/VoiceLoop.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>DBE6BB31F45A485BAF13A5ED</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>Sonique/RemoteLogger.swift</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
 		</dict>
 		<key>E5D54884BF2700547B33C65E</key>
 		<dict>

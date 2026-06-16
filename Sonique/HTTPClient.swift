@@ -73,9 +73,9 @@ struct HTTPClient {
                             "is_charging": isCharging
                         ],
                         "identity": [
-                            "name": profile.name,
-                            "wake_word": profile.wakeWord,
-                            "skills": profile.skills
+                            "name": await profile.name,
+                            "wake_word": await profile.wakeWord,
+                            "skills": await profile.skills
                         ]
                     ]
                     #else
@@ -83,9 +83,9 @@ struct HTTPClient {
                     let payload: [String: Any] = [
                         "text": text,
                         "identity": [
-                            "name": profile.name,
-                            "wake_word": profile.wakeWord,
-                            "skills": profile.skills
+                            "name": await profile.name,
+                            "wake_word": await profile.wakeWord,
+                            "skills": await profile.skills
                         ]
                     ]
                     #endif
