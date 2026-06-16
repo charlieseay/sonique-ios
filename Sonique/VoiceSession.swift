@@ -182,12 +182,12 @@ class VoiceSession: NSObject, ObservableObject {
 
     private func isSpeakingNow() -> Bool { isSpeaking }
 
-    /// Begin speaking - keep recognition running for barge-in (AEC prevents echo).
+    /// Begin speaking but keep recognition running for barge-in (AEC prevents echo).
     func beginSpeaking() {
         isSpeaking = true
         endpointTimer?.cancel(); endpointTimer = nil
-        // DON'T stop recognition - AEC handles echo cancellation, allowing voice barge-in
-        FileTracer.log("[vs] begin speaking (recognition ACTIVE for barge-in, AEC enabled)")
+        // Keep recognition running - AEC will prevent speaker output from being heard as input
+        FileTracer.log("[vs] begin speaking (recognition active for barge-in, AEC enabled)")
     }
 
     /// Play raw 16-bit PCM (24kHz mono) through the shared engine's player node.

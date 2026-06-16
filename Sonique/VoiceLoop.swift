@@ -29,6 +29,9 @@ class VoiceLoop: ObservableObject {
     var idleShutdownAfter: TimeInterval = 600   // 10 minutes
     private var idleTimer: Task<Void, Never>?
 
+    /// The currently running processing task (for cancellation during barge-in)
+    private var processingTask: Task<Void, Error>?
+
     @Published private(set) var session: VoiceSession?
     private var sessionObservation: AnyCancellable?
     private var ttsClient: ElevenLabsTTSClient?
@@ -122,21 +125,27 @@ class VoiceLoop: ObservableObject {
             guard let transcript = notification.userInfo?["transcript"] as? String,
                   !transcript.isEmpty else { continue }
 
-            // Barge-in: if user says "stop", "cancel", or wake word during response, interrupt
+            // Barge-in: if user speaks during processing, cancel the current task and start fresh
             if isProcessing {
                 let lower = transcript.lowercased()
-                if lower.contains("stop") || lower.contains("cancel") ||
-                   lower.contains(AssistantProfile.shared.wakeWord.lowercased()) {
-                    FileTracer.log("[loop] barge-in detected: '\(transcript)'")
+                // Check for explicit stop/cancel commands or any new speech
+                let shouldBargeIn = lower.contains("stop") || lower.contains("cancel") ||
+                                   lower.contains(AssistantProfile.shared.wakeWord.lowercased()) ||
+                                   true  // Allow any speech to barge in
+
+                if shouldBargeIn {
+                    FileTracer.log("[loop] barge-in detected: '\(transcript)' - cancelling current task")
+                    processingTask?.cancel()
+                    processingTask = nil
                     stopSpeaking()
-                    // Fall through to process the new command if wake word was said
-                    if !lower.contains("stop") && !lower.contains("cancel") {
-                        // Continue processing below as new command
-                    } else {
-                        continue  // Just stop, don't process "stop" as a command
+
+                    // If it's just "stop" or "cancel", don't process it as a command
+                    if lower == "stop" || lower == "cancel" {
+                        continue
                     }
+                    // Otherwise fall through to process the new command
                 } else {
-                    continue  // Ignore other speech during processing
+                    continue
                 }
             }
 
@@ -170,15 +179,23 @@ class VoiceLoop: ObservableObject {
             // New turn → dismiss any showing artifact (the conversation has organically moved on).
             artifactURL = nil
             isProcessing = true
+            objectWillChange.send()  // Force SwiftUI update
             FileTracer.log("[loop] isProcessing = true")
             lastTranscript = request
             partialResponse = ""
             debugLog.append("You: \(request)")
             FileTracer.log("[loop] transcript: '\(request)' → SoniqueBar")
 
-            do {
+            // Create cancellable task for processing
+            processingTask = Task {
                 try await processAndSpeak(request)
+            }
+
+            do {
+                try await processingTask!.value
                 FileTracer.log("[loop] done: '\(lastResponse)'")
+            } catch is CancellationError {
+                FileTracer.log("[loop] cancelled by barge-in")
             } catch {
                 // Never throw an app alert for a transient failure — speak a friendly,
                 // retryable message and keep listening.
@@ -187,6 +204,7 @@ class VoiceLoop: ObservableObject {
                 await speakSentence("Sorry, I ran into an issue. Please try again.")
                 session?.endSpeaking()
             }
+            processingTask = nil
             isProcessing = false
             FileTracer.log("[loop] isProcessing = false")
             // After a reply, arm the sleep timer — if no follow-up, go to sleep (needs wake word).
@@ -320,6 +338,9 @@ class VoiceLoop: ObservableObject {
 
         FileTracer.log("[http] streaming \(HTTPClient.activeBaseURL)/command/stream")
         for try await chunk in HTTPClient.sendCommandStreaming(transcript) {
+            // Check for cancellation
+            try Task.checkCancellation()
+
             // Artifact → show the image (ephemeral). No text on this chunk.
             if let art = chunk.artifactURL, let url = URL(string: art) {
                 artifactURL = url
@@ -333,6 +354,7 @@ class VoiceLoop: ObservableObject {
             let (sentences, remainder) = extractCompleteSentences(from: sentenceBuffer)
             sentenceBuffer = remainder
             for sentence in sentences {
+                try Task.checkCancellation()
                 await speakSentence(sentence)
             }
         }
