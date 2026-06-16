@@ -30,80 +30,48 @@ final class AssistantProfile: ObservableObject {
         name.lowercased().split(separator: " ").first.map(String.init) ?? name.lowercased()
     }
 
-    /// Skills manifest - dynamically built from discovered capabilities
+    /// Skills manifest - fetched from backend (which does the discovery)
+    /// Backend maintains the capability state, iOS just displays it
     var skills: [[String: Any]] {
-        var categories: [[String: Any]] = []
-
-        // Core capabilities (always available)
-        categories.append([
-            "category": "Time & Information",
-            "skills": [
-                "Current time and date",
-                "Calendar events and meetings",
-                "Weather information",
-                "General knowledge queries"
-            ]
-        ])
-
-        categories.append([
-            "category": "System Control",
-            "skills": [
-                "Open/close applications",
-                "System volume control",
-                "Display brightness",
-                "Screenshot capture"
-            ]
-        ])
-
-        // Load discovered capabilities from preferences
+        // Load last known capabilities from preferences
         let prefs = SoniqueBrain.shared.loadPreferences()
 
-        // HomeKit (if user has devices)
-        if let homeKitDevices = prefs.discoveredCapabilities?.homeKitDevices, !homeKitDevices.isEmpty {
+        if let discovered = prefs.discoveredCapabilities {
+            // Return what backend told us
+            var categories: [[String: Any]] = []
+
+            // Native capabilities (always present)
             categories.append([
-                "category": "Home Automation",
-                "skills": [
-                    "Control \(homeKitDevices.count) HomeKit devices",
-                    "Scene activation",
-                    "Device status queries"
-                ],
-                "details": ["devices": homeKitDevices]
+                "category": "Core Capabilities",
+                "skills": discovered.availableAPIs ?? [
+                    "Time and calendar",
+                    "System control",
+                    "Web search",
+                    "Vision analysis"
+                ]
             ])
-        }
 
-        // MCP servers (if any are available)
-        if let mcpServers = prefs.discoveredCapabilities?.mcpServers {
-            for server in mcpServers {
-                categories.append([
-                    "category": server.name,
-                    "skills": server.capabilities,
-                    "provider": "mcp",
-                    "details": ["endpoint": server.endpoint]
-                ])
+            // MCP servers (backend discovered)
+            if let mcpServers = discovered.mcpServers {
+                for server in mcpServers {
+                    categories.append([
+                        "category": server.name,
+                        "skills": server.capabilities,
+                        "provider": "mcp"
+                    ])
+                }
             }
+
+            return categories
         }
 
-        // Web capabilities (always available)
-        categories.append([
-            "category": "Web & Research",
-            "skills": [
-                "Web search",
-                "Fetch and summarize URLs",
-                "Real-time information"
-            ]
-        ])
-
-        // Vision (always available via Claude)
-        categories.append([
-            "category": "Vision & Analysis",
-            "skills": [
-                "Analyze screenshots",
-                "Describe images",
-                "Visual question answering"
-            ]
-        ])
-
-        return categories
+        // Fallback: minimal capabilities if backend hasn't been queried yet
+        return [
+            ["category": "Core Capabilities", "skills": [
+                "Time and calendar",
+                "General conversation"
+            ]]
+        ]
     }
 
     /// Skills manifest as JSON string for HTTP payload
