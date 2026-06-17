@@ -173,6 +173,21 @@ struct ContentView: View {
                 .padding(.top, 16)
                 .padding(.horizontal, 32)
 
+                // Response text (streaming token-by-token)
+                if !voiceLoop.partialResponse.isEmpty {
+                    ScrollView {
+                        Text(voiceLoop.partialResponse)
+                            .font(.body)
+                            .foregroundColor(.white.opacity(0.85))
+                            .multilineTextAlignment(.leading)
+                            .padding(.horizontal, 24)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxHeight: 200)
+                    .padding(.top, 12)
+                    .transition(.opacity)
+                }
+
                 Spacer()
 
                 // Version number
