@@ -285,6 +285,11 @@ class VoiceSession: NSObject, ObservableObject {
     /// Stop playback immediately (for voice barge-in / interrupt)
     func stopPlayback() {
         playerNode.stop()
+        // Resume any waiting playback continuation so the speak() call completes
+        if let cont = playbackContinuation {
+            playbackContinuation = nil
+            cont.resume()
+        }
         FileTracer.log("[vs] playback stopped (barge-in)")
     }
 }
