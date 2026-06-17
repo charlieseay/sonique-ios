@@ -298,6 +298,7 @@ struct ContentView: View {
     private var primaryStatus: String {
         if !isHealthy && !isLoadingModel { return "SoniqueBar unreachable" }
         if isLoadingModel { return "Starting…" }
+        if voiceLoop.isTokenSeeding { return "Responding…" }
         if voiceLoop.isProcessing { return "Thinking…" }
         if voiceLoop.isActive { return "Listening" }
         return "Tap to speak"

@@ -21,6 +21,7 @@ class VoiceLoop: ObservableObject {
     @Published var debugLog: [String] = []
 
     private var lastSpeechEndTime: Date?
+    private var lastTokenChimeTime: Date?
 
     /// Seconds of no interaction after a reply before the assistant "sleeps" (then needs
     /// the wake word). 0 = never auto-sleep while the mic is on.
@@ -98,7 +99,7 @@ class VoiceLoop: ObservableObject {
             isAwake = true
             debugLog.append("STT STARTED ✓")
             // Ready cue: crescendo chime, then it's listening.
-            SoundCues.shared.playReady()
+            SoundCues.shared.play(.ready)
             armIdleTimer()
         } catch {
             self.error = "Start failed: \(error.localizedDescription)"
@@ -116,15 +117,16 @@ class VoiceLoop: ObservableObject {
         isProcessing = false
         isAwake = false
         // Sleep cue: decrescendo chime — user will need the wake word next.
-        SoundCues.shared.playSleep()
+        SoundCues.shared.play(.sleep)
     }
 
     /// Stop speaking immediately and resume listening (barge-in / interrupt)
     func stopSpeaking() {
-        guard let vs = session, isProcessing else { return }
+        guard let vs = session else { return }
         vs.stopPlayback()      // Stop TTS playback immediately
         vs.endSpeaking()       // Resume listening
         isProcessing = false
+        isTokenSeeding = false
         partialResponse = ""
         lastSpeechEndTime = Date()
         RemoteLogger.log("[vs] interrupted by user - playback stopped, resumed listening")
@@ -183,7 +185,7 @@ class VoiceLoop: ObservableObject {
                     continue
                 }
                 isAwake = true
-                SoundCues.shared.playReady()
+                SoundCues.shared.play(.ready)
                 cancelSleepTimer()
                 armIdleTimer()
                 // Bare wake word, no command → just acknowledge with the chime and listen.
@@ -231,7 +233,8 @@ class VoiceLoop: ObservableObject {
             }
             processingTask = nil
             isProcessing = false
-            FileTracer.log("[loop] isProcessing = false")
+            isTokenSeeding = false
+            FileTracer.log("[loop] isProcessing = false, isTokenSeeding = false")
             // After a reply, arm the sleep timer — if no follow-up, go to sleep (needs wake word).
             armSleepTimer()
         }
@@ -317,7 +320,7 @@ class VoiceLoop: ObservableObject {
             try? await Task.sleep(nanoseconds: UInt64(self.sleepAfter * 1_000_000_000))
             guard !Task.isCancelled, self.isActive, self.isAwake, !self.isProcessing else { return }
             self.isAwake = false
-            SoundCues.shared.playSleep()
+            SoundCues.shared.play(.sleep)
             FileTracer.log("[loop] went to sleep — wake word required")
         }
     }
@@ -374,11 +377,11 @@ class VoiceLoop: ObservableObject {
             }
             sentenceBuffer += chunk.text + " "
             fullResponse += chunk.text + " "
-            // Token received indicator (audio chime + visual)
+            // Token received indicator (visual only)
             if !isTokenSeeding {
                 isTokenSeeding = true
+                FileTracer.log("[loop] token seeding started")
             }
-            SoundCues.shared.play(.tokenReceived)
 
             let (sentences, remainder) = extractCompleteSentences(from: sentenceBuffer)
             sentenceBuffer = remainder
@@ -393,6 +396,7 @@ class VoiceLoop: ObservableObject {
         lastResponse = fullResponse.trimmingCharacters(in: .whitespaces)
         partialResponse = ""
         isTokenSeeding = false
+        lastTokenChimeTime = nil
 
         // Grow the iCloud brain (mobile folder).
         SoniqueBrain.shared.recordExchange(user: transcript, assistant: lastResponse)
