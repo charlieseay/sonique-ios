@@ -242,9 +242,12 @@ class VoiceSession: NSObject, ObservableObject {
 
     /// Play raw 16-bit PCM (24kHz mono) through the shared engine's player node.
     func playPCM(_ pcm: Data) async {
+        let startTime = Date().timeIntervalSince1970
+        FileTracer.log("[vs] playPCM START: \(pcm.count) bytes")
+
         // Check for cancellation before playing
         guard !Task.isCancelled else {
-            FileTracer.log("[vs] playPCM cancelled before start")
+            FileTracer.log("[vs] playPCM CANCELLED before start [\(Date().timeIntervalSince1970 - startTime)s]")
             return
         }
 
@@ -260,19 +263,43 @@ class VoiceSession: NSObject, ObservableObject {
             let src = raw.bindMemory(to: Int16.self)
             channel.update(from: src.baseAddress!, count: Int(frames))
         }
-        if !engine.isRunning { try? engine.start() }
-        if !playerNode.isPlaying { playerNode.play() }
+
+        FileTracer.log("[vs] playPCM: buffer created [\(Date().timeIntervalSince1970 - startTime)s]")
+
+        if !engine.isRunning {
+            FileTracer.log("[vs] playPCM: starting engine")
+            try? engine.start()
+        }
+        if !playerNode.isPlaying {
+            FileTracer.log("[vs] playPCM: starting player node")
+            playerNode.play()
+        }
+
+        FileTracer.log("[vs] playPCM: scheduling buffer [\(Date().timeIntervalSince1970 - startTime)s]")
 
         await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
             playbackContinuation = cont
+            FileTracer.log("[vs] playPCM: continuation set, calling scheduleBuffer")
+
             playerNode.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { [weak self] _ in
                 Task { @MainActor in
-                    guard let self, let c = self.playbackContinuation else { return }
+                    let callbackTime = Date().timeIntervalSince1970
+                    FileTracer.log("[vs] playPCM: buffer completion callback fired [\(callbackTime - startTime)s from start]")
+
+                    guard let self, let c = self.playbackContinuation else {
+                        FileTracer.log("[vs] playPCM: callback - no continuation to resume")
+                        return
+                    }
                     self.playbackContinuation = nil
                     c.resume()
+                    FileTracer.log("[vs] playPCM: callback - continuation resumed")
                 }
             }
+
+            FileTracer.log("[vs] playPCM: scheduleBuffer called, waiting for playback...")
         }
+
+        FileTracer.log("[vs] playPCM: COMPLETE [\(Date().timeIntervalSince1970 - startTime)s]")
     }
 
     /// Resume recognition after speaking finishes.
@@ -294,21 +321,37 @@ class VoiceSession: NSObject, ObservableObject {
 
     /// Stop playback immediately (for voice barge-in / interrupt)
     func stopPlayback() {
+        let startTime = Date().timeIntervalSince1970
+
         // Disconnect player from mixer to immediately cut audio path
+        FileTracer.log("[vs] stopPlayback: disconnecting player node")
         engine.disconnectNodeOutput(playerNode)
+        FileTracer.log("[vs] stopPlayback: disconnected [\(Date().timeIntervalSince1970 - startTime)s]")
 
         // Stop and reset player node to clear buffers
+        FileTracer.log("[vs] stopPlayback: stopping player node")
         playerNode.stop()
+        FileTracer.log("[vs] stopPlayback: stopped [\(Date().timeIntervalSince1970 - startTime)s]")
+
+        FileTracer.log("[vs] stopPlayback: resetting player node")
         playerNode.reset()
+        FileTracer.log("[vs] stopPlayback: reset [\(Date().timeIntervalSince1970 - startTime)s]")
 
         // Reconnect for next playback
+        FileTracer.log("[vs] stopPlayback: reconnecting player node")
         engine.connect(playerNode, to: engine.mainMixerNode, format: playerFormat)
+        FileTracer.log("[vs] stopPlayback: reconnected [\(Date().timeIntervalSince1970 - startTime)s]")
 
         // Resume any waiting playback continuation so the speak() call completes
         if let cont = playbackContinuation {
+            FileTracer.log("[vs] stopPlayback: resuming continuation")
             playbackContinuation = nil
             cont.resume()
+            FileTracer.log("[vs] stopPlayback: continuation resumed [\(Date().timeIntervalSince1970 - startTime)s]")
+        } else {
+            FileTracer.log("[vs] stopPlayback: NO continuation to resume")
         }
-        FileTracer.log("[vs] playback stopped, buffers cleared, reconnected (barge-in)")
+
+        FileTracer.log("[vs] stopPlayback: complete [\(Date().timeIntervalSince1970 - startTime)s]")
     }
 }

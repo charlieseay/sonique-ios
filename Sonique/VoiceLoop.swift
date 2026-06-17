@@ -123,15 +123,24 @@ class VoiceLoop: ObservableObject {
     /// Stop speaking immediately and resume listening (barge-in / interrupt)
     func stopSpeaking() {
         guard let vs = session else { return }
+        let startTime = Date().timeIntervalSince1970
+
         // Cancel TTS fetch FIRST (before stopping audio)
+        FileTracer.log("[loop] stopSpeaking: cancelling TTS fetch")
         ttsClient?.cancelCurrentFetch()
+        FileTracer.log("[loop] stopSpeaking: TTS cancelled [\(Date().timeIntervalSince1970 - startTime)s]")
+
         // Then stop audio playback
+        FileTracer.log("[loop] stopSpeaking: calling vs.stopPlayback()")
         vs.stopPlayback()      // Stop TTS playback immediately
+        FileTracer.log("[loop] stopSpeaking: playback stopped [\(Date().timeIntervalSince1970 - startTime)s]")
+
         vs.endSpeaking()       // Resume listening
         isProcessing = false
         isTokenSeeding = false
         partialResponse = ""
         lastSpeechEndTime = Date()
+        FileTracer.log("[loop] stopSpeaking: complete [\(Date().timeIntervalSince1970 - startTime)s]")
         RemoteLogger.log("[vs] interrupted by user - TTS cancelled, playback stopped, resumed listening")
     }
 
@@ -161,10 +170,16 @@ class VoiceLoop: ObservableObject {
                                    true  // Allow any speech to barge in
 
                 if shouldBargeIn {
-                    RemoteLogger.log("[loop] BARGE-IN: '\(transcript)' (proc=\(isProcessing) speak=\(session?.isSpeaking == true) recent=\(recentlySpeaking))")
+                    let timestamp = Date().timeIntervalSince1970
+                    RemoteLogger.log("[loop] BARGE-IN START [\(timestamp)]: '\(transcript)' (proc=\(isProcessing) speak=\(session?.isSpeaking == true) recent=\(recentlySpeaking))")
+                    FileTracer.log("[loop] BARGE-IN START [\(timestamp)]")
+
                     processingTask?.cancel()
+                    FileTracer.log("[loop] processingTask cancelled [\(Date().timeIntervalSince1970 - timestamp)s]")
                     processingTask = nil
+
                     stopSpeaking()
+                    FileTracer.log("[loop] stopSpeaking completed [\(Date().timeIntervalSince1970 - timestamp)s]")
 
                     // If it's just "stop" or "cancel", just stop talking and resume listening
                     if trimmed == "stop" || trimmed == "cancel" {
@@ -411,9 +426,12 @@ class VoiceLoop: ObservableObject {
     }
 
     private func speakSentence(_ sentence: String) async {
+        let startTime = Date().timeIntervalSince1970
+        FileTracer.log("[loop] speakSentence START: '\(sentence.prefix(30))...'")
+
         // Check for cancellation before speaking
         guard !Task.isCancelled else {
-            FileTracer.log("[loop] speakSentence cancelled before start")
+            FileTracer.log("[loop] speakSentence CANCELLED before start [\(Date().timeIntervalSince1970 - startTime)s]")
             return
         }
 
@@ -428,12 +446,24 @@ class VoiceLoop: ObservableObject {
 
         // Check again before fetching TTS
         guard !Task.isCancelled else {
-            FileTracer.log("[loop] speakSentence cancelled before TTS fetch")
+            FileTracer.log("[loop] speakSentence CANCELLED before TTS fetch [\(Date().timeIntervalSince1970 - startTime)s]")
             return
         }
 
+        FileTracer.log("[loop] speakSentence: fetching TTS")
         if let pcm = await tts.fetchPCM(clean, voiceID: Config.selectedVoiceID) {
+            FileTracer.log("[loop] speakSentence: TTS fetched (\(pcm.count) bytes) [\(Date().timeIntervalSince1970 - startTime)s]")
+
+            guard !Task.isCancelled else {
+                FileTracer.log("[loop] speakSentence CANCELLED before playback [\(Date().timeIntervalSince1970 - startTime)s]")
+                return
+            }
+
+            FileTracer.log("[loop] speakSentence: starting playback")
             await vs.playPCM(pcm)
+            FileTracer.log("[loop] speakSentence: playback complete [\(Date().timeIntervalSince1970 - startTime)s]")
+        } else {
+            FileTracer.log("[loop] speakSentence: TTS fetch FAILED")
         }
     }
 

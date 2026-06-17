@@ -14,9 +14,17 @@ class ElevenLabsTTSClient: ObservableObject {
 
     /// Cancel any in-progress TTS fetch
     func cancelCurrentFetch() {
-        currentTask?.cancel()
-        currentTask = nil
-        FileTracer.log("[tts] fetch cancelled")
+        let startTime = Date().timeIntervalSince1970
+        FileTracer.log("[tts] cancelCurrentFetch: START")
+
+        if let task = currentTask {
+            FileTracer.log("[tts] cancelCurrentFetch: cancelling URLSessionDataTask")
+            task.cancel()
+            currentTask = nil
+            FileTracer.log("[tts] cancelCurrentFetch: task cancelled [\(Date().timeIntervalSince1970 - startTime)s]")
+        } else {
+            FileTracer.log("[tts] cancelCurrentFetch: NO task to cancel")
+        }
     }
 
     /// Returns raw PCM (pcm_24000, 16-bit LE mono) for the given text, or nil on failure.
