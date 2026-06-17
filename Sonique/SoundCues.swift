@@ -8,33 +8,55 @@ import AVFoundation
 final class SoundCues {
     static let shared = SoundCues()
 
+    enum Cue {
+        case ready
+        case sleep
+        case tokenReceived
+    }
+
     private var player: AVAudioPlayer?
     private init() {}
 
+    func play(_ cue: Cue) {
+        switch cue {
+        case .ready: playReady()
+        case .sleep: playSleep()
+        case .tokenReceived: playTokenReceived()
+        }
+    }
+
     /// Ready: two soft ascending notes — a gentle, quiet rise.
-    func playReady() {
+    private func playReady() {
         let notes: [(freq: Double, start: Double, dur: Double)] = [
             (587.33, 0.00, 0.16),   // D5
             (880.00, 0.10, 0.26)    // A5 — soft perfect fifth up
         ]
-        play(buildChime(notes: notes, totalDuration: 0.40, crescendo: true))
+        playWav(buildChime(notes: notes, totalDuration: 0.40, crescendo: true))
     }
 
     /// Sleep: two soft descending notes — a quiet settle.
-    func playSleep() {
+    private func playSleep() {
         let notes: [(freq: Double, start: Double, dur: Double)] = [
             (880.00, 0.00, 0.16),   // A5
             (587.33, 0.10, 0.30)    // D5 — gentle fall
         ]
-        play(buildChime(notes: notes, totalDuration: 0.44, crescendo: false))
+        playWav(buildChime(notes: notes, totalDuration: 0.44, crescendo: false))
+    }
+
+    /// Token received: single subtle windchime note
+    private func playTokenReceived() {
+        let notes: [(freq: Double, start: Double, dur: Double)] = [
+            (1046.50, 0.00, 0.08)   // C6 — brief high chime
+        ]
+        playWav(buildChime(notes: notes, totalDuration: 0.10, crescendo: false), volume: 0.12)
     }
 
     // MARK: - Synthesis
 
-    private func play(_ data: Data) {
+    private func playWav(_ data: Data, volume: Float = 0.28) {
         do {
             let p = try AVAudioPlayer(data: data)
-            p.volume = 0.28   // subtle — soft background cue, not an alert
+            p.volume = volume   // subtle — soft background cue, not an alert
             player = p
             p.play()
         } catch {

@@ -108,7 +108,11 @@ struct ContentView: View {
                 Button(action: toggleVoice) {
                     ZStack {
                         // Animated state rings
-                        if voiceLoop.isProcessing {
+                        if voiceLoop.isTokenSeeding {
+                            // Token seeding: fast shimmering green rings
+                            TokenSeedingRings()
+                                .id("tokenSeeding")
+                        } else if voiceLoop.isProcessing {
                             // Thinking: pulsing purple rings
                             PulsingRings(color: .purple, count: 3)
                                 .id("processing")
@@ -172,21 +176,6 @@ struct ContentView: View {
                 }
                 .padding(.top, 16)
                 .padding(.horizontal, 32)
-
-                // Response text (streaming token-by-token)
-                if !voiceLoop.partialResponse.isEmpty {
-                    ScrollView {
-                        Text(voiceLoop.partialResponse)
-                            .font(.body)
-                            .foregroundColor(.white.opacity(0.85))
-                            .multilineTextAlignment(.leading)
-                            .padding(.horizontal, 24)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .frame(maxHeight: 200)
-                    .padding(.top, 12)
-                    .transition(.opacity)
-                }
 
                 Spacer()
 
@@ -350,6 +339,46 @@ struct PulsingRings: View {
                     .easeInOut(duration: 1.5)
                     .repeatForever(autoreverses: false)
                     .delay(Double(index) * 0.3)
+                ) {
+                    animationValues[index] = 1
+                }
+            }
+        }
+    }
+}
+
+/// Fast shimmering rings that indicate tokens streaming in (like particle seeding)
+struct TokenSeedingRings: View {
+    @State private var animationValues: [CGFloat]
+    let count = 4
+
+    init() {
+        _animationValues = State(initialValue: Array(repeating: 0, count: 4))
+    }
+
+    var body: some View {
+        ZStack {
+            ForEach(0..<count, id: \.self) { index in
+                Circle()
+                    .stroke(
+                        LinearGradient(
+                            colors: [.green.opacity(0.6), .cyan.opacity(0.4)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.5
+                    )
+                    .frame(width: 88 + CGFloat(index * 20), height: 88 + CGFloat(index * 20))
+                    .scaleEffect(animationValues[index])
+                    .opacity(0.8 - (animationValues[index] * 0.8))
+            }
+        }
+        .onAppear {
+            for index in 0..<count {
+                withAnimation(
+                    .easeOut(duration: 0.4)
+                    .repeatForever(autoreverses: false)
+                    .delay(Double(index) * 0.1)
                 ) {
                     animationValues[index] = 1
                 }

@@ -14,6 +14,7 @@ class VoiceLoop: ObservableObject {
     @Published var error: String?
     @Published var isInitializing = false
     @Published var isProcessing = false
+    @Published var isTokenSeeding = false  // true when receiving tokens from LLM
     @Published var isBargeInActive = false
     @Published var isAwake = false   // true = responding to all speech; false = needs wake word
     @Published var artifactURL: URL? = nil   // ephemeral image to display (Snapchat-style)
@@ -373,7 +374,11 @@ class VoiceLoop: ObservableObject {
             }
             sentenceBuffer += chunk.text + " "
             fullResponse += chunk.text + " "
-            partialResponse = fullResponse.trimmingCharacters(in: .whitespaces)
+            // Token received indicator (audio chime + visual)
+            if !isTokenSeeding {
+                isTokenSeeding = true
+            }
+            SoundCues.shared.play(.tokenReceived)
 
             let (sentences, remainder) = extractCompleteSentences(from: sentenceBuffer)
             sentenceBuffer = remainder
@@ -387,6 +392,7 @@ class VoiceLoop: ObservableObject {
 
         lastResponse = fullResponse.trimmingCharacters(in: .whitespaces)
         partialResponse = ""
+        isTokenSeeding = false
 
         // Grow the iCloud brain (mobile folder).
         SoniqueBrain.shared.recordExchange(user: transcript, assistant: lastResponse)
