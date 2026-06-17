@@ -6,9 +6,17 @@ import Foundation
 @MainActor
 class ElevenLabsTTSClient: ObservableObject {
     private let apiKey: String
+    private var currentTask: URLSessionDataTask?
 
     init(apiKey: String) {
         self.apiKey = apiKey
+    }
+
+    /// Cancel any in-progress TTS fetch
+    func cancelCurrentFetch() {
+        currentTask?.cancel()
+        currentTask = nil
+        FileTracer.log("[tts] fetch cancelled")
     }
 
     /// Returns raw PCM (pcm_24000, 16-bit LE mono) for the given text, or nil on failure.
@@ -25,18 +33,33 @@ class ElevenLabsTTSClient: ObservableObject {
             "voice_settings": ["stability": 0.5, "similarity_boost": 0.75]
         ])
 
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-                let code = (response as? HTTPURLResponse)?.statusCode ?? -1
-                FileTracer.log("[tts] API error \(code)")
-                return nil
+        return await withCheckedContinuation { continuation in
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                Task { @MainActor in
+                    self.currentTask = nil
+
+                    if let error = error {
+                        FileTracer.log("[tts] fetch failed: \(error.localizedDescription)")
+                        continuation.resume(returning: nil)
+                        return
+                    }
+
+                    guard let data = data,
+                          let http = response as? HTTPURLResponse,
+                          http.statusCode == 200 else {
+                        let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+                        FileTracer.log("[tts] API error \(code)")
+                        continuation.resume(returning: nil)
+                        return
+                    }
+
+                    FileTracer.log("[tts] fetched \(data.count) PCM bytes for '\(text.prefix(30))'")
+                    continuation.resume(returning: data)
+                }
             }
-            FileTracer.log("[tts] fetched \(data.count) PCM bytes for '\(text.prefix(30))'")
-            return data
-        } catch {
-            FileTracer.log("[tts] fetch failed: \(error.localizedDescription)")
-            return nil
+
+            currentTask = task
+            task.resume()
         }
     }
 }

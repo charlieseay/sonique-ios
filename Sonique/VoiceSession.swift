@@ -64,8 +64,12 @@ class VoiceSession: NSObject, ObservableObject {
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .voiceChat,
                                 options: [.allowBluetoothHFP, .allowBluetoothA2DP, .defaultToSpeaker])
+
+        // Set IO buffer to minimum (64 samples/48kHz = 1.33ms) for low-latency barge-in
+        try session.setPreferredIOBufferDuration(64.0 / 48000.0)
+
         try session.setActive(true, options: .notifyOthersOnDeactivation)
-        FileTracer.log("[vs] session active (.playAndRecord/.voiceChat)")
+        FileTracer.log("[vs] session active (.playAndRecord/.voiceChat, 1.33ms IO buffer)")
 
         let input = engine.inputNode
         // Voice processing on the input node = AEC + AGC. With the player node on the
@@ -238,6 +242,12 @@ class VoiceSession: NSObject, ObservableObject {
 
     /// Play raw 16-bit PCM (24kHz mono) through the shared engine's player node.
     func playPCM(_ pcm: Data) async {
+        // Check for cancellation before playing
+        guard !Task.isCancelled else {
+            FileTracer.log("[vs] playPCM cancelled before start")
+            return
+        }
+
         guard pcm.count > 1 else { return }
         let frames = AVAudioFrameCount(pcm.count / 2)
         guard let buffer = AVAudioPCMBuffer(pcmFormat: playerFormat, frameCapacity: frames),
@@ -284,12 +294,21 @@ class VoiceSession: NSObject, ObservableObject {
 
     /// Stop playback immediately (for voice barge-in / interrupt)
     func stopPlayback() {
+        // Disconnect player from mixer to immediately cut audio path
+        engine.disconnectNodeOutput(playerNode)
+
+        // Stop and reset player node to clear buffers
         playerNode.stop()
+        playerNode.reset()
+
+        // Reconnect for next playback
+        engine.connect(playerNode, to: engine.mainMixerNode, format: playerFormat)
+
         // Resume any waiting playback continuation so the speak() call completes
         if let cont = playbackContinuation {
             playbackContinuation = nil
             cont.resume()
         }
-        FileTracer.log("[vs] playback stopped (barge-in)")
+        FileTracer.log("[vs] playback stopped, buffers cleared, reconnected (barge-in)")
     }
 }

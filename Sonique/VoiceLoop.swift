@@ -123,13 +123,16 @@ class VoiceLoop: ObservableObject {
     /// Stop speaking immediately and resume listening (barge-in / interrupt)
     func stopSpeaking() {
         guard let vs = session else { return }
+        // Cancel TTS fetch FIRST (before stopping audio)
+        ttsClient?.cancelCurrentFetch()
+        // Then stop audio playback
         vs.stopPlayback()      // Stop TTS playback immediately
         vs.endSpeaking()       // Resume listening
         isProcessing = false
         isTokenSeeding = false
         partialResponse = ""
         lastSpeechEndTime = Date()
-        RemoteLogger.log("[vs] interrupted by user - playback stopped, resumed listening")
+        RemoteLogger.log("[vs] interrupted by user - TTS cancelled, playback stopped, resumed listening")
     }
 
     // MARK: - Pipeline
@@ -408,6 +411,12 @@ class VoiceLoop: ObservableObject {
     }
 
     private func speakSentence(_ sentence: String) async {
+        // Check for cancellation before speaking
+        guard !Task.isCancelled else {
+            FileTracer.log("[loop] speakSentence cancelled before start")
+            return
+        }
+
         guard let vs = session, let tts = ttsClient else { return }
         var clean = sentence.trimmingCharacters(in: .whitespaces)
         // Strip markdown formatting so TTS doesn't read "asterisk asterisk"
@@ -416,6 +425,13 @@ class VoiceLoop: ObservableObject {
         clean = clean.replacingOccurrences(of: "`", with: "")   // Code
         clean = clean.replacingOccurrences(of: "_", with: "")   // Underscore emphasis
         guard !clean.isEmpty else { return }
+
+        // Check again before fetching TTS
+        guard !Task.isCancelled else {
+            FileTracer.log("[loop] speakSentence cancelled before TTS fetch")
+            return
+        }
+
         if let pcm = await tts.fetchPCM(clean, voiceID: Config.selectedVoiceID) {
             await vs.playPCM(pcm)
         }
