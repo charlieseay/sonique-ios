@@ -31,7 +31,7 @@ class VoiceSession: NSObject, ObservableObject {
     private let endpointSilence: TimeInterval = 1.2
 
     // TTS playback gating
-    private var isSpeaking = false
+    var isSpeaking = false
     private var playbackContinuation: CheckedContinuation<Void, Never>?
 
     // MARK: - Permissions

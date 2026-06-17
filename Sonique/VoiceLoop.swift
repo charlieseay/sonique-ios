@@ -140,27 +140,29 @@ class VoiceLoop: ObservableObject {
                 continue
             }
 
-            // Barge-in: if user speaks during processing, cancel the current task and start fresh
-            if isProcessing {
+            // Barge-in: if user speaks during processing OR speaking, cancel and start fresh
+            if isProcessing || session?.isSpeaking == true {
                 let lower = transcript.lowercased()
+                let trimmed = lower.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
+
                 // Check for explicit stop/cancel commands or any new speech
                 let shouldBargeIn = lower.contains("stop") || lower.contains("cancel") ||
                                    lower.contains(AssistantProfile.shared.wakeWord.lowercased()) ||
                                    true  // Allow any speech to barge in
 
                 if shouldBargeIn {
-                    RemoteLogger.log("[loop] BARGE-IN DETECTED: '\(transcript)' (isProcessing=true) - cancelling task")
+                    RemoteLogger.log("[loop] BARGE-IN: '\(transcript)' (proc=\(isProcessing) speak=\(session?.isSpeaking == true))")
                     processingTask?.cancel()
                     processingTask = nil
                     stopSpeaking()
 
                     // If it's just "stop" or "cancel", just stop talking and resume listening
-                    if lower == "stop" || lower == "cancel" {
-                        RemoteLogger.log("[loop] stop/cancel command - resuming listening (not processing new command)")
+                    if trimmed == "stop" || trimmed == "cancel" {
+                        RemoteLogger.log("[loop] stop/cancel → silent resume")
                         continue
                     }
                     // Otherwise fall through to process the new command
-                    RemoteLogger.log("[loop] barge-in with new command '\(transcript)' - will process")
+                    RemoteLogger.log("[loop] barge-in → process '\(transcript)'")
                 } else {
                     continue
                 }
