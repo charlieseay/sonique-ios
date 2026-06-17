@@ -19,6 +19,8 @@ class VoiceLoop: ObservableObject {
     @Published var artifactURL: URL? = nil   // ephemeral image to display (Snapchat-style)
     @Published var debugLog: [String] = []
 
+    private var lastSpeechEndTime: Date?
+
     /// Seconds of no interaction after a reply before the assistant "sleeps" (then needs
     /// the wake word). 0 = never auto-sleep while the mic is on.
     var sleepAfter: TimeInterval = 30
@@ -123,6 +125,7 @@ class VoiceLoop: ObservableObject {
         vs.endSpeaking()       // Resume listening
         isProcessing = false
         partialResponse = ""
+        lastSpeechEndTime = Date()
         RemoteLogger.log("[vs] interrupted by user - playback stopped, resumed listening")
     }
 
@@ -140,8 +143,9 @@ class VoiceLoop: ObservableObject {
                 continue
             }
 
-            // Barge-in: if user speaks during processing OR speaking, cancel and start fresh
-            if isProcessing || session?.isSpeaking == true {
+            // Barge-in: if user speaks during processing, speaking, or within 2s after speech ends
+            let recentlySpeaking = lastSpeechEndTime.map { Date().timeIntervalSince($0) < 2.0 } ?? false
+            if isProcessing || session?.isSpeaking == true || recentlySpeaking {
                 let lower = transcript.lowercased()
                 let trimmed = lower.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
 
@@ -151,7 +155,7 @@ class VoiceLoop: ObservableObject {
                                    true  // Allow any speech to barge in
 
                 if shouldBargeIn {
-                    RemoteLogger.log("[loop] BARGE-IN: '\(transcript)' (proc=\(isProcessing) speak=\(session?.isSpeaking == true))")
+                    RemoteLogger.log("[loop] BARGE-IN: '\(transcript)' (proc=\(isProcessing) speak=\(session?.isSpeaking == true) recent=\(recentlySpeaking))")
                     processingTask?.cancel()
                     processingTask = nil
                     stopSpeaking()
@@ -389,6 +393,7 @@ class VoiceLoop: ObservableObject {
 
         // Resume listening now that all audio has played.
         vs.endSpeaking()
+        lastSpeechEndTime = Date()
         FileTracer.log("[loop] resumed listening")
     }
 
