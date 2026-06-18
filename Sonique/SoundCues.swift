@@ -11,6 +11,7 @@ final class SoundCues {
     enum Cue {
         case ready
         case sleep
+        case thinking
         case tokenReceived
     }
 
@@ -21,6 +22,7 @@ final class SoundCues {
         switch cue {
         case .ready: playReady()
         case .sleep: playSleep()
+        case .thinking: playThinking()
         case .tokenReceived: playTokenReceived()
         }
     }
@@ -41,6 +43,14 @@ final class SoundCues {
             (587.33, 0.10, 0.30)    // D5 — gentle fall
         ]
         playWav(buildChime(notes: notes, totalDuration: 0.44, crescendo: false))
+    }
+
+    /// Thinking: single soft note — acknowledges request received
+    private func playThinking() {
+        let notes: [(freq: Double, start: Double, dur: Double)] = [
+            (659.25, 0.00, 0.12)    // E5 — brief acknowledgment
+        ]
+        playWav(buildChime(notes: notes, totalDuration: 0.15, crescendo: false), volume: 0.18)
     }
 
     /// Token received: single subtle windchime note

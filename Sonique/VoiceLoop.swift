@@ -228,6 +228,8 @@ class VoiceLoop: ObservableObject {
             isProcessing = true
             objectWillChange.send()  // Force SwiftUI update
             RemoteLogger.log("[loop] START processing request: '\(request)' (isProcessing=true)")
+            // Acknowledgment cue: request received, processing started
+            SoundCues.shared.play(.thinking)
             lastTranscript = request
             partialResponse = ""
             debugLog.append("You: \(request)")

@@ -121,6 +121,12 @@ class SpeechRecognitionService: ObservableObject {
                     if !text.isEmpty {
                         self.lastStablePartial = text
                         self.armEndpointTimer()
+                        // Post partial transcript for real-time barge-in detection
+                        NotificationCenter.default.post(
+                            name: .speechTranscriptPartial,
+                            object: nil,
+                            userInfo: ["transcript": text]
+                        )
                     }
                 }
 
