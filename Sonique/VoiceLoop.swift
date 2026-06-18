@@ -165,10 +165,13 @@ class VoiceLoop: ObservableObject {
                 let lower = transcript.lowercased()
                 let trimmed = lower.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
 
-                // Check for explicit stop/cancel commands or any new speech
-                let shouldBargeIn = lower.contains("stop") || lower.contains("cancel") ||
-                                   lower.contains(AssistantProfile.shared.wakeWord.lowercased()) ||
-                                   true  // Allow any speech to barge in
+                // Barge-in only on:
+                // 1. Explicit stop/cancel commands
+                // 2. During TTS playback (user wants to interrupt the response)
+                // NOT during processing (let her finish the current response)
+                let shouldBargeIn = (lower.contains("stop") || lower.contains("cancel") ||
+                                    lower.contains(AssistantProfile.shared.wakeWord.lowercased())) ||
+                                   (session?.isSpeaking == true)  // Allow barge-in during speaking only
 
                 if shouldBargeIn {
                     let timestamp = Date().timeIntervalSince1970
@@ -190,6 +193,9 @@ class VoiceLoop: ObservableObject {
                     // Otherwise fall through to process the new command
                     RemoteLogger.log("[loop] barge-in → process '\(transcript)'")
                 } else {
+                    // User spoke during processing but not a barge-in command
+                    // Queue it for after current processing completes
+                    RemoteLogger.log("[loop] ignoring '\(transcript)' during processing (not a barge-in)")
                     continue
                 }
             }
