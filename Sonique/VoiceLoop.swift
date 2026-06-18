@@ -75,9 +75,8 @@ class VoiceLoop: ObservableObject {
             isInitializing = false
         }
 
-        // Check connection and initialize TTS BEFORE starting audio
-        // See lesson: "TTS Initialization Must Happen After Connection Probe.md"
-        await checkConnection()
+        // Note: checkConnection() is called at app launch via ContentView.task
+        // TTS is initialized there, so we don't need to call it again here
 
         guard let vs = session else { return }
         do {
