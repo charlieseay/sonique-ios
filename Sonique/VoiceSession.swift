@@ -161,7 +161,13 @@ class VoiceSession: NSObject, ObservableObject {
                     self.transcript = text
                     FileTracer.log("[vs] result '\(text)' final=\(result.isFinal)")
                     if result.isFinal { self.submit(text); return }
-                    if !text.isEmpty { self.lastStablePartial = text; self.armEndpoint() }
+                    if !text.isEmpty {
+                        self.lastStablePartial = text
+                        self.armEndpoint()
+                        // Post partial transcript for real-time barge-in detection
+                        NotificationCenter.default.post(name: .speechTranscriptPartial, object: nil,
+                                                        userInfo: ["transcript": text])
+                    }
                 }
                 if let error {
                     let ns = error as NSError
@@ -328,14 +334,16 @@ class VoiceSession: NSObject, ObservableObject {
         engine.disconnectNodeOutput(playerNode)
         FileTracer.log("[vs] stopPlayback: disconnected [\(Date().timeIntervalSince1970 - startTime)s]")
 
-        // Stop and reset player node to clear buffers
+        // CRITICAL: reset() BEFORE stop() to immediately silence hardware
+        // stop() alone waits for scheduled buffers to complete playing
+        // reset() clears all buffers immediately, silencing audio
+        FileTracer.log("[vs] stopPlayback: resetting player node (clears buffers)")
+        playerNode.reset()
+        FileTracer.log("[vs] stopPlayback: reset [\(Date().timeIntervalSince1970 - startTime)s]")
+
         FileTracer.log("[vs] stopPlayback: stopping player node")
         playerNode.stop()
         FileTracer.log("[vs] stopPlayback: stopped [\(Date().timeIntervalSince1970 - startTime)s]")
-
-        FileTracer.log("[vs] stopPlayback: resetting player node")
-        playerNode.reset()
-        FileTracer.log("[vs] stopPlayback: reset [\(Date().timeIntervalSince1970 - startTime)s]")
 
         // Reconnect for next playback
         FileTracer.log("[vs] stopPlayback: reconnecting player node")

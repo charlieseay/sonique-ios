@@ -47,6 +47,7 @@ class VoiceLoop: ObservableObject {
 
     init() {
         Task { await observeTranscripts() }
+        Task { await observePartialTranscripts() }
     }
 
     // MARK: - Control
@@ -255,6 +256,30 @@ class VoiceLoop: ObservableObject {
             FileTracer.log("[loop] isProcessing = false, isTokenSeeding = false")
             // After a reply, arm the sleep timer — if no follow-up, go to sleep (needs wake word).
             armSleepTimer()
+        }
+    }
+
+    /// Observe partial transcripts for immediate barge-in (don't wait for endpoint timer)
+    private func observePartialTranscripts() async {
+        for await notification in NotificationCenter.default.notifications(named: .speechTranscriptPartial) {
+            guard let transcript = notification.userInfo?["transcript"] as? String,
+                  !transcript.isEmpty else { continue }
+
+            // Only check for explicit stop/cancel commands during playback
+            guard session?.isSpeaking == true else { continue }
+
+            let lower = transcript.lowercased()
+            if lower.contains("stop") || lower.contains("cancel") {
+                let timestamp = Date().timeIntervalSince1970
+                FileTracer.log("[loop] PARTIAL BARGE-IN [\(timestamp)]: '\(transcript)' (immediate stop)")
+                RemoteLogger.log("[loop] PARTIAL BARGE-IN: '\(transcript)' during TTS playback")
+
+                processingTask?.cancel()
+                processingTask = nil
+                stopSpeaking()
+
+                FileTracer.log("[loop] partial barge-in complete [\(Date().timeIntervalSince1970 - timestamp)s]")
+            }
         }
     }
 

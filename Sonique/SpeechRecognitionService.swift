@@ -275,4 +275,5 @@ enum RecognitionError: LocalizedError {
 
 extension Notification.Name {
     static let speechTranscriptComplete = Notification.Name("speechTranscriptComplete")
+    static let speechTranscriptPartial = Notification.Name("speechTranscriptPartial")
 }
