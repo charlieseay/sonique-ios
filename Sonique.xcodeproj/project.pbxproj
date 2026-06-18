@@ -364,7 +364,7 @@
 				<key>CODE_SIGN_ENTITLEMENTS</key>
 				<string>Sonique.entitlements</string>
 				<key>CURRENT_PROJECT_VERSION</key>
-				<string>81</string>
+				<string>112</string>
 				<key>DEVELOPMENT_TEAM</key>
 				<string>7NSS5CJL9E</string>
 				<key>EMBED_PACKAGE_FRAMEWORKS</key>
@@ -416,7 +416,7 @@
 				<key>CODE_SIGN_ENTITLEMENTS</key>
 				<string>Sonique.entitlements</string>
 				<key>CURRENT_PROJECT_VERSION</key>
-				<string>81</string>
+				<string>112</string>
 				<key>DEVELOPMENT_TEAM</key>
 				<string>7NSS5CJL9E</string>
 				<key>EMBED_PACKAGE_FRAMEWORKS</key>

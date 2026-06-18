@@ -11,8 +11,9 @@ enum Config {
             return cached
         }
 
-        // Fetch from SoniqueBar /config endpoint
-        guard let url = URL(string: "\(commandServerURL)/config") else {
+        // Fetch from SoniqueBar /config endpoint using the active (working) endpoint
+        let baseURL = HTTPClient.activeBaseURL ?? commandServerURL
+        guard let url = URL(string: "\(baseURL)/config") else {
             throw ConfigError.invalidURL
         }
 

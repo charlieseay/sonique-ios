@@ -163,9 +163,13 @@ struct HTTPClient {
     static func probeConnection() async -> ConnectionResult {
         let endpoints = Config.endpointsToTry
         for base in endpoints {
+            FileTracer.log("[conn] Trying \(base)...")
             if await isHealthy(base) {
                 activeBaseURL = base
+                FileTracer.log("[conn] SUCCESS: \(base)")
                 return ConnectionResult(reachable: true, endpoint: base, triedEndpoints: endpoints)
+            } else {
+                FileTracer.log("[conn] FAILED: \(base)")
             }
         }
         return ConnectionResult(reachable: false, endpoint: nil, triedEndpoints: endpoints)
@@ -174,14 +178,27 @@ struct HTTPClient {
     private static func isHealthy(_ base: String) async -> Bool {
         guard let url = URL(string: "\(base)/health") else { return false }
         var req = URLRequest(url: url)
-        req.timeoutInterval = 4   // fast probe — don't hang the UI on a dead endpoint
+        req.timeoutInterval = 10   // Longer timeout for Tailscale over cellular
         do {
             let (data, response) = try await URLSession.shared.data(for: req)
-            guard let http = response as? HTTPURLResponse, http.statusCode == 200,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  json["status"] as? String == "ok" else { return false }
+            guard let http = response as? HTTPURLResponse else {
+                FileTracer.log("[conn] Health check failed: not HTTP response")
+                return false
+            }
+            guard http.statusCode == 200 else {
+                FileTracer.log("[conn] Health check failed: status=\(http.statusCode)")
+                return false
+            }
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  json["status"] as? String == "ok" else {
+                FileTracer.log("[conn] Health check failed: invalid JSON or status != ok")
+                return false
+            }
             return true
-        } catch { return false }
+        } catch {
+            FileTracer.log("[conn] Health check error: \(error.localizedDescription)")
+            return false
+        }
     }
 
     static func healthCheck() async throws -> Bool {

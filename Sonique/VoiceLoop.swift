@@ -72,18 +72,12 @@ class VoiceLoop: ObservableObject {
             sessionObservation = vs.objectWillChange.sink { [weak self] _ in
                 self?.objectWillChange.send()
             }
-            do {
-                let apiKey = try await Config.getAPIKey()
-                ttsClient = ElevenLabsTTSClient(apiKey: apiKey)
-                debugLog.append("TTS ready")
-            } catch {
-                self.error = "TTS init failed: \(error.localizedDescription)"
-                debugLog.append("ERROR: TTS - \(error.localizedDescription)")
-                isInitializing = false
-                return
-            }
             isInitializing = false
         }
+
+        // Check connection and initialize TTS BEFORE starting audio
+        // See lesson: "TTS Initialization Must Happen After Connection Probe.md"
+        await checkConnection()
 
         guard let vs = session else { return }
         do {
@@ -433,6 +427,22 @@ class VoiceLoop: ObservableObject {
         if result.reachable {
             connectionMessage = ""
             FileTracer.log("[conn] reachable via \(result.endpoint ?? "?")")
+
+            // Initialize TTS after connection is established
+            if ttsClient == nil {
+                FileTracer.log("[conn] Initializing TTS after connection established")
+                do {
+                    let apiKey = try await Config.getAPIKey()
+                    ttsClient = ElevenLabsTTSClient(apiKey: apiKey)
+                    self.error = nil
+                    debugLog.append("TTS ready")
+                    FileTracer.log("[conn] TTS initialized successfully")
+                } catch {
+                    self.error = "TTS init failed: \(error.localizedDescription)"
+                    debugLog.append("ERROR: TTS - \(error.localizedDescription)")
+                    FileTracer.log("[conn] TTS initialization failed: \(error.localizedDescription)")
+                }
+            }
             return true
         }
 
