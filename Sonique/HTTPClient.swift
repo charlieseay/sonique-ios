@@ -165,9 +165,15 @@ struct HTTPClient {
         for base in endpoints {
             if await isHealthy(base) {
                 activeBaseURL = base
+                lastSuccessfulConnection = Date()  // Track success
                 return ConnectionResult(reachable: true, endpoint: base, triedEndpoints: endpoints)
             }
         }
+
+        // All endpoints failed - run diagnostics
+        FileTracer.log("[http] All endpoints failed, running diagnostics")
+        // Note: diagnostics will be triggered by ContentView when showing error to user
+
         return ConnectionResult(reachable: false, endpoint: nil, triedEndpoints: endpoints)
     }
 
@@ -186,6 +192,66 @@ struct HTTPClient {
 
     static func healthCheck() async throws -> Bool {
         return await probeConnection().reachable
+    }
+
+    // MARK: - Diagnostics
+
+    /// Last successful connection timestamp (for diagnostic context)
+    private(set) static var lastSuccessfulConnection: Date?
+
+    /// Run diagnostics when connection fails
+    static func runDiagnostics(error: Error, endpointsTried: [String]) async -> DiagnosticResponse? {
+        FileTracer.log("[http] Running diagnostics for error: \(error.localizedDescription)")
+
+        // Create diagnostic snapshot
+        let snapshot = DiagnosticSnapshot.fromURLError(
+            error,
+            endpointsTried: endpointsTried,
+            lastSuccess: lastSuccessfulConnection
+        )
+
+        // Try to send to any reachable endpoint
+        for base in endpointsTried {
+            if let response = await sendDiagnosticSnapshot(snapshot, to: base) {
+                return response
+            }
+        }
+
+        FileTracer.log("[http] Failed to send diagnostic snapshot - no reachable endpoint")
+        return nil
+    }
+
+    private static func sendDiagnosticSnapshot(_ snapshot: DiagnosticSnapshot, to baseURL: String) async -> DiagnosticResponse? {
+        guard let url = URL(string: "\(baseURL)/diagnose") else { return nil }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 10
+
+        do {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            request.httpBody = try encoder.encode(snapshot)
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 else {
+                return nil
+            }
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let diagnosisResponse = try decoder.decode(DiagnosticResponse.self, from: data)
+
+            FileTracer.log("[http] Diagnosis received: \(diagnosisResponse.diagnosis.diagnosis)")
+            return diagnosisResponse
+
+        } catch {
+            FileTracer.log("[http] Failed to send diagnostic snapshot: \(error)")
+            return nil
+        }
     }
 }
 

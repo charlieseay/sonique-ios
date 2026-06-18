@@ -1,6 +1,9 @@
 import Foundation
 import AVFoundation
 import Combine
+#if os(iOS)
+import UIKit
+#endif
 
 /// Orchestrates the voice loop on top of VoiceSession (single shared engine):
 /// listen → submit transcript → stream LLM reply from SoniqueBar → speak sentences
@@ -77,16 +80,7 @@ class VoiceLoop: ObservableObject {
             sessionObservation = vs.objectWillChange.sink { [weak self] _ in
                 self?.objectWillChange.send()
             }
-            do {
-                let apiKey = try await Config.getAPIKey()
-                ttsClient = ElevenLabsTTSClient(apiKey: apiKey)
-                debugLog.append("TTS ready")
-            } catch {
-                self.error = "TTS init failed: \(error.localizedDescription)"
-                debugLog.append("ERROR: TTS - \(error.localizedDescription)")
-                isInitializing = false
-                return
-            }
+            // TTS initialization moved to after connection check
             isInitializing = false
         }
 
@@ -398,6 +392,16 @@ class VoiceLoop: ObservableObject {
     private func processAndSpeak(_ transcript: String) async throws {
         guard let vs = session else { return }
 
+        // DIAGNOSTIC: Device info for iPhone vs iPad audio debugging
+        #if os(iOS)
+        let deviceModel = UIDevice.current.model
+        let deviceName = UIDevice.current.name
+        let osVersion = UIDevice.current.systemVersion
+        let idiom = UIDevice.current.userInterfaceIdiom
+        FileTracer.log("[loop] DEVICE: model=\(deviceModel), name=\(deviceName), iOS=\(osVersion), idiom=\(idiom == .pad ? "iPad" : idiom == .phone ? "iPhone" : "other")")
+        FileTracer.log("[loop] processAndSpeak START: session=\(session != nil), tts=\(ttsClient != nil)")
+        #endif
+
         // Pause recognition while we fetch + speak. Engine + session stay live.
         vs.beginSpeaking()
 
@@ -416,7 +420,11 @@ class VoiceLoop: ObservableObject {
         var fullResponse = ""
 
         FileTracer.log("[http] streaming \(HTTPClient.activeBaseURL)/command/stream")
+        var chunkCount = 0
         for try await chunk in HTTPClient.sendCommandStreaming(transcript) {
+            chunkCount += 1
+            FileTracer.log("[loop] chunk #\(chunkCount): '\(chunk.text.prefix(50))...' (len=\(chunk.text.count))")
+
             // Check for cancellation
             try Task.checkCancellation()
 
@@ -435,14 +443,20 @@ class VoiceLoop: ObservableObject {
             }
 
             let (sentences, remainder) = extractCompleteSentences(from: sentenceBuffer)
+            FileTracer.log("[loop] extractCompleteSentences: found \(sentences.count) sentences, remainder=\(remainder.count) chars")
             sentenceBuffer = remainder
             for sentence in sentences {
                 try Task.checkCancellation()
+                FileTracer.log("[loop] calling speakSentence: '\(sentence.prefix(50))...'")
                 await speakSentence(sentence)
             }
         }
+        FileTracer.log("[loop] streaming complete: received \(chunkCount) chunks, sentenceBuffer='\(sentenceBuffer.prefix(100))...'")
         let remaining = sentenceBuffer.trimmingCharacters(in: .whitespaces)
-        if !remaining.isEmpty { await speakSentence(remaining) }
+        if !remaining.isEmpty {
+            FileTracer.log("[loop] speaking remaining buffer: '\(remaining.prefix(50))...'")
+            await speakSentence(remaining)
+        }
 
         lastResponse = fullResponse.trimmingCharacters(in: .whitespaces)
         partialResponse = ""
@@ -468,7 +482,10 @@ class VoiceLoop: ObservableObject {
             return
         }
 
-        guard let vs = session, let tts = ttsClient else { return }
+        guard let vs = session, let tts = ttsClient else {
+            FileTracer.log("[loop] speakSentence GUARD FAILED: session=\(session != nil), tts=\(ttsClient != nil)")
+            return
+        }
         var clean = sentence.trimmingCharacters(in: .whitespaces)
         // Strip markdown formatting so TTS doesn't read "asterisk asterisk"
         clean = clean.replacingOccurrences(of: "**", with: "")  // Bold
@@ -529,6 +546,23 @@ class VoiceLoop: ObservableObject {
         if result.reachable {
             connectionMessage = ""
             FileTracer.log("[conn] reachable via \(result.endpoint ?? "?")")
+
+            // Initialize TTS after connection is established
+            if ttsClient == nil {
+                FileTracer.log("[conn] Initializing TTS after connection established")
+                do {
+                    let apiKey = try await Config.getAPIKey()
+                    ttsClient = ElevenLabsTTSClient(apiKey: apiKey)
+                    self.error = nil
+                    debugLog.append("TTS ready")
+                    FileTracer.log("[conn] TTS initialized successfully")
+                } catch {
+                    self.error = "TTS init failed: \(error.localizedDescription)"
+                    debugLog.append("ERROR: TTS - \(error.localizedDescription)")
+                    FileTracer.log("[conn] TTS initialization failed: \(error.localizedDescription)")
+                }
+            }
+
             return true
         }
 

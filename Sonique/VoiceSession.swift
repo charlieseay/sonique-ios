@@ -69,6 +69,10 @@ class VoiceSession: NSObject, ObservableObject {
         try session.setPreferredIOBufferDuration(64.0 / 48000.0)
 
         try session.setActive(true, options: .notifyOthersOnDeactivation)
+
+        // Auto-route to Bluetooth if available, otherwise speaker
+        routeAudioToBestOutput()
+
         FileTracer.log("[vs] session active (.playAndRecord/.voiceChat, 1.33ms IO buffer)")
 
         let input = engine.inputNode
@@ -113,6 +117,58 @@ class VoiceSession: NSObject, ObservableObject {
         FileTracer.log("[vs] stopped")
     }
 
+    /// Route audio to best available output (Bluetooth > Speaker > Earpiece)
+    private func routeAudioToBestOutput() {
+        let session = AVAudioSession.sharedInstance()
+        let currentRoute = session.currentRoute
+
+        // Log available outputs
+        FileTracer.log("[vs] Available outputs: \(currentRoute.outputs.map { "\($0.portType.rawValue):\($0.portName)" }.joined(separator: ", "))")
+
+        // Check if Bluetooth is already active
+        let hasBluetooth = currentRoute.outputs.contains { output in
+            output.portType == .bluetoothHFP || output.portType == .bluetoothA2DP || output.portType == .bluetoothLE
+        }
+
+        if hasBluetooth {
+            FileTracer.log("[vs] Audio routing: Bluetooth (already active)")
+            return
+        }
+
+        // Check if Bluetooth is available but not active
+        let availableInputs = session.availableInputs ?? []
+        let hasBluetoothAvailable = availableInputs.contains { input in
+            input.portType == .bluetoothHFP
+        }
+
+        if hasBluetoothAvailable {
+            // Try to activate Bluetooth input (which should also activate Bluetooth output)
+            if let bluetoothInput = availableInputs.first(where: { $0.portType == .bluetoothHFP }) {
+                do {
+                    try session.setPreferredInput(bluetoothInput)
+                    FileTracer.log("[vs] Audio routing: Switched to Bluetooth")
+                    return
+                } catch {
+                    FileTracer.log("[vs] Failed to switch to Bluetooth: \(error.localizedDescription)")
+                }
+            }
+        }
+
+        // No Bluetooth - check if using speaker or earpiece
+        let usingEarpiece = currentRoute.outputs.contains { $0.portType == .builtInReceiver }
+        if usingEarpiece {
+            // Switch to speaker
+            do {
+                try session.overrideOutputAudioPort(.speaker)
+                FileTracer.log("[vs] Audio routing: Switched to Speaker (from earpiece)")
+            } catch {
+                FileTracer.log("[vs] Failed to switch to speaker: \(error.localizedDescription)")
+            }
+        } else {
+            FileTracer.log("[vs] Audio routing: Speaker (default)")
+        }
+    }
+
     // MARK: - Recognition
 
     private func beginRecognition(_ recognizer: SFSpeechRecognizer) {
@@ -135,6 +191,7 @@ class VoiceSession: NSObject, ObservableObject {
         if recognizer.supportsOnDeviceRecognition { req.requiresOnDeviceRecognition = true }
         request = req
         lastStablePartial = ""
+        lastSubmitted = nil  // Reset duplicate prevention for new recognition session
 
         let input = engine.inputNode
         let format = input.outputFormat(forBus: 0)
@@ -217,6 +274,8 @@ class VoiceSession: NSObject, ObservableObject {
         }
     }
 
+    private var lastSubmitted: String? = nil  // Prevent duplicate submissions
+
     private func submit(_ text: String) {
         endpointTimer?.cancel(); endpointTimer = nil
         let final = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -225,6 +284,14 @@ class VoiceSession: NSObject, ObservableObject {
             if isListening, let r = recognizer { beginRecognition(r) }
             return
         }
+
+        // Prevent duplicate submissions of the same transcript
+        if final == lastSubmitted {
+            FileTracer.log("[vs] DUPLICATE PREVENTED: '\(final)'")
+            return
+        }
+
+        lastSubmitted = final
         FileTracer.log("[vs] SUBMIT '\(final)'")
         NotificationCenter.default.post(name: .speechTranscriptComplete, object: nil,
                                         userInfo: ["transcript": final])

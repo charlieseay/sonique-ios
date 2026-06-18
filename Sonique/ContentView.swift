@@ -12,6 +12,8 @@ struct ContentView: View {
     @State private var showReportSheet = false
     @State private var selectedVoiceID = Config.selectedVoiceID
     @State private var apiKey = ""
+    @State private var diagnosticResponse: DiagnosticResponse?
+    @State private var showDiagnostics = false
 
     var body: some View {
         ZStack {
@@ -238,8 +240,20 @@ struct ContentView: View {
             DiagnosticsReportView(connectionOK: voiceLoop.connectionOK,
                                   activeEndpoint: HTTPClient.activeBaseURL)
         }
+        .sheet(isPresented: $showDiagnostics) {
+            if let response = diagnosticResponse {
+                DiagnosticsView(diagnosis: response.diagnosis, remediation: response.remediation)
+            }
+        }
         .alert("Error", isPresented: .constant(voiceLoop.error != nil && !voiceLoop.isInitializing)) {
             Button("OK") { voiceLoop.error = nil }
+            if !isHealthy {
+                Button("Run Diagnostics") {
+                    Task {
+                        await runDiagnostics()
+                    }
+                }
+            }
         } message: {
             Text(voiceLoop.error ?? "")
         }
@@ -306,9 +320,28 @@ struct ContentView: View {
 
     private var secondaryStatus: String {
         if isLoadingModel { return "Setting up microphone" }
-        if !isHealthy { return "Check that SoniqueBar is running on the Mac" }
+        if !isHealthy { return "Tap 'Run Diagnostics' to find the issue" }
         if voiceLoop.isActive { return "Speak naturally — pause when you're done" }
         return ""
+    }
+
+    private func runDiagnostics() async {
+        FileTracer.log("[ContentView] Running diagnostics...")
+
+        // Create a fake error to trigger diagnostics
+        let endpoints = Config.endpointsToTry
+        let error = NSError(domain: NSURLErrorDomain, code: -1001, userInfo: [
+            NSLocalizedDescriptionKey: "Connection failed"
+        ])
+
+        if let response = await HTTPClient.runDiagnostics(error: error, endpointsTried: endpoints) {
+            await MainActor.run {
+                diagnosticResponse = response
+                showDiagnostics = true
+            }
+        } else {
+            FileTracer.log("[ContentView] No diagnostic response received")
+        }
     }
 }
 
