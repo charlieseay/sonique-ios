@@ -109,8 +109,23 @@ struct HTTPClient {
                         return
                     }
 
+                    // Stream watchdog: if no data received for 30s, abort and recover
+                    var lastDataTime = Date()
+                    let watchdogTask = Task {
+                        while !Task.isCancelled {
+                            try? await Task.sleep(nanoseconds: 5_000_000_000) // Check every 5s
+                            let elapsed = Date().timeIntervalSince(lastDataTime)
+                            if elapsed > 30 {
+                                FileTracer.log("[http] stream watchdog: no data for 30s, aborting")
+                                continuation.finish(throwing: HTTPError.streamTimeout)
+                                return
+                            }
+                        }
+                    }
+
                     var lineBuffer = ""
                     for try await byte in bytes {
+                        lastDataTime = Date() // Reset watchdog timer
                         let char = String(bytes: [byte], encoding: .utf8) ?? ""
                         if char == "\n" {
                             let line = lineBuffer.trimmingCharacters(in: .whitespaces)
@@ -120,6 +135,7 @@ struct HTTPClient {
                                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
 
                             if json["done"] as? Bool == true {
+                                watchdogTask.cancel()
                                 continuation.finish()
                                 return
                             }
@@ -139,6 +155,7 @@ struct HTTPClient {
                             lineBuffer += char
                         }
                     }
+                    watchdogTask.cancel()
                     continuation.finish()
                 } catch {
                     continuation.finish(throwing: error)
@@ -209,4 +226,5 @@ struct HTTPClient {
 enum HTTPError: Error {
     case badResponse
     case invalidJSON
+    case streamTimeout
 }

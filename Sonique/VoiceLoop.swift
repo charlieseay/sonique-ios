@@ -212,8 +212,26 @@ class VoiceLoop: ObservableObject {
                 // retryable message and keep listening.
                 debugLog.append("ERROR: \(error.localizedDescription)")
                 FileTracer.log("[loop] PIPELINE ERROR (spoken, not alerted): \(error)")
-                await speakSentence("Sorry, I ran into an issue. Please try again.")
-                session?.endSpeaking()
+
+                // Different messages for different error types
+                if let httpError = error as? HTTPError, httpError == .streamTimeout {
+                    await speakSentence("The connection timed out. Let me try again.")
+                    FileTracer.log("[loop] AUTO-RECOVERY: stream timeout, will retry")
+                    // Retry the same request once
+                    processingTask = Task {
+                        try await processAndSpeak(request)
+                    }
+                    do {
+                        try await processingTask!.value
+                        RemoteLogger.log("[loop] RETRY SUCCEEDED: '\(lastResponse)'")
+                    } catch {
+                        await speakSentence("Sorry, I'm still having connection issues. Please try again.")
+                        session?.endSpeaking()
+                    }
+                } else {
+                    await speakSentence("Sorry, I ran into an issue. Please try again.")
+                    session?.endSpeaking()
+                }
             }
             processingTask = nil
             isProcessing = false
