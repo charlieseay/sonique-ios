@@ -19,7 +19,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>2.1.0</string>
 	<key>CFBundleVersion</key>
-	<string>115</string>
+	<string>116</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -48,8 +48,6 @@
 	<string>Sonique accesses your calendar to show upcoming events and create new calendar entries via voice commands.</string>
 	<key>NSRemindersUsageDescription</key>
 	<string>Sonique accesses your reminders to show and create reminders via voice commands.</string>
-	<key>NSHomeKitUsageDescription</key>
-	<string>Sonique controls your HomeKit-enabled smart home devices via voice commands.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

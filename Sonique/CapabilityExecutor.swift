@@ -93,33 +93,6 @@ class CapabilityExecutor: ObservableObject {
             return "I couldn't parse the email details"
         }
 
-        // HomeKit - Lights
-        if lowercased.contains("turn on") && (lowercased.contains("light") || lowercased.contains("lamp")) {
-            if let lightName = extractBetween(lowercased, start: "turn on ", end: " light") ?? extractAfter(lowercased, after: "turn on the ") {
-                let success = await capabilities.setLight(name: lightName, on: true)
-                return success ? "Turned on \(lightName)" : "Couldn't find light named \(lightName)"
-            }
-            return "Which light?"
-        }
-
-        if lowercased.contains("turn off") && (lowercased.contains("light") || lowercased.contains("lamp")) {
-            if let lightName = extractBetween(lowercased, start: "turn off ", end: " light") ?? extractAfter(lowercased, after: "turn off the ") {
-                let success = await capabilities.setLight(name: lightName, on: false)
-                return success ? "Turned off \(lightName)" : "Couldn't find light named \(lightName)"
-            }
-            return "Which light?"
-        }
-
-        // HomeKit - Scenes
-        if lowercased.contains("activate") && lowercased.contains("scene") {
-            if let sceneName = extractAfter(lowercased, after: "activate ") ?? extractAfter(lowercased, after: "scene ") {
-                let success = await capabilities.activateScene(name: sceneName)
-                return success ? "Activated scene: \(sceneName)" : "Couldn't find scene named \(sceneName)"
-            }
-            let scenes = capabilities.getScenes()
-            return scenes.isEmpty ? "No HomeKit scenes available" : "Available scenes: \(scenes.joined(separator: ", "))"
-        }
-
         // Apple Intelligence (iOS 18.1+)
         if lowercased.contains("summarize") || lowercased.contains("writing tools") ||
            lowercased.contains("generate image") || lowercased.contains("image playground") {

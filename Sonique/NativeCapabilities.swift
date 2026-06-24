@@ -1,7 +1,6 @@
 import Foundation
 import EventKit
 import MessageUI
-import HomeKit
 
 /// Native iOS capabilities - uses Apple frameworks directly
 /// Messages, Mail, Calendar, Reminders, HomeKit
@@ -10,7 +9,6 @@ class NativeCapabilities: NSObject, ObservableObject {
     static let shared = NativeCapabilities()
 
     private let eventStore = EKEventStore()
-    private var homeManager: HMHomeManager?
 
     // MARK: - Calendar & Reminders
 
@@ -157,73 +155,4 @@ class NativeCapabilities: NSObject, ObservableObject {
         return composer
     }
 
-    // MARK: - HomeKit
-
-    func setupHomeKit() {
-        homeManager = HMHomeManager()
-    }
-
-    /// Get HomeKit home
-    var home: HMHome? {
-        homeManager?.primaryHome
-    }
-
-    /// List all HomeKit lights
-    func getLights() -> [HMAccessory] {
-        guard let home = home else { return [] }
-
-        return home.accessories.filter { accessory in
-            accessory.services.contains { service in
-                service.serviceType == HMServiceTypeLightbulb
-            }
-        }
-    }
-
-    /// Turn light on/off
-    func setLight(name: String, on: Bool) async -> Bool {
-        guard let home = home else { return false }
-
-        guard let light = home.accessories.flatMap({ $0.services }).first(where: {
-            $0.serviceType == HMServiceTypeLightbulb && $0.name == name
-        }) else {
-            return false
-        }
-
-        guard let powerChar = light.characteristics.first(where: {
-            $0.characteristicType == HMCharacteristicTypePowerState
-        }) else {
-            return false
-        }
-
-        do {
-            try await powerChar.writeValue(on)
-            return true
-        } catch {
-            print("[NativeCapabilities] Failed to set light: \(error)")
-            return false
-        }
-    }
-
-    /// Activate HomeKit scene
-    func activateScene(name: String) async -> Bool {
-        guard let home = home else { return false }
-
-        guard let scene = home.actionSets.first(where: { $0.name == name }) else {
-            return false
-        }
-
-        do {
-            try await home.executeActionSet(scene)
-            return true
-        } catch {
-            print("[NativeCapabilities] Failed to activate scene: \(error)")
-            return false
-        }
-    }
-
-    /// List all scenes
-    func getScenes() -> [String] {
-        guard let home = home else { return [] }
-        return home.actionSets.map { $0.name }
-    }
 }
