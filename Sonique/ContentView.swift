@@ -4,6 +4,7 @@ struct ContentView: View {
     @StateObject private var voiceLoop = VoiceLoop()
     @ObservedObject private var profile = AssistantProfile.shared
     @ObservedObject private var launchState = AppLaunchState.shared
+    @ObservedObject private var capabilityExecutor = CapabilityExecutor.shared
     @Environment(\.scenePhase) private var scenePhase
     @State private var isHealthy = false
     @State private var showDebug = false
@@ -233,6 +234,21 @@ struct ContentView: View {
         .sheet(isPresented: $showReportSheet) {
             DiagnosticsReportView(connectionOK: voiceLoop.connectionOK,
                                   activeEndpoint: HTTPClient.activeBaseURL)
+        }
+        .sheet(isPresented: $capabilityExecutor.showMessageComposer) {
+            MessageComposerView(
+                recipients: [capabilityExecutor.messageRecipient],
+                body: capabilityExecutor.messageBody,
+                isPresented: $capabilityExecutor.showMessageComposer
+            )
+        }
+        .sheet(isPresented: $capabilityExecutor.showMailComposer) {
+            MailComposerView(
+                recipients: [capabilityExecutor.mailRecipient],
+                subject: capabilityExecutor.mailSubject,
+                body: capabilityExecutor.mailBody,
+                isPresented: $capabilityExecutor.showMailComposer
+            )
         }
         .alert("Error", isPresented: .constant(voiceLoop.error != nil && !voiceLoop.isInitializing)) {
             Button("OK") { voiceLoop.error = nil }
