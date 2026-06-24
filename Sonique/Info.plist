@@ -19,16 +19,13 @@
 	<key>CFBundleShortVersionString</key>
 	<string>2.1.0</string>
 	<key>CFBundleVersion</key>
-	<string>116</string>
+	<string>117</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<!-- Allow HTTP to RFC1918 LAN addresses (192.168/16, 10/8, 172.16/12) without a per-host exception. -->
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
-		<!-- Tailscale CGNAT range (100.64.0.0/10) is not covered by NSAllowsLocalNetworking, so list
-		     the tailnet peer explicitly. Add another entry here if the Mac Mini's tailnet IP changes. -->
 		<key>NSExceptionDomains</key>
 		<dict>
 			<key>100.122.13.35</key>
@@ -40,14 +37,14 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Sonique uses your microphone to capture your voice so you can issue voice commands to control smart home devices, ask questions, and manage tasks hands-free.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Sonique uses speech recognition to convert your voice commands into text, enabling you to control smart home devices, query information, and interact with your personal assistant through natural voice input.</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Sonique accesses your calendar to show upcoming events and create new calendar entries via voice commands.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Sonique uses your microphone to capture your voice so you can issue voice commands to control smart home devices, ask questions, and manage tasks hands-free.</string>
 	<key>NSRemindersUsageDescription</key>
 	<string>Sonique accesses your reminders to show and create reminders via voice commands.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Sonique uses speech recognition to convert your voice commands into text, enabling you to control smart home devices, query information, and interact with your personal assistant through natural voice input.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
