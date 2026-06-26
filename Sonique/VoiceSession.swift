@@ -156,7 +156,12 @@ class VoiceSession: NSObject, ObservableObject {
                     let text = result.bestTranscription.formattedString
                     self.transcript = text
                     FileTracer.log("[vs] result '\(text)' final=\(result.isFinal)")
-                    if result.isFinal { self.submit(text); return }
+                    if result.isFinal {
+                        self.endpointTimer?.cancel()  // Cancel endpoint timer
+                        self.lastStablePartial = ""   // Clear to prevent duplicate submit
+                        self.submit(text)
+                        return
+                    }
                     if !text.isEmpty { self.lastStablePartial = text; self.armEndpoint() }
                 }
                 if let error {
