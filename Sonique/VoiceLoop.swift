@@ -235,6 +235,7 @@ class VoiceLoop: ObservableObject {
             }
             processingTask = nil
             isProcessing = false
+            lastTranscript = ""  // Clear to allow same transcript again
             FileTracer.log("[loop] isProcessing = false")
             // After a reply, arm the sleep timer — if no follow-up, go to sleep (needs wake word).
             armSleepTimer()
