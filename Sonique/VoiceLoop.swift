@@ -34,7 +34,7 @@ class VoiceLoop: ObservableObject {
 
     @Published private(set) var session: VoiceSession?
     private var sessionObservation: AnyCancellable?
-    private var ttsClient: ElevenLabsTTSClient?
+    private var ttsClient: TTSClient?
 
     // Back-compat for ContentView
     var speechRecognition: VoiceSession? { session }
@@ -463,7 +463,10 @@ class VoiceLoop: ObservableObject {
                 FileTracer.log("[conn] Initializing TTS after connection established")
                 do {
                     let apiKey = try await Config.getAPIKey()
-                    ttsClient = ElevenLabsTTSClient(apiKey: apiKey)
+                    ttsClient = TTSClient(
+                        elevenLabsAPIKey: apiKey,
+                        soniqueBarHost: Config.soniqueBarHost
+                    )
                     self.error = nil
                     debugLog.append("TTS ready")
                     FileTracer.log("[conn] TTS initialized successfully")

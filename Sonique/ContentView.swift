@@ -10,6 +10,7 @@ struct ContentView: View {
     @State private var showDebug = false
     @State private var showVoicePicker = false
     @State private var showAssistantSettings = false
+    @State private var showSettings = false
     @State private var showReportSheet = false
     @State private var selectedVoiceID = Config.selectedVoiceID
     @State private var apiKey = ""
@@ -23,6 +24,17 @@ struct ContentView: View {
             VStack(spacing: 0) {
                 // Top bar
                 HStack(spacing: 8) {
+                    // Settings gear
+                    Button(action: { showSettings = true }) {
+                        Image(systemName: "gearshape")
+                            .font(.title3)
+                            .foregroundColor(.white.opacity(0.6))
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Settings")
+
                     // Assistant identity — tap to rename / set photo
                     Button(action: { showAssistantSettings = true }) {
                         HStack(spacing: 7) {
@@ -227,6 +239,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showVoicePicker) {
             VoiceSelector(apiKey: apiKey, selectedVoiceID: $selectedVoiceID)
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
         }
         .sheet(isPresented: $showAssistantSettings) {
             AssistantSettingsView()

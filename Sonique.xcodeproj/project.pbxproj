@@ -34,6 +34,7 @@
 		AC1B00100000000000VC01B /* VoiceCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000VC01A /* VoiceCatalog.swift */; };
 		AC1B00100000000000VS01B /* VoiceSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000VS01A /* VoiceSession.swift */; };
 		AC1B00100000000000WK10B /* WhisperKitSTTService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000WK10A /* WhisperKitSTTService.swift */; };
+		BB26EE3075600D93C8DD659C /* TTSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4EC42E16028E8000D577CB4 /* TTSClient.swift */; };
 		D1864FD5AF3143B3F0797457 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 671A40B7929AC4785513019C /* HTTPClient.swift */; };
 		EAC245018BD75F904B3DFA71 /* VoiceSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDEE4E65BD1368173EB33E93 /* VoiceSelector.swift */; };
 		EDAD47EA8D3B00AC2541F23A /* SoniqueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5D54884BF2700547B33C65E /* SoniqueApp.swift */; };
@@ -47,7 +48,7 @@
 		3A6EDC914A658CBC3E575AB7 /* DeviceContextPublisher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Sonique/DeviceContextPublisher.swift; sourceTree = SOURCE_ROOT; };
 		3F6411FD2FE1CED600B99A93 /* AudioLevelMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioLevelMonitor.swift; sourceTree = "<group>"; };
 		3F6411FE2FE1CED600B99A93 /* WaveformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformView.swift; sourceTree = "<group>"; };
-		3F73A4432FCE86A90057ED63 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		3F73A4432FCE86A90057ED63 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SettingsView.swift; sourceTree = "<group>"; };
 		3F7FC5FF2FCF20CF00280E3B /* ElevenLabsTTSClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/ElevenLabsTTSClient.swift; sourceTree = "<group>"; };
 		3F7FC6002FCF20CF00280E3B /* SpeechRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SpeechRecognitionService.swift; sourceTree = "<group>"; };
 		3FA000000000000000000018 /* Sonique.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sonique.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -72,6 +73,7 @@
 		D8F04A6A893C92D026BF8A2F /* VoiceLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VoiceLoop.swift; path = Sonique/VoiceLoop.swift; sourceTree = SOURCE_ROOT; };
 		DBB396DDBA76855651D24A88 /* AppleIntelligenceCapabilities.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppleIntelligenceCapabilities.swift; path = Sonique/AppleIntelligenceCapabilities.swift; sourceTree = "<group>"; };
 		DBE6BB31F45A485BAF13A5ED /* RemoteLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/RemoteLogger.swift; sourceTree = "<group>"; };
+		E4EC42E16028E8000D577CB4 /* TTSClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TTSClient.swift; path = Sonique/TTSClient.swift; sourceTree = "<group>"; };
 		E5D54884BF2700547B33C65E /* SoniqueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SoniqueApp.swift; path = Sonique/SoniqueApp.swift; sourceTree = SOURCE_ROOT; };
 		EE57C6A78015FFAD8828EFF9 /* CapabilityExecutor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CapabilityExecutor.swift; path = Sonique/CapabilityExecutor.swift; sourceTree = "<group>"; };
 		FF1A00000000000000ASSET0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Sonique/Resources/Assets.xcassets; sourceTree = SOURCE_ROOT; };
@@ -140,6 +142,7 @@
 			isa = PBXGroup;
 			children = (
 				3A6EDC914A658CBC3E575AB7 /* DeviceContextPublisher.swift */,
+				E4EC42E16028E8000D577CB4 /* TTSClient.swift */,
 			);
 			name = Sonique;
 			sourceTree = "<group>";
@@ -247,6 +250,7 @@
 				865B1979F6D2564DBD38C8C0 /* CapabilityExecutor.swift in Sources */,
 				5AAA4BE563957AE623DFE425 /* AppleIntelligenceCapabilities.swift in Sources */,
 				3AD4BE75784BB13A70577E66 /* DeviceContextPublisher.swift in Sources */,
+				BB26EE3075600D93C8DD659C /* TTSClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -258,7 +262,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 120;
+				CURRENT_PROJECT_VERSION = 126;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -287,7 +291,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 120;
+				CURRENT_PROJECT_VERSION = 126;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;

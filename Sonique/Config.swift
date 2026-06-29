@@ -164,4 +164,14 @@ enum Config {
             UserDefaults.standard.set(newValue, forKey: voiceNameKey)
         }
     }
+
+    /// Extract host from commandServerURL for TTS client
+    static var soniqueBarHost: String {
+        // Extract host from URL like "http://192.168.0.221:8890" -> "192.168.0.221"
+        if let url = URL(string: commandServerURL) {
+            return url.host() ?? "192.168.0.221"
+        }
+        // Last resort: default LAN IP
+        return "192.168.0.221"
+    }
 }

@@ -6,10 +6,10 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -19,16 +19,13 @@
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
-	<string>120</string>
+	<string>126</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<!-- Allow HTTP to RFC1918 LAN addresses (192.168/16, 10/8, 172.16/12) without a per-host exception. -->
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
-		<!-- Tailscale CGNAT range (100.64.0.0/10) is not covered by NSAllowsLocalNetworking, so list
-		     the tailnet peer explicitly. Add another entry here if the Mac Mini's tailnet IP changes. -->
 		<key>NSExceptionDomains</key>
 		<dict>
 			<key>100.122.13.35</key>
@@ -40,10 +37,16 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>audio</string>
-	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Sonique does not use the camera. This permission is declared because an embedded advertising SDK references camera APIs.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Sonique uses your microphone to capture your voice so you can issue voice commands to control smart home devices, ask questions, and manage tasks hands-free.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Sonique does not access photos. This permission is declared because an embedded advertising SDK references photo library APIs.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Sonique uses speech recognition to convert your voice commands into text, enabling you to control smart home devices, query information, and interact with your personal assistant through natural voice input.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This identifier will be used to deliver personalized ads to you.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -51,6 +54,10 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UIRequiredDeviceCapabilities</key>
@@ -70,15 +77,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>NSCameraUsageDescription</key>
-	<string>Sonique does not use the camera. This permission is declared because an embedded advertising SDK references camera APIs.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Sonique uses your microphone to capture your voice so you can issue voice commands to control smart home devices, ask questions, and manage tasks hands-free.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Sonique uses speech recognition to convert your voice commands into text, enabling you to control smart home devices, query information, and interact with your personal assistant through natural voice input.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Sonique does not access photos. This permission is declared because an embedded advertising SDK references photo library APIs.</string>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>This identifier will be used to deliver personalized ads to you.</string>
 </dict>
 </plist>
