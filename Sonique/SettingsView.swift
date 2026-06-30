@@ -22,8 +22,10 @@ struct SettingsView: View {
                             if newValue {
                                 serverURL = Config.tailscaleURL
                             } else {
-                                serverURL = "http://192.168.0.221:8890"
+                                serverURL = Config.defaultLANURL
                             }
+                            // Also update Config to keep in sync
+                            Config.tailscaleFallbackEnabled = newValue
                         }
 
                     TextField("Server URL", text: $serverURL)
