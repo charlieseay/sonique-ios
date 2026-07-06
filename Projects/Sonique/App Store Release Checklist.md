@@ -7,12 +7,12 @@
 | App | Sonique |
 | Bundle ID | `com.seayniclabs.sonique` |
 | Marketing Version | 2.1.0 |
-| Build Number | 129 |
+| Build Number | 129 (incremented from 128 — ASC collision avoidance) |
 | Team ID | 7NSS5CJL9E |
 | ASC Link | https://appstoreconnect.apple.com/apps |
 | Git Branch | `fix/tailscale-tts-init` |
 
-## Build 128 Highlights
+## Build 129 Highlights
 
 - App Intents framework with Siri-discoverable shortcuts (`StartListeningIntent`, Slack, Linear, GitHub, Notion, Docker)
 - Siri phrases: "Hey Sonique", "Start Sonique", "Talk to Sonique"

@@ -61,8 +61,21 @@ enum IntentParameterValidator {
 
     static func sanitizeRepo(_ repo: String) -> String {
         let trimmed = repo.trimmingCharacters(in: .whitespacesAndNewlines)
-        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_/"))
-        return String(trimmed.unicodeScalars.filter { allowed.contains($0) })
+        let stopChars = CharacterSet(charactersIn: ";|&$`\"'<>()")
+        let truncated = String(trimmed.unicodeScalars.prefix { !stopChars.contains($0) })
+        let segmentAllowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_."))
+        let parts = truncated.split(separator: "/", maxSplits: 1).map(String.init)
+        guard parts.count == 2 else { return "" }
+
+        func cleanSegment(_ segment: String) -> String {
+            let cleaned = String(segment.unicodeScalars.filter { segmentAllowed.contains($0) })
+            return cleaned.contains("..") ? "" : cleaned
+        }
+
+        let owner = cleanSegment(parts[0])
+        let name = cleanSegment(parts[1])
+        guard !owner.isEmpty, !name.isEmpty else { return "" }
+        return "\(owner)/\(name)"
     }
 }
 

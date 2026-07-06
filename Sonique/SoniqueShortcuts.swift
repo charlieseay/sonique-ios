@@ -73,6 +73,16 @@ struct SoniqueShortcuts: AppShortcutsProvider {
             systemImageName: "chevron.left.forwardslash.chevron.right"
         )
         AppShortcut(
+            intent: GitHubCreateIssueIntent(),
+            phrases: [
+                "Create GitHub issue with \(.applicationName)",
+                "GitHub issue with \(.applicationName)",
+                "New GitHub issue with \(.applicationName)"
+            ],
+            shortTitle: "Create GitHub Issue",
+            systemImageName: "plus.circle"
+        )
+        AppShortcut(
             intent: NotionCreateIntent(),
             phrases: [
                 "Create Notion page with \(.applicationName)",

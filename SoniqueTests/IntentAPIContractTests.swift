@@ -37,6 +37,18 @@ final class IntentAPIContractTests: XCTestCase {
         XCTAssertEqual(decoded?["title"], "weekly standup")
     }
 
+    func testGitHubCreateIssuePayloadKeys() throws {
+        let payload = [
+            "action": "create_issue",
+            "title": "fix microphone echo",
+            "repo": "charlieseay/sonique-ios"
+        ]
+        let data = try JSONSerialization.data(withJSONObject: payload)
+        let decoded = try JSONSerialization.jsonObject(with: data) as? [String: String]
+        XCTAssertEqual(decoded?["action"], "create_issue")
+        XCTAssertEqual(decoded?["title"], "fix microphone echo")
+    }
+
     func testDockerPayloadKeys() throws {
         let payload = ["all": "false"]
         let data = try JSONSerialization.data(withJSONObject: payload)

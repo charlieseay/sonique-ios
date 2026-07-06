@@ -65,4 +65,8 @@ final class IntentParameterValidatorTests: XCTestCase {
     func testSanitizeRepoStripsInvalidChars() {
         XCTAssertEqual(IntentParameterValidator.sanitizeRepo("owner/repo;drop"), "owner/repo")
     }
+
+    func testSanitizeRepoStopsAtPipe() {
+        XCTAssertEqual(IntentParameterValidator.sanitizeRepo("owner/repo|whoami"), "owner/repo")
+    }
 }

@@ -38,6 +38,7 @@
 		INT000000000000000005B /* GitHubSearchIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000005A /* GitHubSearchIntent.swift */; };
 		INT000000000000000006B /* NotionCreateIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000006A /* NotionCreateIntent.swift */; };
 		INT000000000000000007B /* DockerListIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000007A /* DockerListIntent.swift */; };
+		INT000000000000000008B /* GitHubCreateIssueIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000008A /* GitHubCreateIssueIntent.swift */; };
 		TST000000000000000001B /* IntentParameterValidatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TST000000000000000001A /* IntentParameterValidatorTests.swift */; };
 		TST000000000000000002B /* IntentResponseParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TST000000000000000002A /* IntentResponseParserTests.swift */; };
 		TST000000000000000003B /* IntentAPIContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TST000000000000000003A /* IntentAPIContractTests.swift */; };
@@ -82,6 +83,7 @@
 		INT000000000000000005A /* GitHubSearchIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/GitHubSearchIntent.swift; sourceTree = SOURCE_ROOT; };
 		INT000000000000000006A /* NotionCreateIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/NotionCreateIntent.swift; sourceTree = SOURCE_ROOT; };
 		INT000000000000000007A /* DockerListIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/DockerListIntent.swift; sourceTree = SOURCE_ROOT; };
+		INT000000000000000008A /* GitHubCreateIssueIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/GitHubCreateIssueIntent.swift; sourceTree = SOURCE_ROOT; };
 		TST000000000000000001A /* IntentParameterValidatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentParameterValidatorTests.swift; sourceTree = "<group>"; };
 		TST000000000000000002A /* IntentResponseParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentResponseParserTests.swift; sourceTree = "<group>"; };
 		TST000000000000000003A /* IntentAPIContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentAPIContractTests.swift; sourceTree = "<group>"; };
@@ -140,6 +142,7 @@
 				INT000000000000000005A /* GitHubSearchIntent.swift */,
 				INT000000000000000006A /* NotionCreateIntent.swift */,
 				INT000000000000000007A /* DockerListIntent.swift */,
+				INT000000000000000008A /* GitHubCreateIssueIntent.swift */,
 				3F73A4432FCE86A90057ED63 /* SettingsView.swift */,
 				3FC595A32F998A2100BEFC6F /* Sonique.entitlements */,
 				3FA000000000000000000003 /* Products */,
@@ -332,6 +335,7 @@
 				INT000000000000000005B /* GitHubSearchIntent.swift in Sources */,
 				INT000000000000000006B /* NotionCreateIntent.swift in Sources */,
 				INT000000000000000007B /* DockerListIntent.swift in Sources */,
+				INT000000000000000008B /* GitHubCreateIssueIntent.swift in Sources */,
 				23DA4ACE8CFA741DF5BD9C1B /* Config.swift in Sources */,
 				FD354B38A1B5A35514512A28 /* ContentView.swift in Sources */,
 				EAC245018BD75F904B3DFA71 /* VoiceSelector.swift in Sources */,
