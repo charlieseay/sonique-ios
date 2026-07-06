@@ -31,6 +31,16 @@
 		AC1B00100000000000SB02B /* SoniqueBrain.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000SB02A /* SoniqueBrain.swift */; };
 		AC1B00100000000000SC01B /* SoundCues.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000SC01A /* SoundCues.swift */; };
 		AC1B00100000000000SH01B /* SoniqueShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000SH01A /* SoniqueShortcuts.swift */; };
+		INT000000000000000001B /* IntentTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000001A /* IntentTypes.swift */; };
+		INT000000000000000002B /* IntentBarClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000002A /* IntentBarClient.swift */; };
+		INT000000000000000003B /* SlackPostIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000003A /* SlackPostIntent.swift */; };
+		INT000000000000000004B /* LinearCreateIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000004A /* LinearCreateIntent.swift */; };
+		INT000000000000000005B /* GitHubSearchIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000005A /* GitHubSearchIntent.swift */; };
+		INT000000000000000006B /* NotionCreateIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000006A /* NotionCreateIntent.swift */; };
+		INT000000000000000007B /* DockerListIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000007A /* DockerListIntent.swift */; };
+		TST000000000000000001B /* IntentParameterValidatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TST000000000000000001A /* IntentParameterValidatorTests.swift */; };
+		TST000000000000000002B /* IntentResponseParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TST000000000000000002A /* IntentResponseParserTests.swift */; };
+		TST000000000000000003B /* IntentAPIContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TST000000000000000003A /* IntentAPIContractTests.swift */; };
 		AC1B00100000000000VC01B /* VoiceCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000VC01A /* VoiceCatalog.swift */; };
 		AC1B00100000000000VS01B /* VoiceSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000VS01A /* VoiceSession.swift */; };
 		AC1B00100000000000WK10B /* WhisperKitSTTService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000WK10A /* WhisperKitSTTService.swift */; };
@@ -65,6 +75,17 @@
 		AC1B00100000000000SB02A /* SoniqueBrain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SoniqueBrain.swift; sourceTree = "<group>"; };
 		AC1B00100000000000SC01A /* SoundCues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SoundCues.swift; sourceTree = "<group>"; };
 		AC1B00100000000000SH01A /* SoniqueShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SoniqueShortcuts.swift; sourceTree = "<group>"; };
+		INT000000000000000001A /* IntentTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/IntentTypes.swift; sourceTree = SOURCE_ROOT; };
+		INT000000000000000002A /* IntentBarClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/IntentBarClient.swift; sourceTree = SOURCE_ROOT; };
+		INT000000000000000003A /* SlackPostIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/SlackPostIntent.swift; sourceTree = SOURCE_ROOT; };
+		INT000000000000000004A /* LinearCreateIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/LinearCreateIntent.swift; sourceTree = SOURCE_ROOT; };
+		INT000000000000000005A /* GitHubSearchIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/GitHubSearchIntent.swift; sourceTree = SOURCE_ROOT; };
+		INT000000000000000006A /* NotionCreateIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/NotionCreateIntent.swift; sourceTree = SOURCE_ROOT; };
+		INT000000000000000007A /* DockerListIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/DockerListIntent.swift; sourceTree = SOURCE_ROOT; };
+		TST000000000000000001A /* IntentParameterValidatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentParameterValidatorTests.swift; sourceTree = "<group>"; };
+		TST000000000000000002A /* IntentResponseParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentResponseParserTests.swift; sourceTree = "<group>"; };
+		TST000000000000000003A /* IntentAPIContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentAPIContractTests.swift; sourceTree = "<group>"; };
+		TST000000000000000010A /* SoniqueTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SoniqueTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC1B00100000000000VC01A /* VoiceCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/VoiceCatalog.swift; sourceTree = "<group>"; };
 		AC1B00100000000000VS01A /* VoiceSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/VoiceSession.swift; sourceTree = "<group>"; };
 		AC1B00100000000000WK10A /* WhisperKitSTTService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/WhisperKitSTTService.swift; sourceTree = "<group>"; };
@@ -112,6 +133,13 @@
 				AC1B00100000000000DR01A /* DiagnosticsReportView.swift */,
 				AC1B00100000000000AO01A /* ArtifactOverlay.swift */,
 				AC1B00100000000000SH01A /* SoniqueShortcuts.swift */,
+				INT000000000000000001A /* IntentTypes.swift */,
+				INT000000000000000002A /* IntentBarClient.swift */,
+				INT000000000000000003A /* SlackPostIntent.swift */,
+				INT000000000000000004A /* LinearCreateIntent.swift */,
+				INT000000000000000005A /* GitHubSearchIntent.swift */,
+				INT000000000000000006A /* NotionCreateIntent.swift */,
+				INT000000000000000007A /* DockerListIntent.swift */,
 				3F73A4432FCE86A90057ED63 /* SettingsView.swift */,
 				3FC595A32F998A2100BEFC6F /* Sonique.entitlements */,
 				3FA000000000000000000003 /* Products */,
@@ -127,6 +155,7 @@
 				EE57C6A78015FFAD8828EFF9 /* CapabilityExecutor.swift */,
 				DBB396DDBA76855651D24A88 /* AppleIntelligenceCapabilities.swift */,
 				816F6DC62CE49E77EB708B8C /* Sonique */,
+				TST000000000000000020G /* SoniqueTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -134,9 +163,20 @@
 			isa = PBXGroup;
 			children = (
 				3FA000000000000000000018 /* Sonique.app */,
+				TST000000000000000010A /* SoniqueTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
+		};
+		TST000000000000000020G /* SoniqueTests */ = {
+			isa = PBXGroup;
+			children = (
+				TST000000000000000001A /* IntentParameterValidatorTests.swift */,
+				TST000000000000000002A /* IntentResponseParserTests.swift */,
+				TST000000000000000003A /* IntentAPIContractTests.swift */,
+			);
+			path = SoniqueTests;
+			sourceTree = SOURCE_ROOT;
 		};
 		816F6DC62CE49E77EB708B8C /* Sonique */ = {
 			isa = PBXGroup;
@@ -166,6 +206,23 @@
 			productName = Sonique;
 			productReference = 3FA000000000000000000018 /* Sonique.app */;
 			productType = "com.apple.product-type.application";
+		};
+		TST000000000000000011T /* SoniqueTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = TST000000000000000015L /* Build configuration list for PBXNativeTarget "SoniqueTests" */;
+			buildPhases = (
+				TST000000000000000012P /* Sources */,
+				TST000000000000000013F /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				TST000000000000000014D /* PBXTargetDependency */,
+			);
+			name = SoniqueTests;
+			productName = SoniqueTests;
+			productReference = TST000000000000000010A /* SoniqueTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -201,6 +258,7 @@
 			projectRoot = "";
 			targets = (
 				3FA00000000000000000000B /* Sonique */,
+				TST000000000000000011T /* SoniqueTests */,
 			);
 		};
 /* End PBXProject section */
@@ -215,6 +273,34 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		TST000000000000000013F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXContainerItemProxy section */
+		TST000000000000000016P /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3FA000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3FA00000000000000000000B;
+			remoteInfo = Sonique;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		TST000000000000000014D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3FA00000000000000000000B /* Sonique */;
+			targetProxy = TST000000000000000016P /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXSourcesBuildPhase section */
 		3FA00000000000000000000C /* Sources */ = {
@@ -239,6 +325,13 @@
 				AC1B00100000000000DR01B /* DiagnosticsReportView.swift in Sources */,
 				AC1B00100000000000AO01B /* ArtifactOverlay.swift in Sources */,
 				AC1B00100000000000SH01B /* SoniqueShortcuts.swift in Sources */,
+				INT000000000000000001B /* IntentTypes.swift in Sources */,
+				INT000000000000000002B /* IntentBarClient.swift in Sources */,
+				INT000000000000000003B /* SlackPostIntent.swift in Sources */,
+				INT000000000000000004B /* LinearCreateIntent.swift in Sources */,
+				INT000000000000000005B /* GitHubSearchIntent.swift in Sources */,
+				INT000000000000000006B /* NotionCreateIntent.swift in Sources */,
+				INT000000000000000007B /* DockerListIntent.swift in Sources */,
 				23DA4ACE8CFA741DF5BD9C1B /* Config.swift in Sources */,
 				FD354B38A1B5A35514512A28 /* ContentView.swift in Sources */,
 				EAC245018BD75F904B3DFA71 /* VoiceSelector.swift in Sources */,
@@ -254,6 +347,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		TST000000000000000012P /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				TST000000000000000001B /* IntentParameterValidatorTests.swift in Sources */,
+				TST000000000000000002B /* IntentResponseParserTests.swift in Sources */,
+				TST000000000000000003B /* IntentAPIContractTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
@@ -262,7 +365,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 128;
+				CURRENT_PROJECT_VERSION = 129;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -291,7 +394,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 128;
+				CURRENT_PROJECT_VERSION = 129;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -370,6 +473,44 @@
 			};
 			name = Release;
 		};
+		TST000000000000000017D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 129;
+				DEVELOPMENT_TEAM = 7NSS5CJL9E;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 2.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.seayniclabs.sonique.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Sonique.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Sonique";
+			};
+			name = Debug;
+		};
+		TST000000000000000018R /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 129;
+				DEVELOPMENT_TEAM = 7NSS5CJL9E;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 2.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.seayniclabs.sonique.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Sonique.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Sonique";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -387,6 +528,15 @@
 			buildConfigurations = (
 				3FA000000000000000000013 /* Debug */,
 				3FA000000000000000000014 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		TST000000000000000015L /* Build configuration list for PBXNativeTarget "SoniqueTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				TST000000000000000017D /* Debug */,
+				TST000000000000000018R /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

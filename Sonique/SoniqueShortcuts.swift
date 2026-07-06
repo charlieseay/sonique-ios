@@ -42,5 +42,55 @@ struct SoniqueShortcuts: AppShortcutsProvider {
             shortTitle: "Start Listening",
             systemImageName: "mic.fill"
         )
+        AppShortcut(
+            intent: SlackPostIntent(),
+            phrases: [
+                "Post to Slack with \(.applicationName)",
+                "Slack message with \(.applicationName)",
+                "Send Slack with \(.applicationName)"
+            ],
+            shortTitle: "Post to Slack",
+            systemImageName: "number"
+        )
+        AppShortcut(
+            intent: LinearCreateIntent(),
+            phrases: [
+                "Create Linear task with \(.applicationName)",
+                "Linear task with \(.applicationName)",
+                "New Linear issue with \(.applicationName)"
+            ],
+            shortTitle: "Create Linear Task",
+            systemImageName: "checklist"
+        )
+        AppShortcut(
+            intent: GitHubSearchIntent(),
+            phrases: [
+                "Search GitHub with \(.applicationName)",
+                "GitHub search with \(.applicationName)",
+                "Find GitHub pull requests with \(.applicationName)"
+            ],
+            shortTitle: "Search GitHub",
+            systemImageName: "chevron.left.forwardslash.chevron.right"
+        )
+        AppShortcut(
+            intent: NotionCreateIntent(),
+            phrases: [
+                "Create Notion page with \(.applicationName)",
+                "Notion page with \(.applicationName)",
+                "New Notion entry with \(.applicationName)"
+            ],
+            shortTitle: "Create Notion Page",
+            systemImageName: "doc.text"
+        )
+        AppShortcut(
+            intent: DockerListIntent(),
+            phrases: [
+                "List Docker with \(.applicationName)",
+                "Docker containers with \(.applicationName)",
+                "Show Docker with \(.applicationName)"
+            ],
+            shortTitle: "List Docker",
+            systemImageName: "shippingbox"
+        )
     }
 }
