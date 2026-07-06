@@ -53,7 +53,7 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
 
                     if ttsProvider == "kokoro" {
-                        Label("Using embedded TTS on Mac", systemImage: "checkmark.circle.fill")
+                        Label("Kokoro via SoniqueBar on your Mac (LAN/Tailscale)", systemImage: "checkmark.circle.fill")
                             .foregroundColor(.green)
                             .font(.caption)
                     } else {

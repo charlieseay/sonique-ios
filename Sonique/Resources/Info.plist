@@ -19,7 +19,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
-	<string>127</string>
+	<string>128</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -37,6 +37,10 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Sonique accesses your calendar to show upcoming events and create new calendar entries via voice commands.</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>Sonique accesses your reminders to show and create reminders via voice commands.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Sonique does not use the camera. This permission is declared because an embedded advertising SDK references camera APIs.</string>
 	<key>NSMicrophoneUsageDescription</key>
