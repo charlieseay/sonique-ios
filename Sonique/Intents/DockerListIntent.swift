@@ -6,7 +6,7 @@ import Foundation
 @available(iOS 16.0, *)
 struct DockerListIntent: AppIntent {
     static var title: LocalizedStringResource = "List Docker Containers"
-    static var description = IntentDescription("Lists running Docker containers on the Mac.")
+    static var description = IntentDescription("Lists running Docker containers.")
 
     @Parameter(title: "Show All", default: false)
     var showAll: Bool
