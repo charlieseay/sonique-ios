@@ -41,7 +41,8 @@ enum Config {
 
     // MARK: - SoniqueBar endpoints (user-configurable, iCloud-backed)
 
-    static let defaultLANURL = "http://192.168.0.221:8890"
+    // Defaults used only if Bonjour discovery fails
+    static let defaultLANURL = "http://192.168.68.78:8890"  // Fallback only
     static let defaultTailscaleURL = "http://100.122.13.35:8890"  // SoniqueBar via Tailscale
 
     @MainActor

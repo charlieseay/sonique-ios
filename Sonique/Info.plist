@@ -37,8 +37,14 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_sonique._tcp</string>
+	</array>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Sonique accesses your calendar to show upcoming events and create new calendar entries via voice commands.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Sonique needs local network access to discover your SoniqueBar backend on your home network.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Sonique uses your microphone to capture your voice so you can issue voice commands to control smart home devices, ask questions, and manage tasks hands-free.</string>
 	<key>NSRemindersUsageDescription</key>
