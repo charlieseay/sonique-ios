@@ -79,8 +79,8 @@
 		FF1A00000000000000ASSET0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Sonique/Resources/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 		TST000000000000000010A /* SoniqueTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SoniqueTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 
-		3EADEBB50BE145DC80783D10 /* NotificationNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationNames.swift; sourceTree = "<group>"; };
-		08D9A67C2CBC4419B88B3169 /* WakeWordMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeWordMatcher.swift; sourceTree = "<group>"; };
+		3EADEBB50BE145DC80783D10 /* NotificationNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/NotificationNames.swift; sourceTree = "<group>"; };
+		08D9A67C2CBC4419B88B3169 /* WakeWordMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/WakeWordMatcher.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -275,7 +275,9 @@
 				3AD4BE75784BB13A70577E66 /* DeviceContextPublisher.swift in Sources */,
 				BB26EE3075600D93C8DD659C /* TTSClient.swift in Sources */,
 				9799BFC0599B37F5FBC462FE /* BonjourDiscovery.swift in Sources */,
-			);
+			
+				5A8627754ECF4312B7FC7B61 /* NotificationNames.swift in Sources */,
+				0F043EAB95B04B37A67616F0 /* WakeWordMatcher.swift in Sources */,);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		TST000000000000000012P /* Sources */ = {
