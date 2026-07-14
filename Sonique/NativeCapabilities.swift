@@ -1,122 +1,64 @@
 import Foundation
 import EventKit
 
-/// Native iOS capabilities - uses Apple frameworks directly
-/// Calendar, Reminders
+/// Native iOS capabilities — Calendar and Reminders via EventKit.
+/// App targets iOS 17.0+, so all EventKit full-access APIs are always available.
 @MainActor
-class NativeCapabilities: NSObject, ObservableObject {
+class NativeCapabilities: NSObject {
     static let shared = NativeCapabilities()
-
     private let eventStore = EKEventStore()
 
-    // MARK: - Calendar & Reminders
+    // MARK: - Calendar
 
     func requestCalendarAccess() async -> Bool {
-        if #available(iOS 17.0, *) {
-            do {
-                return try await eventStore.requestFullAccessToEvents()
-            } catch {
-                print("[NativeCapabilities] Calendar access error: \(error)")
-                return false
-            }
-        } else {
-            return await withCheckedContinuation { continuation in
-                eventStore.requestAccess(to: .event) { granted, _ in
-                    continuation.resume(returning: granted)
-                }
-            }
-        }
+        do { return try await eventStore.requestFullAccessToEvents() } catch { return false }
     }
 
-    func requestRemindersAccess() async -> Bool {
-        if #available(iOS 17.0, *) {
-            do {
-                return try await eventStore.requestFullAccessToReminders()
-            } catch {
-                print("[NativeCapabilities] Reminders access error: \(error)")
-                return false
-            }
-        } else {
-            return await withCheckedContinuation { continuation in
-                eventStore.requestAccess(to: .reminder) { granted, _ in
-                    continuation.resume(returning: granted)
-                }
-            }
-        }
-    }
-
-    /// Get today's calendar events
     func getTodayEvents() async -> [String] {
         guard await requestCalendarAccess() else { return [] }
-
         let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: Date())
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
-
-        let predicate = eventStore.predicateForEvents(withStart: startOfDay, end: endOfDay, calendars: nil)
-        let events = eventStore.events(matching: predicate)
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a"
-
-        return events.map { event in
-            "\(event.title ?? "Untitled") at \(formatter.string(from: event.startDate))"
+        let start = calendar.startOfDay(for: Date())
+        let end = calendar.date(byAdding: .day, value: 1, to: start)!
+        let predicate = eventStore.predicateForEvents(withStart: start, end: end, calendars: nil)
+        let fmt = DateFormatter(); fmt.dateFormat = "h:mm a"
+        return eventStore.events(matching: predicate).map {
+            "\($0.title ?? "Untitled") at \(fmt.string(from: $0.startDate))"
         }
     }
 
-    /// Create a calendar event
     func createCalendarEvent(title: String, date: Date, duration: Int = 60) async -> Bool {
         guard await requestCalendarAccess() else { return false }
-
         let event = EKEvent(eventStore: eventStore)
         event.title = title
         event.startDate = date
         event.endDate = date.addingTimeInterval(TimeInterval(duration * 60))
         event.calendar = eventStore.defaultCalendarForNewEvents
-
-        do {
-            try eventStore.save(event, span: .thisEvent)
-            return true
-        } catch {
-            print("[NativeCapabilities] Failed to create event: \(error)")
-            return false
-        }
+        do { try eventStore.save(event, span: .thisEvent); return true } catch { return false }
     }
 
-    /// Get all reminders
+    // MARK: - Reminders
+
+    func requestRemindersAccess() async -> Bool {
+        do { return try await eventStore.requestFullAccessToReminders() } catch { return false }
+    }
+
     func getReminders() async -> [String] {
         guard await requestRemindersAccess() else { return [] }
-
         return await withCheckedContinuation { continuation in
-            let predicate = eventStore.predicateForReminders(in: nil)
-
-            eventStore.fetchReminders(matching: predicate) { reminders in
-                let titles = reminders?.filter { !$0.isCompleted }.map { $0.title ?? "Untitled" } ?? []
-                continuation.resume(returning: titles)
+            eventStore.fetchReminders(matching: eventStore.predicateForReminders(in: nil)) { reminders in
+                continuation.resume(returning: reminders?.filter { !$0.isCompleted }.map { $0.title ?? "Untitled" } ?? [])
             }
         }
     }
 
-    /// Create a reminder
     func createReminder(title: String, dueDate: Date? = nil) async -> Bool {
         guard await requestRemindersAccess() else { return false }
-
         let reminder = EKReminder(eventStore: eventStore)
         reminder.title = title
         reminder.calendar = eventStore.defaultCalendarForNewReminders()
-
-        if let dueDate = dueDate {
-            let dueDateComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: dueDate)
-            reminder.dueDateComponents = dueDateComponents
+        if let dueDate {
+            reminder.dueDateComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: dueDate)
         }
-
-        do {
-            try eventStore.save(reminder, commit: true)
-            return true
-        } catch {
-            print("[NativeCapabilities] Failed to create reminder: \(error)")
-            return false
-        }
+        do { try eventStore.save(reminder, commit: true); return true } catch { return false }
     }
-
 }

@@ -363,10 +363,8 @@ class VoiceLoop: ObservableObject {
             return
         }
 
-        // Native iOS capabilities — Calendar, Reminders, Messages, Mail, HomeKit
-        // Executes locally when possible (Calendar/Reminders/HomeKit API calls)
-        let capabilityResponse = await CapabilityExecutor.shared.execute(transcript)
-        if capabilityResponse != "I don't recognize that native capability command" {
+        // Native iOS capabilities — Calendar, Reminders
+        if let capabilityResponse = await CapabilityExecutor.shared.execute(transcript) {
             FileTracer.log("[loop] native capability → '\(capabilityResponse)'")
             lastTranscript = transcript
             lastResponse = capabilityResponse
