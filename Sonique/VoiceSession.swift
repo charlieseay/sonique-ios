@@ -29,6 +29,7 @@ class VoiceSession: NSObject, ObservableObject {
     private var endpointTimer: Task<Void, Never>?
     private var lastStablePartial = ""
     private let endpointSilence: TimeInterval = 1.2
+    private var hasSubmitted = false  // Prevent duplicate submissions
 
     // TTS playback gating
     private var isSpeaking = false
@@ -131,6 +132,7 @@ class VoiceSession: NSObject, ObservableObject {
         if recognizer.supportsOnDeviceRecognition { req.requiresOnDeviceRecognition = true }
         request = req
         lastStablePartial = ""
+        hasSubmitted = false  // Reset for new recognition pass
 
         let input = engine.inputNode
         let format = input.outputFormat(forBus: 0)
@@ -213,16 +215,24 @@ class VoiceSession: NSObject, ObservableObject {
     }
 
     private func submit(_ text: String) {
+        // Prevent duplicate submissions from endpoint + final result
+        guard !hasSubmitted else {
+            FileTracer.log("[vs] SKIP duplicate submit '\(text)'")
+            return
+        }
+        hasSubmitted = true
+
         endpointTimer?.cancel(); endpointTimer = nil
         let final = text.trimmingCharacters(in: .whitespacesAndNewlines)
         lastStablePartial = ""
         guard !final.isEmpty else {
+            hasSubmitted = false  // Reset if empty
             if isListening, let r = recognizer { beginRecognition(r) }
             return
         }
         FileTracer.log("[vs] SUBMIT '\(final)'")
 
-        // CRITICAL: Stop recognition task IMMEDIATELY to prevent duplicate submissions
+        // CRITICAL: Stop recognition task IMMEDIATELY to prevent further results
         task?.finish()
         task = nil
         request = nil
