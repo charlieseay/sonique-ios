@@ -34,7 +34,7 @@ class VoiceLoop: ObservableObject {
 
     @Published private(set) var session: VoiceSession?
     private var sessionObservation: AnyCancellable?
-    private var ttsClient: TTSClient?
+    private var simpleTTS: SimpleTTS?
 
     // Back-compat for ContentView
     var speechRecognition: VoiceSession? { session }
@@ -111,9 +111,8 @@ class VoiceLoop: ObservableObject {
 
     /// Stop speaking immediately and resume listening (barge-in / interrupt)
     func stopSpeaking() {
-        guard let vs = session, isProcessing else { return }
-        vs.stopPlayback()      // Stop TTS playback immediately
-        vs.endSpeaking()       // Resume listening
+        guard isProcessing else { return }
+        simpleTTS?.stop()      // Stop TTS playback immediately
         isProcessing = false
         partialResponse = ""
         RemoteLogger.log("[vs] interrupted by user - playback stopped, resumed listening")
@@ -335,7 +334,7 @@ class VoiceLoop: ObservableObject {
     }
 
     private func speakSentence(_ sentence: String) async {
-        guard let vs = session, let tts = ttsClient else { return }
+        guard let tts = simpleTTS else { return }
         var clean = sentence.trimmingCharacters(in: .whitespaces)
         // Strip markdown formatting so TTS doesn't read "asterisk asterisk"
         clean = clean.replacingOccurrences(of: "**", with: "")  // Bold
@@ -343,8 +342,11 @@ class VoiceLoop: ObservableObject {
         clean = clean.replacingOccurrences(of: "`", with: "")   // Code
         clean = clean.replacingOccurrences(of: "_", with: "")   // Underscore emphasis
         guard !clean.isEmpty else { return }
-        if let pcm = await tts.fetchPCM(clean, voiceID: Config.selectedVoiceID) {
-            await vs.playPCM(pcm)
+
+        await withCheckedContinuation { continuation in
+            tts.speak(clean) {
+                continuation.resume()
+            }
         }
     }
 
@@ -378,23 +380,13 @@ class VoiceLoop: ObservableObject {
             connectionMessage = ""
             FileTracer.log("[conn] reachable via \(result.endpoint ?? "?")")
 
-            // Initialize TTS after connection is established
-            if ttsClient == nil {
-                FileTracer.log("[conn] Initializing TTS after connection established")
-                do {
-                    let apiKey = try await Config.getAPIKey()
-                    ttsClient = TTSClient(
-                        elevenLabsAPIKey: apiKey,
-                        soniqueBarHost: Config.soniqueBarHost
-                    )
-                    self.error = nil
-                    debugLog.append("TTS ready")
-                    FileTracer.log("[conn] TTS initialized successfully")
-                } catch {
-                    self.error = "TTS init failed: \(error.localizedDescription)"
-                    debugLog.append("ERROR: TTS - \(error.localizedDescription)")
-                    FileTracer.log("[conn] TTS initialization failed: \(error.localizedDescription)")
-                }
+            // Initialize SimpleTTS (on-device, no API key needed)
+            if simpleTTS == nil {
+                FileTracer.log("[conn] Initializing SimpleTTS")
+                simpleTTS = SimpleTTS()
+                self.error = nil
+                debugLog.append("TTS ready (on-device)")
+                FileTracer.log("[conn] SimpleTTS initialized successfully")
             }
             return true
         }
