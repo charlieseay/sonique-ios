@@ -20,15 +20,7 @@ class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate, TTSProvider {
             return
         }
 
-        // Configure audio session for TTS playback (routes to Bluetooth)
-        do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .voicePrompt, options: [.allowBluetooth, .allowBluetoothA2DP])
-            FileTracer.log("[tts] Audio session set to .playback for Bluetooth")
-        } catch {
-            FileTracer.log("[tts] Audio session config failed: \(error)")
-        }
-
+        // Don't reconfigure audio session - VoiceSession already set it up with Bluetooth support
         FileTracer.log("[tts] speaking: '\(text.prefix(50))'")
         onComplete = completion
 
