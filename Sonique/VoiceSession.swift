@@ -258,7 +258,7 @@ class VoiceSession: NSObject, ObservableObject {
     }
 
     /// Play raw 16-bit PCM (24kHz mono) through the shared engine's player node.
-    func playPCM(_ pcm: Data) async {
+    func playPCM(data pcm: Data, completion: @escaping () -> Void) {
         guard pcm.count > 1 else { return }
         let frames = AVAudioFrameCount(pcm.count / 2)
         guard let buffer = AVAudioPCMBuffer(pcmFormat: playerFormat, frameCapacity: frames),
@@ -274,14 +274,9 @@ class VoiceSession: NSObject, ObservableObject {
         if !engine.isRunning { try? engine.start() }
         if !playerNode.isPlaying { playerNode.play() }
 
-        await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
-            playbackContinuation = cont
-            playerNode.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { [weak self] _ in
-                Task { @MainActor in
-                    guard let self, let c = self.playbackContinuation else { return }
-                    self.playbackContinuation = nil
-                    c.resume()
-                }
+        playerNode.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { _ in
+            Task { @MainActor in
+                completion()
             }
         }
     }

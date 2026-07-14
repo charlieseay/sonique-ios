@@ -69,6 +69,11 @@ class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate, TTSProvider {
         onComplete = nil
     }
 
+    /// SimpleTTS doesn't return PCM - it plays directly
+    func fetchPCM(_ text: String) async -> Data? {
+        return nil
+    }
+
     // MARK: - AVSpeechSynthesizerDelegate
 
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {

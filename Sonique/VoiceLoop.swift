@@ -342,7 +342,7 @@ class VoiceLoop: ObservableObject {
     }
 
     private func speakSentence(_ sentence: String) async {
-        guard let tts = ttsProvider else { return }
+        guard let tts = ttsProvider, let vs = session else { return }
         var clean = sentence.trimmingCharacters(in: .whitespaces)
         // Strip markdown formatting so TTS doesn't read "asterisk asterisk"
         clean = clean.replacingOccurrences(of: "**", with: "")  // Bold
@@ -351,10 +351,21 @@ class VoiceLoop: ObservableObject {
         clean = clean.replacingOccurrences(of: "_", with: "")   // Underscore emphasis
         guard !clean.isEmpty else { return }
 
-        await withCheckedContinuation { continuation in
-            Task {
-                await tts.speak(clean) {
+        // VoiceBox/ElevenLabs: fetch PCM and play through VoiceSession (routes to Bluetooth)
+        if let pcmData = await tts.fetchPCM(clean) {
+            FileTracer.log("[loop] playing PCM via VoiceSession (\(pcmData.count) bytes)")
+            await withCheckedContinuation { continuation in
+                vs.playPCM(data: pcmData) {
                     continuation.resume()
+                }
+            }
+        } else {
+            // SimpleTTS: plays directly (fetchPCM returns nil)
+            await withCheckedContinuation { continuation in
+                Task {
+                    await tts.speak(clean) {
+                        continuation.resume()
+                    }
                 }
             }
         }
