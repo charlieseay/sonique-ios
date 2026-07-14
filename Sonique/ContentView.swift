@@ -250,6 +250,8 @@ struct ContentView: View {
             DiagnosticsReportView(connectionOK: voiceLoop.connectionOK,
                                   activeEndpoint: HTTPClient.activeBaseURL)
         }
+        // Message/Mail composers disabled during simplification
+        /*
         .sheet(isPresented: $capabilityExecutor.showMessageComposer) {
             MessageComposerView(
                 recipients: [capabilityExecutor.messageRecipient],
@@ -265,6 +267,7 @@ struct ContentView: View {
                 isPresented: $capabilityExecutor.showMailComposer
             )
         }
+        */
         .alert("Error", isPresented: .constant(voiceLoop.error != nil && !voiceLoop.isInitializing)) {
             Button("OK") { voiceLoop.error = nil }
         } message: {

@@ -93,21 +93,18 @@ class CapabilityExecutor: ObservableObject {
             return "I couldn't parse the email details"
         }
 
-        // Apple Intelligence (iOS 18.1+)
+        // Apple Intelligence (iOS 18.1+) - disabled during simplification
         if lowercased.contains("summarize") || lowercased.contains("writing tools") ||
            lowercased.contains("generate image") || lowercased.contains("image playground") {
-            if AppleIntelligenceCompatibility.isAvailable {
-                return await executeAppleIntelligence(command)
-            } else {
-                return "Apple Intelligence requires iOS 18.1 or later and a compatible device"
-            }
+            return "Apple Intelligence integration coming soon"
         }
 
         return "I don't recognize that native capability command"
     }
 
-    // MARK: - Apple Intelligence (iOS 18.1+)
+    // MARK: - Apple Intelligence (iOS 18.1+) - disabled during simplification
 
+    /*
     private func executeAppleIntelligence(_ command: String) async -> String {
         let lowercased = command.lowercased()
 
@@ -126,9 +123,9 @@ class CapabilityExecutor: ObservableObject {
             }
             return "What image would you like me to create?"
         }
-
         return "I can help you with Writing Tools and Image Playground via system features"
     }
+    */
 
     // MARK: - String Parsing Helpers
 
