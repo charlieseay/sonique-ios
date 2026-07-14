@@ -34,7 +34,15 @@ class VoiceLoop: ObservableObject {
 
     @Published private(set) var session: VoiceSession?
     private var sessionObservation: AnyCancellable?
-    private var simpleTTS: SimpleTTS?
+    private var ttsProvider: TTSProvider?
+
+    enum TTSMode: String {
+        case voicebox  // VoiceBox/Kokoro via SoniqueBar (best quality)
+        case elevenlabs  // ElevenLabs API (premium, costs $)
+        case ondevice  // Apple AVSpeechSynthesizer (free fallback)
+    }
+
+    private var ttsMode: TTSMode = .voicebox  // Default to VoiceBox
 
     // Back-compat for ContentView
     var speechRecognition: VoiceSession? { session }
@@ -112,7 +120,7 @@ class VoiceLoop: ObservableObject {
     /// Stop speaking immediately and resume listening (barge-in / interrupt)
     func stopSpeaking() {
         guard isProcessing else { return }
-        simpleTTS?.stop()      // Stop TTS playback immediately
+        ttsProvider?.stop()      // Stop TTS playback immediately
         isProcessing = false
         partialResponse = ""
         RemoteLogger.log("[vs] interrupted by user - playback stopped, resumed listening")
@@ -334,7 +342,7 @@ class VoiceLoop: ObservableObject {
     }
 
     private func speakSentence(_ sentence: String) async {
-        guard let tts = simpleTTS else { return }
+        guard let tts = ttsProvider else { return }
         var clean = sentence.trimmingCharacters(in: .whitespaces)
         // Strip markdown formatting so TTS doesn't read "asterisk asterisk"
         clean = clean.replacingOccurrences(of: "**", with: "")  // Bold
@@ -344,8 +352,10 @@ class VoiceLoop: ObservableObject {
         guard !clean.isEmpty else { return }
 
         await withCheckedContinuation { continuation in
-            tts.speak(clean) {
-                continuation.resume()
+            Task {
+                await tts.speak(clean) {
+                    continuation.resume()
+                }
             }
         }
     }
@@ -380,13 +390,36 @@ class VoiceLoop: ObservableObject {
             connectionMessage = ""
             FileTracer.log("[conn] reachable via \(result.endpoint ?? "?")")
 
-            // Initialize SimpleTTS (on-device, no API key needed)
-            if simpleTTS == nil {
-                FileTracer.log("[conn] Initializing SimpleTTS")
-                simpleTTS = SimpleTTS()
+            // Initialize TTS provider based on mode
+            if ttsProvider == nil {
+                FileTracer.log("[conn] Initializing TTS provider: \(ttsMode.rawValue)")
+
+                switch ttsMode {
+                case .voicebox:
+                    ttsProvider = VoiceBoxTTS(soniqueBarHost: Config.soniqueBarHost)
+                    debugLog.append("TTS ready (VoiceBox)")
+                    FileTracer.log("[conn] VoiceBox TTS initialized")
+
+                case .elevenlabs:
+                    do {
+                        let apiKey = try await Config.getAPIKey()
+                        ttsProvider = ElevenLabsTTS(apiKey: apiKey)
+                        debugLog.append("TTS ready (ElevenLabs)")
+                        FileTracer.log("[conn] ElevenLabs TTS initialized")
+                    } catch {
+                        // Fall back to on-device if API key missing
+                        FileTracer.log("[conn] ElevenLabs API key missing, falling back to on-device")
+                        ttsProvider = SimpleTTS()
+                        debugLog.append("TTS ready (on-device fallback)")
+                    }
+
+                case .ondevice:
+                    ttsProvider = SimpleTTS()
+                    debugLog.append("TTS ready (on-device)")
+                    FileTracer.log("[conn] On-device TTS initialized")
+                }
+
                 self.error = nil
-                debugLog.append("TTS ready (on-device)")
-                FileTracer.log("[conn] SimpleTTS initialized successfully")
             }
             return true
         }

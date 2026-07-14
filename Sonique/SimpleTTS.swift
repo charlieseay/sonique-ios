@@ -3,7 +3,7 @@ import AVFoundation
 
 /// Simple on-device TTS using AVSpeechSynthesizer.speak() (the correct API)
 @MainActor
-class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate {
+class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate, TTSProvider {
     private let synthesizer = AVSpeechSynthesizer()
     private var onComplete: (() -> Void)?
 
@@ -13,7 +13,7 @@ class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate {
     }
 
     /// Speak text and call completion when done
-    func speak(_ text: String, completion: @escaping () -> Void) {
+    func speak(_ text: String, completion: @escaping () -> Void) async {
         guard !text.isEmpty else {
             completion()
             return
