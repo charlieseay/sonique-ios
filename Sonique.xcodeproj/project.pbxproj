@@ -34,6 +34,9 @@
 		EDAD47EA8D3B00AC2541F23A /* SoniqueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5D54884BF2700547B33C65E /* SoniqueApp.swift */; };
 		FD354B38A1B5A35514512A28 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A793446A9BBB7A765178A683 /* ContentView.swift */; };
 		FF1A00000000000000ASSET1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FF1A00000000000000ASSET0 /* Assets.xcassets */; };
+
+		5A8627754ECF4312B7FC7B61 /* NotificationNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EADEBB50BE145DC80783D10 /* NotificationNames.swift */; };
+		0F043EAB95B04B37A67616F0 /* WakeWordMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08D9A67C2CBC4419B88B3169 /* WakeWordMatcher.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -75,6 +78,9 @@
 		EE57C6A78015FFAD8828EFF9 /* CapabilityExecutor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CapabilityExecutor.swift; path = Sonique/CapabilityExecutor.swift; sourceTree = "<group>"; };
 		FF1A00000000000000ASSET0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Sonique/Resources/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 		TST000000000000000010A /* SoniqueTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SoniqueTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+
+		3EADEBB50BE145DC80783D10 /* NotificationNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationNames.swift; sourceTree = "<group>"; };
+		08D9A67C2CBC4419B88B3169 /* WakeWordMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeWordMatcher.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -295,7 +301,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 134;
+				CURRENT_PROJECT_VERSION = 135;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -324,7 +330,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 134;
+				CURRENT_PROJECT_VERSION = 135;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -408,7 +414,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 134;
+				CURRENT_PROJECT_VERSION = 135;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -427,7 +433,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 134;
+				CURRENT_PROJECT_VERSION = 135;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;

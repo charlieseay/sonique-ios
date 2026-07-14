@@ -140,4 +140,51 @@ class TTSClient: ObservableObject {
         // Extract PCM data (skip 44-byte header)
         return wavData.subdata(in: 44..<wavData.count)
     }
+
+    // MARK: - On-Device TTS (AVSpeechSynthesizer)
+
+    private func synthesizeOnDevice(_ text: String) async -> Data? {
+        return await withCheckedContinuation { continuation in
+            let synthesizer = AVSpeechSynthesizer()
+            let utterance = AVSpeechUtterance(string: text)
+
+            // Use natural US English voice
+            utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+            utterance.rate = 0.5  // Natural speaking rate
+            utterance.pitchMultiplier = 1.0
+
+            var pcmData = Data()
+            var isDone = false
+
+            // AVSpeechSynthesizer.write() uses a simple buffer callback
+            let voice = synthesizer.write(utterance) { buffer in
+                guard let pcmBuffer = buffer as? AVAudioPCMBuffer,
+                      let channelData = pcmBuffer.int16ChannelData else {
+                    // End of synthesis signaled by nil buffer
+                    if !isDone {
+                        isDone = true
+                        if pcmData.isEmpty {
+                            FileTracer.log("[tts] on-device synthesis produced no data")
+                            continuation.resume(returning: nil)
+                        } else {
+                            FileTracer.log("[tts] synthesized \(pcmData.count) PCM bytes on-device for '\(text.prefix(30))'")
+                            continuation.resume(returning: pcmData)
+                        }
+                    }
+                    return
+                }
+
+                // Convert AVAudioPCMBuffer to Data (16-bit PCM)
+                let frameCount = Int(pcmBuffer.frameLength)
+                let samples = UnsafeBufferPointer(start: channelData[0], count: frameCount)
+                let data = Data(buffer: samples)
+                pcmData.append(data)
+            }
+
+            if voice == nil {
+                FileTracer.log("[tts] on-device synthesis failed to start")
+                continuation.resume(returning: nil)
+            }
+        }
+    }
 }

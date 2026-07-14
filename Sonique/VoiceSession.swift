@@ -221,6 +221,12 @@ class VoiceSession: NSObject, ObservableObject {
             return
         }
         FileTracer.log("[vs] SUBMIT '\(final)'")
+
+        // CRITICAL: Stop recognition task IMMEDIATELY to prevent duplicate submissions
+        task?.finish()
+        task = nil
+        request = nil
+
         NotificationCenter.default.post(name: .speechTranscriptComplete, object: nil,
                                         userInfo: ["transcript": final])
         // Caller (VoiceLoop) will speak, then call resumeListening(); meanwhile pause input.
