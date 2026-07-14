@@ -10,10 +10,7 @@
 		1C140EA451B919D9298BE32E /* NativeCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62F4F3D0ECD71D878D9DA058 /* NativeCapabilities.swift */; };
 		23DA4ACE8CFA741DF5BD9C1B /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CE437189C0E4421DAF830B /* Config.swift */; };
 		3AD4BE75784BB13A70577E66 /* DeviceContextPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A6EDC914A658CBC3E575AB7 /* DeviceContextPublisher.swift */; };
-		3F6411FF2FE1CED600B99A93 /* AudioLevelMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F6411FD2FE1CED600B99A93 /* AudioLevelMonitor.swift */; };
-		3F6412002FE1CED600B99A93 /* WaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F6411FE2FE1CED600B99A93 /* WaveformView.swift */; };
 		3F73A4442FCE86A90057ED63 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F73A4432FCE86A90057ED63 /* SettingsView.swift */; };
-		3F7FC6022FCF20CF00280E3B /* SpeechRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7FC6002FCF20CF00280E3B /* SpeechRecognitionService.swift */; };
 		3F8E06692F99DA5C00F7E36D /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 3F8E06682F99DA5C00F7E36D /* GoogleMobileAds */; };
 		3FA000000000000000000017 /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3FA000000000000000000016 /* LiveKit */; };
 		865B1979F6D2564DBD38C8C0 /* CapabilityExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE57C6A78015FFAD8828EFF9 /* CapabilityExecutor.swift */; };
@@ -37,17 +34,6 @@
 		EDAD47EA8D3B00AC2541F23A /* SoniqueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5D54884BF2700547B33C65E /* SoniqueApp.swift */; };
 		FD354B38A1B5A35514512A28 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A793446A9BBB7A765178A683 /* ContentView.swift */; };
 		FF1A00000000000000ASSET1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FF1A00000000000000ASSET0 /* Assets.xcassets */; };
-		INT000000000000000001B /* IntentTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000001A /* IntentTypes.swift */; };
-		INT000000000000000002B /* IntentBarClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000002A /* IntentBarClient.swift */; };
-		INT000000000000000003B /* SlackPostIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000003A /* SlackPostIntent.swift */; };
-		INT000000000000000004B /* LinearCreateIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000004A /* LinearCreateIntent.swift */; };
-		INT000000000000000005B /* GitHubSearchIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000005A /* GitHubSearchIntent.swift */; };
-		INT000000000000000006B /* NotionCreateIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000006A /* NotionCreateIntent.swift */; };
-		INT000000000000000007B /* DockerListIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000007A /* DockerListIntent.swift */; };
-		INT000000000000000008B /* GitHubCreateIssueIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = INT000000000000000008A /* GitHubCreateIssueIntent.swift */; };
-		TST000000000000000001B /* IntentParameterValidatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TST000000000000000001A /* IntentParameterValidatorTests.swift */; };
-		TST000000000000000002B /* IntentResponseParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TST000000000000000002A /* IntentResponseParserTests.swift */; };
-		TST000000000000000003B /* IntentAPIContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TST000000000000000003A /* IntentAPIContractTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,10 +50,7 @@
 		14CE437189C0E4421DAF830B /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Config.swift; path = Sonique/Config.swift; sourceTree = SOURCE_ROOT; };
 		2A23AB4D69778C0A2A9DD563 /* BonjourDiscovery.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BonjourDiscovery.swift; path = Sonique/BonjourDiscovery.swift; sourceTree = "<group>"; };
 		3A6EDC914A658CBC3E575AB7 /* DeviceContextPublisher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Sonique/DeviceContextPublisher.swift; sourceTree = SOURCE_ROOT; };
-		3F6411FD2FE1CED600B99A93 /* AudioLevelMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioLevelMonitor.swift; sourceTree = "<group>"; };
-		3F6411FE2FE1CED600B99A93 /* WaveformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformView.swift; sourceTree = "<group>"; };
 		3F73A4432FCE86A90057ED63 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SettingsView.swift; sourceTree = "<group>"; };
-		3F7FC6002FCF20CF00280E3B /* SpeechRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SpeechRecognitionService.swift; sourceTree = "<group>"; };
 		3FA000000000000000000018 /* Sonique.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sonique.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FC595A32F998A2100BEFC6F /* Sonique.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Sonique.entitlements; sourceTree = "<group>"; };
 		62F4F3D0ECD71D878D9DA058 /* NativeCapabilities.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NativeCapabilities.swift; path = Sonique/NativeCapabilities.swift; sourceTree = "<group>"; };
@@ -91,17 +74,6 @@
 		E5D54884BF2700547B33C65E /* SoniqueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SoniqueApp.swift; path = Sonique/SoniqueApp.swift; sourceTree = SOURCE_ROOT; };
 		EE57C6A78015FFAD8828EFF9 /* CapabilityExecutor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CapabilityExecutor.swift; path = Sonique/CapabilityExecutor.swift; sourceTree = "<group>"; };
 		FF1A00000000000000ASSET0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Sonique/Resources/Assets.xcassets; sourceTree = SOURCE_ROOT; };
-		INT000000000000000001A /* IntentTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/IntentTypes.swift; sourceTree = SOURCE_ROOT; };
-		INT000000000000000002A /* IntentBarClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/IntentBarClient.swift; sourceTree = SOURCE_ROOT; };
-		INT000000000000000003A /* SlackPostIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/SlackPostIntent.swift; sourceTree = SOURCE_ROOT; };
-		INT000000000000000004A /* LinearCreateIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/LinearCreateIntent.swift; sourceTree = SOURCE_ROOT; };
-		INT000000000000000005A /* GitHubSearchIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/GitHubSearchIntent.swift; sourceTree = SOURCE_ROOT; };
-		INT000000000000000006A /* NotionCreateIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/NotionCreateIntent.swift; sourceTree = SOURCE_ROOT; };
-		INT000000000000000007A /* DockerListIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/DockerListIntent.swift; sourceTree = SOURCE_ROOT; };
-		INT000000000000000008A /* GitHubCreateIssueIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Intents/GitHubCreateIssueIntent.swift; sourceTree = SOURCE_ROOT; };
-		TST000000000000000001A /* IntentParameterValidatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentParameterValidatorTests.swift; sourceTree = "<group>"; };
-		TST000000000000000002A /* IntentResponseParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentResponseParserTests.swift; sourceTree = "<group>"; };
-		TST000000000000000003A /* IntentAPIContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentAPIContractTests.swift; sourceTree = "<group>"; };
 		TST000000000000000010A /* SoniqueTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SoniqueTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -128,9 +100,6 @@
 		3FA000000000000000000002 = {
 			isa = PBXGroup;
 			children = (
-				3F6411FD2FE1CED600B99A93 /* AudioLevelMonitor.swift */,
-				3F6411FE2FE1CED600B99A93 /* WaveformView.swift */,
-				3F7FC6002FCF20CF00280E3B /* SpeechRecognitionService.swift */,
 				AC1B00100000000000FT01A /* FileTracer.swift */,
 				AC1B00100000000000VS01A /* VoiceSession.swift */,
 				AC1B00100000000000VC01A /* VoiceCatalog.swift */,
@@ -142,14 +111,6 @@
 				AC1B00100000000000DR01A /* DiagnosticsReportView.swift */,
 				AC1B00100000000000AO01A /* ArtifactOverlay.swift */,
 				AC1B00100000000000SH01A /* SoniqueShortcuts.swift */,
-				INT000000000000000001A /* IntentTypes.swift */,
-				INT000000000000000002A /* IntentBarClient.swift */,
-				INT000000000000000003A /* SlackPostIntent.swift */,
-				INT000000000000000004A /* LinearCreateIntent.swift */,
-				INT000000000000000005A /* GitHubSearchIntent.swift */,
-				INT000000000000000006A /* NotionCreateIntent.swift */,
-				INT000000000000000007A /* DockerListIntent.swift */,
-				INT000000000000000008A /* GitHubCreateIssueIntent.swift */,
 				3F73A4432FCE86A90057ED63 /* SettingsView.swift */,
 				3FC595A32F998A2100BEFC6F /* Sonique.entitlements */,
 				3FA000000000000000000003 /* Products */,
@@ -189,9 +150,6 @@
 		TST000000000000000020G /* SoniqueTests */ = {
 			isa = PBXGroup;
 			children = (
-				TST000000000000000001A /* IntentParameterValidatorTests.swift */,
-				TST000000000000000002A /* IntentResponseParserTests.swift */,
-				TST000000000000000003A /* IntentAPIContractTests.swift */,
 			);
 			path = SoniqueTests;
 			sourceTree = SOURCE_ROOT;
@@ -288,10 +246,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EDAD47EA8D3B00AC2541F23A /* SoniqueApp.swift in Sources */,
-				3F6411FF2FE1CED600B99A93 /* AudioLevelMonitor.swift in Sources */,
-				3F6412002FE1CED600B99A93 /* WaveformView.swift in Sources */,
-				3F73A4442FCE86A90057ED63 /* SettingsView.swift in Sources */,
-				3F7FC6022FCF20CF00280E3B /* SpeechRecognitionService.swift in Sources */,
+			3F73A4442FCE86A90057ED63 /* SettingsView.swift in Sources */,
 				AC1B00100000000000FT01B /* FileTracer.swift in Sources */,
 				AC1B00100000000000VS01B /* VoiceSession.swift in Sources */,
 				AC1B00100000000000VC01B /* VoiceCatalog.swift in Sources */,
@@ -303,14 +258,6 @@
 				AC1B00100000000000DR01B /* DiagnosticsReportView.swift in Sources */,
 				AC1B00100000000000AO01B /* ArtifactOverlay.swift in Sources */,
 				AC1B00100000000000SH01B /* SoniqueShortcuts.swift in Sources */,
-				INT000000000000000001B /* IntentTypes.swift in Sources */,
-				INT000000000000000002B /* IntentBarClient.swift in Sources */,
-				INT000000000000000003B /* SlackPostIntent.swift in Sources */,
-				INT000000000000000004B /* LinearCreateIntent.swift in Sources */,
-				INT000000000000000005B /* GitHubSearchIntent.swift in Sources */,
-				INT000000000000000006B /* NotionCreateIntent.swift in Sources */,
-				INT000000000000000007B /* DockerListIntent.swift in Sources */,
-				INT000000000000000008B /* GitHubCreateIssueIntent.swift in Sources */,
 				23DA4ACE8CFA741DF5BD9C1B /* Config.swift in Sources */,
 				FD354B38A1B5A35514512A28 /* ContentView.swift in Sources */,
 				EAC245018BD75F904B3DFA71 /* VoiceSelector.swift in Sources */,
@@ -329,9 +276,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				TST000000000000000001B /* IntentParameterValidatorTests.swift in Sources */,
-				TST000000000000000002B /* IntentResponseParserTests.swift in Sources */,
-				TST000000000000000003B /* IntentAPIContractTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
