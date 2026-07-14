@@ -23,8 +23,19 @@ class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate {
         onComplete = completion
 
         let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = AVSpeechUtteranceDefaultSpeechRate
+
+        // Use premium quality voices - find best female US English voice
+        let voices = AVSpeechSynthesisVoice.speechVoices()
+        let premiumVoices = voices.filter { voice in
+            voice.language == "en-US" &&
+            voice.quality == .premium &&
+            (voice.name.contains("Samantha") || voice.name.contains("Ava"))
+        }
+
+        utterance.voice = premiumVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
+        utterance.rate = 0.52  // Slightly faster than default for more natural conversation
+        utterance.pitchMultiplier = 1.0
+        utterance.volume = 1.0
 
         synthesizer.speak(utterance)
     }
@@ -42,5 +53,18 @@ class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate {
         FileTracer.log("[tts] finished speaking")
         onComplete?()
         onComplete = nil
+    }
+
+    // MARK: - Voice Selection Helper
+
+    /// List all available premium voices for debugging
+    static func listAvailableVoices() {
+        let voices = AVSpeechSynthesisVoice.speechVoices()
+        let usVoices = voices.filter { $0.language == "en-US" }
+        FileTracer.log("[tts] Available US English voices:")
+        for voice in usVoices {
+            let quality = voice.quality == .premium ? "PREMIUM" : voice.quality == .enhanced ? "enhanced" : "default"
+            FileTracer.log("[tts]   [\(quality)] \(voice.name) - \(voice.identifier)")
+        }
     }
 }
