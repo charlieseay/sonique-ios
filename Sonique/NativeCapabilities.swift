@@ -1,9 +1,8 @@
 import Foundation
 import EventKit
-import MessageUI
 
 /// Native iOS capabilities - uses Apple frameworks directly
-/// Messages, Mail, Calendar, Reminders, HomeKit
+/// Calendar, Reminders
 @MainActor
 class NativeCapabilities: NSObject, ObservableObject {
     static let shared = NativeCapabilities()
@@ -118,41 +117,6 @@ class NativeCapabilities: NSObject, ObservableObject {
             print("[NativeCapabilities] Failed to create reminder: \(error)")
             return false
         }
-    }
-
-    // MARK: - Messages
-
-    /// Can send messages on this device?
-    var canSendMessages: Bool {
-        MFMessageComposeViewController.canSendText()
-    }
-
-    /// Get message composer (present this as a sheet)
-    func getMessageComposer(to recipient: String, body: String) -> MFMessageComposeViewController? {
-        guard MFMessageComposeViewController.canSendText() else { return nil }
-
-        let composer = MFMessageComposeViewController()
-        composer.recipients = [recipient]
-        composer.body = body
-        return composer
-    }
-
-    // MARK: - Mail
-
-    /// Can send email on this device?
-    var canSendMail: Bool {
-        MFMailComposeViewController.canSendMail()
-    }
-
-    /// Get mail composer (present this as a sheet)
-    func getMailComposer(to recipient: String, subject: String, body: String) -> MFMailComposeViewController? {
-        guard MFMailComposeViewController.canSendMail() else { return nil }
-
-        let composer = MFMailComposeViewController()
-        composer.setToRecipients([recipient])
-        composer.setSubject(subject)
-        composer.setMessageBody(body, isHTML: false)
-        return composer
     }
 
 }
