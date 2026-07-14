@@ -3,7 +3,7 @@ import Foundation
 /// Posts log messages to SoniqueBar's /log endpoint so they're visible on the Mac
 /// for debugging voice loop issues, barge-in, etc. without needing device access.
 enum RemoteLogger {
-    private static let backendURL = "http://192.168.0.221:8890/log"
+    private static var backendURL: String { "\(HTTPClient.activeBaseURL)/log" }
 
     static func log(_ message: String, source: String = "VoiceLoop") {
         // Also write to local FileTracer

@@ -130,20 +130,19 @@ struct ContentView: View {
                                 .id("listening")
                         }
 
-                        // Progress ring (only during model load)
-                        if isLoadingModel {
+                        // Progress ring (only during mic/TTS setup)
+                        if voiceLoop.isInitializing {
                             Circle()
                                 .stroke(Color.white.opacity(0.12), lineWidth: 5)
                                 .frame(width: 108, height: 108)
                             Circle()
-                                .trim(from: 0, to: loadProgress)
+                                .trim(from: 0, to: 0.5)
                                 .stroke(
                                     Color.purple,
                                     style: StrokeStyle(lineWidth: 5, lineCap: .round)
                                 )
                                 .frame(width: 108, height: 108)
                                 .rotationEffect(.degrees(-90))
-                                .animation(.easeInOut(duration: 0.3), value: loadProgress)
                         }
 
                         // Main button
@@ -153,8 +152,8 @@ struct ContentView: View {
                             .shadow(color: micButtonColor.opacity(0.5), radius: 20)
 
                         // Icon
-                        if isLoadingModel {
-                            Text("\(Int(loadProgress * 100))%")
+                        if voiceLoop.isInitializing {
+                            Text("50%")
                                 .font(.system(size: 20, weight: .semibold, design: .rounded))
                                 .foregroundColor(.white)
                         } else {
@@ -165,7 +164,7 @@ struct ContentView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .disabled(isLoadingModel)
+                .disabled(voiceLoop.isInitializing)
                 .accessibilityLabel(voiceLoop.isActive ? "Stop listening" : "Start listening")
                 .accessibilityHint(voiceLoop.isActive ? "Double tap to stop" : "Double tap to talk to \(profile.name)")
                 .accessibilityAddTraits(.isButton)
@@ -293,29 +292,22 @@ struct ContentView: View {
     }
 
     private var micButtonColor: Color {
-        if isLoadingModel { return .purple.opacity(0.7) }
+        if voiceLoop.isInitializing { return .purple.opacity(0.7) }
         if voiceLoop.isProcessing { return .purple }
         if voiceLoop.isActive { return Color(red: 0.9, green: 0.2, blue: 0.2) }
         return Color(red: 0.3, green: 0.3, blue: 0.9)
     }
 
-    // Apple STT initializes near-instantly — only "loading" during permission/TTS setup.
-    private var isLoadingModel: Bool {
-        voiceLoop.isInitializing
-    }
-
-    private var loadProgress: Double { voiceLoop.isInitializing ? 0.5 : 0 }
-
     private var primaryStatus: String {
-        if !isHealthy && !isLoadingModel { return "SoniqueBar unreachable" }
-        if isLoadingModel { return "Starting…" }
+        if !isHealthy && !voiceLoop.isInitializing { return "SoniqueBar unreachable" }
+        if voiceLoop.isInitializing { return "Starting…" }
         if voiceLoop.isProcessing { return "Thinking…" }
         if voiceLoop.isActive { return "Listening" }
         return "Tap to speak"
     }
 
     private var secondaryStatus: String {
-        if isLoadingModel { return "Setting up microphone" }
+        if voiceLoop.isInitializing { return "Setting up microphone" }
         if !isHealthy { return "Check that SoniqueBar is running on the Mac" }
         if voiceLoop.isActive { return "Speak naturally — pause when you're done" }
         return ""

@@ -133,30 +133,20 @@ class VoiceLoop: ObservableObject {
                 continue
             }
 
-            // Barge-in: if user speaks during processing, cancel the current task and start fresh
+            // Barge-in: any new speech while processing cancels the current response.
             if isProcessing {
                 let lower = transcript.lowercased()
-                // Check for explicit stop/cancel commands or any new speech
-                let shouldBargeIn = lower.contains("stop") || lower.contains("cancel") ||
-                                   lower.contains(AssistantProfile.shared.wakeWord.lowercased()) ||
-                                   true  // Allow any speech to barge in
+                RemoteLogger.log("[loop] BARGE-IN DETECTED: '\(transcript)' (isProcessing=true) - cancelling task")
+                processingTask?.cancel()
+                processingTask = nil
+                stopSpeaking()
 
-                if shouldBargeIn {
-                    RemoteLogger.log("[loop] BARGE-IN DETECTED: '\(transcript)' (isProcessing=true) - cancelling task")
-                    processingTask?.cancel()
-                    processingTask = nil
-                    stopSpeaking()
-
-                    // If it's just "stop" or "cancel", just stop talking and resume listening
-                    if lower == "stop" || lower == "cancel" {
-                        RemoteLogger.log("[loop] stop/cancel command - resuming listening (not processing new command)")
-                        continue
-                    }
-                    // Otherwise fall through to process the new command
-                    RemoteLogger.log("[loop] barge-in with new command '\(transcript)' - will process")
-                } else {
+                // "stop" / "cancel" = just stop talking, don't process a new command.
+                if lower == "stop" || lower == "cancel" {
+                    RemoteLogger.log("[loop] stop/cancel command - resuming listening (not processing new command)")
                     continue
                 }
+                RemoteLogger.log("[loop] barge-in with new command '\(transcript)' - will process")
             }
 
             // Wake-word gating: when asleep, only respond if the user said the assistant's
@@ -164,7 +154,7 @@ class VoiceLoop: ObservableObject {
             let request: String
             if !isAwake {
                 let wake = AssistantProfile.shared.wakeWord
-                guard let stripped = stripWakeWord(from: transcript, wake: wake) else {
+                guard let stripped = WakeWordMatcher.strip(wakeWord: wake, from: transcript) else {
                     FileTracer.log("[loop] asleep, no wake word ('\(wake)') in '\(transcript)' — ignoring")
                     continue
                 }
@@ -243,76 +233,6 @@ class VoiceLoop: ObservableObject {
     }
 
     // MARK: - Wake word + sleep
-
-    /// Return the request with the wake word removed if present, else nil.
-    /// Matches phonetically — the recognizer often spells a name differently than the user
-    /// (e.g. "Cael" → "Kale", "Sonique" → "Sonic"), so exact-string matching fails.
-    private func stripWakeWord(from text: String, wake: String) -> String? {
-        let words = text.split(whereSeparator: { $0 == " " || $0 == "," })
-            .map { String($0).trimmingCharacters(in: CharacterSet(charactersIn: " ,.!?")) }
-            .filter { !$0.isEmpty }
-
-        // Find the first word that sounds like the wake word.
-        guard let hitIndex = words.firstIndex(where: { wordMatchesWake($0, wake: wake) }) else {
-            return nil
-        }
-
-        // Drop the matched word + a leading "hey" if present. Return the remainder.
-        let remaining = Array(words[(hitIndex + 1)...])
-        // (the wake word may have been preceded by "hey" — already excluded since we keep
-        // only words after the hit)
-        let result = remaining.joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: " ,.!?"))
-        return result
-    }
-
-    /// Does a single spoken word sound like the wake word? Exact, substring, small
-    /// edit-distance, or shared phonetic key all count.
-    private func wordMatchesWake(_ word: String, wake: String) -> Bool {
-        let w = word.lowercased()
-        if w == wake || w.contains(wake) || wake.contains(w) { return true }
-        if levenshtein(w, wake) <= 1 { return true }
-        return phoneticKey(w) == phoneticKey(wake)
-    }
-
-    /// A crude phonetic key: drop vowels (except leading), collapse common homophone
-    /// consonants (c/k→k, q→k, ph/f→f, s/z→s), dedupe. "cael"→"kl", "kale"→"kl".
-    private func phoneticKey(_ s: String) -> String {
-        let chars = Array(s.lowercased())
-        guard !chars.isEmpty else { return "" }
-        var out = ""
-        for (i, c) in chars.enumerated() {
-            var ch = c
-            switch ch {
-            case "c", "q", "k": ch = "k"
-            case "z": ch = "s"
-            case "y": ch = "i"
-            default: break
-            }
-            // keep leading vowel; drop later vowels
-            let isVowel = "aeiou".contains(ch)
-            if isVowel && i != 0 { continue }
-            if out.last == ch { continue }  // dedupe doubles
-            out.append(ch)
-        }
-        return out
-    }
-
-    private func levenshtein(_ a: String, _ b: String) -> Int {
-        let a = Array(a), b = Array(b)
-        if a.isEmpty { return b.count }
-        if b.isEmpty { return a.count }
-        var prev = Array(0...b.count)
-        var cur = [Int](repeating: 0, count: b.count + 1)
-        for i in 1...a.count {
-            cur[0] = i
-            for j in 1...b.count {
-                let cost = a[i-1] == b[j-1] ? 0 : 1
-                cur[j] = min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + cost)
-            }
-            prev = cur
-        }
-        return prev[b.count]
-    }
 
     private func armSleepTimer() {
         cancelSleepTimer()
