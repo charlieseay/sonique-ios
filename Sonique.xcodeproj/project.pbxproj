@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		307D709226B85346EDA7F35C /* SimpleTTS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78E343F937973D5F45310576 /* SimpleTTS.swift */; };
 		1C140EA451B919D9298BE32E /* NativeCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62F4F3D0ECD71D878D9DA058 /* NativeCapabilities.swift */; };
 		23DA4ACE8CFA741DF5BD9C1B /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CE437189C0E4421DAF830B /* Config.swift */; };
 		3AD4BE75784BB13A70577E66 /* DeviceContextPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A6EDC914A658CBC3E575AB7 /* DeviceContextPublisher.swift */; };
@@ -50,6 +51,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		78E343F937973D5F45310576 /* SimpleTTS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/SimpleTTS.swift; sourceTree = "<group>"; };
 		14CE437189C0E4421DAF830B /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Config.swift; path = Sonique/Config.swift; sourceTree = SOURCE_ROOT; };
 		2A23AB4D69778C0A2A9DD563 /* BonjourDiscovery.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BonjourDiscovery.swift; path = Sonique/BonjourDiscovery.swift; sourceTree = "<group>"; };
 		3A6EDC914A658CBC3E575AB7 /* DeviceContextPublisher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Sonique/DeviceContextPublisher.swift; sourceTree = SOURCE_ROOT; };
@@ -148,6 +150,7 @@
 			children = (
 				3A6EDC914A658CBC3E575AB7 /* DeviceContextPublisher.swift */,
 				E4EC42E16028E8000D577CB4 /* TTSClient.swift */,
+				78E343F937973D5F45310576 /* SimpleTTS.swift */,
 				2A23AB4D69778C0A2A9DD563 /* BonjourDiscovery.swift */,
 			);
 			name = Sonique;
@@ -274,6 +277,7 @@
 				865B1979F6D2564DBD38C8C0 /* CapabilityExecutor.swift in Sources */,
 				3AD4BE75784BB13A70577E66 /* DeviceContextPublisher.swift in Sources */,
 				BB26EE3075600D93C8DD659C /* TTSClient.swift in Sources */,
+				307D709226B85346EDA7F35C /* SimpleTTS.swift in Sources */,
 				9799BFC0599B37F5FBC462FE /* BonjourDiscovery.swift in Sources */,
 			
 				5A8627754ECF4312B7FC7B61 /* NotificationNames.swift in Sources */,
