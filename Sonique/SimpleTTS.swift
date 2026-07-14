@@ -10,18 +10,6 @@ class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate {
     override init() {
         super.init()
         synthesizer.delegate = self
-        configureAudioSession()
-    }
-
-    private func configureAudioSession() {
-        do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .voicePrompt, options: [.allowBluetooth, .allowBluetoothA2DP])
-            try session.setActive(true, options: [])
-            FileTracer.log("[tts] Audio session configured for Bluetooth")
-        } catch {
-            FileTracer.log("[tts] Audio session config failed: \(error)")
-        }
     }
 
     /// Speak text and call completion when done
@@ -31,6 +19,15 @@ class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate {
             return
         }
 
+        // Configure audio session for TTS playback (routes to Bluetooth)
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .voicePrompt, options: [.allowBluetooth, .allowBluetoothA2DP])
+            FileTracer.log("[tts] Audio session set to .playback for Bluetooth")
+        } catch {
+            FileTracer.log("[tts] Audio session config failed: \(error)")
+        }
+
         FileTracer.log("[tts] speaking: '\(text.prefix(50))'")
         onComplete = completion
 
@@ -38,10 +35,23 @@ class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate {
 
         // Use premium quality voices - find best female US English voice
         let voices = AVSpeechSynthesisVoice.speechVoices()
+
+        // List available voices on first speak
+        static var didListVoices = false
+        if !Self.didListVoices {
+            Self.didListVoices = true
+            FileTracer.log("[tts] === Available US English voices ===")
+            let usVoices = voices.filter { $0.language == "en-US" }
+            for voice in usVoices {
+                let quality = voice.quality == .premium ? "PREMIUM" : voice.quality == .enhanced ? "ENHANCED" : "default"
+                FileTracer.log("[tts]   [\(quality)] \(voice.name)")
+            }
+        }
+
         let premiumVoices = voices.filter { voice in
             voice.language == "en-US" &&
             voice.quality == .premium &&
-            (voice.name.contains("Samantha") || voice.name.contains("Ava"))
+            (voice.name.contains("Samantha") || voice.name.contains("Ava") || voice.name.contains("Nicky"))
         }
 
         utterance.voice = premiumVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
