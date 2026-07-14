@@ -171,8 +171,8 @@ class TTSClient: ObservableObject {
             // AVSpeechSynthesizer.write() uses a simple buffer callback
             FileTracer.log("[tts] calling synthesizer.write()")
             let voice = synthesizer.write(utterance) { [weak self] buffer in
-                guard let buffer = buffer else {
-                    // nil buffer = end of synthesis
+                guard let pcmBuffer = buffer as? AVAudioPCMBuffer else {
+                    // Not a PCM buffer - likely end of synthesis marker
                     if !isDone {
                         isDone = true
                         self?.activeSynthesizer = nil
@@ -184,11 +184,6 @@ class TTSClient: ObservableObject {
                             continuation.resume(returning: pcmData)
                         }
                     }
-                    return
-                }
-
-                guard let pcmBuffer = buffer as? AVAudioPCMBuffer else {
-                    FileTracer.log("[tts] buffer is not AVAudioPCMBuffer")
                     return
                 }
 
