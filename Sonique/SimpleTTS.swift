@@ -6,6 +6,7 @@ import AVFoundation
 class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate, TTSProvider {
     private let synthesizer = AVSpeechSynthesizer()
     private var onComplete: (() -> Void)?
+    private static var didListVoices = false
 
     override init() {
         super.init()
@@ -37,9 +38,8 @@ class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate, TTSProvider {
         let voices = AVSpeechSynthesisVoice.speechVoices()
 
         // List available voices on first speak
-        static var didListVoices = false
-        if !Self.didListVoices {
-            Self.didListVoices = true
+        if !SimpleTTS.didListVoices {
+            SimpleTTS.didListVoices = true
             FileTracer.log("[tts] === Available US English voices ===")
             let usVoices = voices.filter { $0.language == "en-US" }
             for voice in usVoices {

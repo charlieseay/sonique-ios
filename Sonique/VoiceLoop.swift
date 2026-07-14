@@ -42,7 +42,7 @@ class VoiceLoop: ObservableObject {
         case ondevice  // Apple AVSpeechSynthesizer (free fallback)
     }
 
-    private var ttsMode: TTSMode = .voicebox  // Default to VoiceBox
+    private var ttsMode: TTSMode = .ondevice  // Default to on-device (VoiceBox endpoint not ready yet)
 
     // Back-compat for ContentView
     var speechRecognition: VoiceSession? { session }
