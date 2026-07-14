@@ -27,15 +27,7 @@ class VoiceBoxTTS: NSObject, TTSProvider, AVAudioPlayerDelegate {
 
         onComplete = completion
 
-        // Configure audio session for playback
-        do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .voicePrompt, options: [.allowBluetooth, .allowBluetoothA2DP])
-            FileTracer.log("[voicebox] Audio session set to .playback for Bluetooth")
-        } catch {
-            FileTracer.log("[voicebox] Audio session config failed: \(error)")
-        }
-
+        // Don't reconfigure audio session - VoiceSession already set it up with Bluetooth support
         FileTracer.log("[voicebox] fetching TTS for: '\(text.prefix(50))'")
 
         // Call SoniqueBar /synthesize endpoint
@@ -119,14 +111,7 @@ class ElevenLabsTTS: NSObject, TTSProvider, AVAudioPlayerDelegate {
 
         onComplete = completion
 
-        // Configure audio session
-        do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .voicePrompt, options: [.allowBluetooth, .allowBluetoothA2DP])
-        } catch {
-            FileTracer.log("[elevenlabs] Audio session config failed: \(error)")
-        }
-
+        // Don't reconfigure audio session - VoiceSession already set it up with Bluetooth support
         FileTracer.log("[elevenlabs] fetching TTS for: '\(text.prefix(50))'")
 
         let url = URL(string: "https://api.elevenlabs.io/v1/text-to-speech/\(voiceID)")!
