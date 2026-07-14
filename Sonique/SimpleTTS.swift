@@ -10,6 +10,18 @@ class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate {
     override init() {
         super.init()
         synthesizer.delegate = self
+        configureAudioSession()
+    }
+
+    private func configureAudioSession() {
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .voicePrompt, options: [.allowBluetooth, .allowBluetoothA2DP])
+            try session.setActive(true, options: [])
+            FileTracer.log("[tts] Audio session configured for Bluetooth")
+        } catch {
+            FileTracer.log("[tts] Audio session config failed: \(error)")
+        }
     }
 
     /// Speak text and call completion when done
