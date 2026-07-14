@@ -1,8 +1,7 @@
 import Foundation
+import AVFoundation
 
-/// Unified TTS client that supports multiple providers:
-/// - ElevenLabs (cloud)
-/// - SoniqueBar embedded Kokoro (local)
+/// On-device TTS using AVSpeechSynthesizer (free, offline)
 @MainActor
 class TTSClient: ObservableObject {
     enum Provider: String, Codable {
@@ -42,12 +41,8 @@ class TTSClient: ObservableObject {
     func fetchPCM(_ text: String, voiceID: String) async -> Data? {
         guard !text.isEmpty else { return nil }
 
-        switch provider {
-        case .elevenlabs:
-            return await fetchFromElevenLabs(text, voiceID: voiceID)
-        case .kokoro:
-            return await fetchFromSoniqueBar(text, voiceID: voiceID)
-        }
+        // Use on-device AVSpeechSynthesizer (free, works offline)
+        return await synthesizeOnDevice(text)
     }
 
     // MARK: - ElevenLabs
