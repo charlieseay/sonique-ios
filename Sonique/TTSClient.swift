@@ -39,10 +39,16 @@ class TTSClient: ObservableObject {
 
     /// Returns raw PCM (pcm_24000, 16-bit LE mono) for the given text, or nil on failure.
     func fetchPCM(_ text: String, voiceID: String) async -> Data? {
-        guard !text.isEmpty else { return nil }
+        guard !text.isEmpty else {
+            FileTracer.log("[tts] fetchPCM called with empty text")
+            return nil
+        }
 
+        FileTracer.log("[tts] fetchPCM called with: '\(text.prefix(50))'")
         // Use on-device AVSpeechSynthesizer (free, works offline)
-        return await synthesizeOnDevice(text)
+        let result = await synthesizeOnDevice(text)
+        FileTracer.log("[tts] synthesizeOnDevice returned: \(result?.count ?? 0) bytes")
+        return result
     }
 
     // MARK: - ElevenLabs
@@ -143,9 +149,15 @@ class TTSClient: ObservableObject {
 
     // MARK: - On-Device TTS (AVSpeechSynthesizer)
 
+    // Keep synthesizer alive during synthesis
+    private var activeSynthesizer: AVSpeechSynthesizer?
+
     private func synthesizeOnDevice(_ text: String) async -> Data? {
+        FileTracer.log("[tts] synthesizeOnDevice START for '\(text.prefix(30))'")
         return await withCheckedContinuation { continuation in
+            FileTracer.log("[tts] creating AVSpeechSynthesizer")
             let synthesizer = AVSpeechSynthesizer()
+            self.activeSynthesizer = synthesizer  // Keep alive
             let utterance = AVSpeechUtterance(string: text)
 
             // Use natural US English voice
@@ -157,33 +169,59 @@ class TTSClient: ObservableObject {
             var isDone = false
 
             // AVSpeechSynthesizer.write() uses a simple buffer callback
-            let voice = synthesizer.write(utterance) { buffer in
-                guard let pcmBuffer = buffer as? AVAudioPCMBuffer,
-                      let channelData = pcmBuffer.int16ChannelData else {
-                    // End of synthesis signaled by nil buffer
+            FileTracer.log("[tts] calling synthesizer.write()")
+            let voice = synthesizer.write(utterance) { [weak self] buffer in
+                guard let buffer = buffer else {
+                    // nil buffer = end of synthesis
                     if !isDone {
                         isDone = true
+                        self?.activeSynthesizer = nil
                         if pcmData.isEmpty {
-                            FileTracer.log("[tts] on-device synthesis produced no data")
+                            FileTracer.log("[tts] synthesis complete but no data")
                             continuation.resume(returning: nil)
                         } else {
-                            FileTracer.log("[tts] synthesized \(pcmData.count) PCM bytes on-device for '\(text.prefix(30))'")
+                            FileTracer.log("[tts] synthesized \(pcmData.count) PCM bytes on-device")
                             continuation.resume(returning: pcmData)
                         }
                     }
                     return
                 }
 
-                // Convert AVAudioPCMBuffer to Data (16-bit PCM)
-                let frameCount = Int(pcmBuffer.frameLength)
-                let samples = UnsafeBufferPointer(start: channelData[0], count: frameCount)
-                let data = Data(buffer: samples)
-                pcmData.append(data)
+                guard let pcmBuffer = buffer as? AVAudioPCMBuffer else {
+                    FileTracer.log("[tts] buffer is not AVAudioPCMBuffer")
+                    return
+                }
+
+                FileTracer.log("[tts] got buffer: \(pcmBuffer.frameLength) frames, format=\(pcmBuffer.format)")
+
+                // AVSpeechSynthesizer outputs float32, need to convert to int16
+                if let floatData = pcmBuffer.floatChannelData {
+                    let frameCount = Int(pcmBuffer.frameLength)
+                    let floatSamples = UnsafeBufferPointer(start: floatData[0], count: frameCount)
+
+                    // Convert float32 [-1.0, 1.0] to int16 [-32768, 32767]
+                    var int16Samples = [Int16](repeating: 0, count: frameCount)
+                    for i in 0..<frameCount {
+                        let floatValue = floatSamples[i]
+                        let scaledValue = floatValue * 32767.0
+                        int16Samples[i] = Int16(max(-32768, min(32767, scaledValue)))
+                    }
+
+                    let data = Data(bytes: int16Samples, count: frameCount * 2)
+                    pcmData.append(data)
+                    FileTracer.log("[tts] converted \(frameCount) float32 samples to int16")
+                } else {
+                    FileTracer.log("[tts] no float channel data available")
+                }
             }
 
+            FileTracer.log("[tts] synthesizer.write() returned voice=\(voice != nil)")
             if voice == nil {
-                FileTracer.log("[tts] on-device synthesis failed to start")
+                FileTracer.log("[tts] on-device synthesis failed to start (voice=nil)")
+                self.activeSynthesizer = nil
                 continuation.resume(returning: nil)
+            } else {
+                FileTracer.log("[tts] synthesis started successfully, waiting for buffers...")
             }
         }
     }

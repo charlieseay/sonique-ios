@@ -301,6 +301,8 @@ class VoiceLoop: ObservableObject {
             // Check for cancellation
             try Task.checkCancellation()
 
+            FileTracer.log("[loop] received chunk: '\(chunk.text)' final=\(chunk.isFinal)")
+
             // Artifact → show the image (ephemeral). No text on this chunk.
             if let art = chunk.artifactURL, let url = URL(string: art) {
                 artifactURL = url

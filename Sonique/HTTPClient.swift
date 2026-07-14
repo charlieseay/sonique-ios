@@ -124,17 +124,25 @@ struct HTTPClient {
                     }
 
                     var lineBuffer = ""
+                    FileTracer.log("[http] starting byte stream read")
                     for try await byte in bytes {
                         lastDataTime = Date() // Reset watchdog timer
                         let char = String(bytes: [byte], encoding: .utf8) ?? ""
                         if char == "\n" {
                             let line = lineBuffer.trimmingCharacters(in: .whitespaces)
                             lineBuffer = ""
-                            guard !line.isEmpty,
-                                  let data = line.data(using: .utf8),
-                                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
+                            guard !line.isEmpty else { continue }
+
+                            FileTracer.log("[http] received line: \(line.prefix(100))")
+
+                            guard let data = line.data(using: .utf8),
+                                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                                FileTracer.log("[http] failed to parse JSON")
+                                continue
+                            }
 
                             if json["done"] as? Bool == true {
+                                FileTracer.log("[http] stream complete (done:true)")
                                 watchdogTask.cancel()
                                 continuation.finish()
                                 return
@@ -144,11 +152,13 @@ struct HTTPClient {
                                artifact["type"] as? String == "image",
                                let id = artifact["id"] as? String {
                                 let url = "\(HTTPClient.activeBaseURL)/artifact/\(id)"
+                                FileTracer.log("[http] yielding artifact: \(id)")
                                 continuation.yield(StreamChunk(text: "", isFinal: false, artifactURL: url))
                                 continue
                             }
                             if let chunk = json["chunk"] as? String {
                                 let isFinal = json["is_final"] as? Bool ?? false
+                                FileTracer.log("[http] yielding chunk: '\(chunk)' final=\(isFinal)")
                                 continuation.yield(StreamChunk(text: chunk, isFinal: isFinal))
                             }
                         } else {
