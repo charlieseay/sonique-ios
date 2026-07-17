@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import CoreMedia
 
 /// TTS provider protocol - supports multiple backends
 protocol TTSProvider {
@@ -75,92 +76,59 @@ class VoiceBoxTTS: NSObject, TTSProvider {
     }
 
     private func convertAudioToPCM(_ audioData: Data, contentType: String) -> Data? {
-        // Determine file extension from content type
-        let ext: String
-        if contentType.contains("mpeg") || contentType.contains("mp3") {
-            ext = "mp3"
-        } else if contentType.contains("aiff") || contentType.contains("x-aiff") {
-            ext = "aiff"
-        } else {
-            // Default to trying as audio file
-            ext = "audio"
-        }
+        FileTracer.log("[voicebox] Converting \(audioData.count) bytes (\(contentType)) to PCM")
 
-        // Write audio to temp file
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".\(ext)")
-        FileTracer.log("[voicebox] converting \(ext) (\(audioData.count) bytes) to PCM")
+        // Write to temp file - let AVAssetReader handle format detection
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".audio")
 
         do {
             try audioData.write(to: tempURL)
+            defer { try? FileManager.default.removeItem(at: tempURL) }
 
-            // AVAudioFile doesn't support MP3 on iOS - use AVAssetReader for MP3
-            if ext == "mp3" {
-                return try convertMP3ToPCM(url: tempURL)
-            }
-
-            // Read as AVAudioFile (AIFF/WAV)
-            let audioFile = try AVAudioFile(forReading: tempURL)
-            let format = audioFile.processingFormat
-
-            guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(audioFile.length)) else {
-                FileTracer.log("[voicebox] Failed to create PCM buffer")
-                try? FileManager.default.removeItem(at: tempURL)
+            // Use AVAssetReader for universal format support (MP3, WAV, AIFF, etc)
+            let asset = AVURLAsset(url: tempURL)
+            guard let track = asset.tracks(withMediaType: .audio).first else {
+                FileTracer.log("[voicebox] ❌ No audio track found")
                 return nil
             }
 
-            try audioFile.read(into: buffer)
+            let reader = try AVAssetReader(asset: asset)
+            let outputSettings: [String: Any] = [
+                AVFormatIDKey: kAudioFormatLinearPCM,
+                AVLinearPCMBitDepthKey: 16,
+                AVLinearPCMIsFloatKey: false,
+                AVLinearPCMIsBigEndianKey: false,
+                AVLinearPCMIsNonInterleaved: false,
+                AVSampleRateKey: 16000  // 16kHz for voice
+            ]
 
-            // Convert to 16-bit PCM data
-            let pcmData = bufferToPCMData(buffer)
+            let output = AVAssetReaderTrackOutput(track: track, outputSettings: outputSettings)
+            reader.add(output)
 
-            // Cleanup
-            try? FileManager.default.removeItem(at: tempURL)
+            guard reader.startReading() else {
+                FileTracer.log("[voicebox] ❌ Failed to start reading")
+                return nil
+            }
 
-            FileTracer.log("[voicebox] converted to \(pcmData?.count ?? 0) bytes PCM")
+            var pcmData = Data()
+            while let sampleBuffer = output.copyNextSampleBuffer() {
+                if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
+                    let length = CMBlockBufferGetDataLength(blockBuffer)
+                    var data = Data(count: length)
+                    data.withUnsafeMutableBytes { bytes in
+                        CMBlockBufferCopyDataBytes(blockBuffer, atOffset: 0, dataLength: length, destination: bytes.baseAddress!)
+                    }
+                    pcmData.append(data)
+                }
+            }
+
+            FileTracer.log("[voicebox] ✓✓✓ Converted to \(pcmData.count) bytes PCM @ 16kHz")
             return pcmData
 
         } catch {
-            FileTracer.log("[voicebox] audio conversion failed: \(error)")
-            try? FileManager.default.removeItem(at: tempURL)
+            FileTracer.log("[voicebox] ❌ Conversion failed: \(error)")
             return nil
         }
-    }
-
-    private func convertMP3ToPCM(url: URL) throws -> Data? {
-        let asset = AVURLAsset(url: url)
-        guard let track = asset.tracks(withMediaType: .audio).first else {
-            FileTracer.log("[voicebox] No audio track in MP3")
-            return nil
-        }
-
-        let reader = try AVAssetReader(asset: asset)
-        let outputSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVLinearPCMBitDepthKey: 16,
-            AVLinearPCMIsFloatKey: false,
-            AVLinearPCMIsBigEndianKey: false,
-            AVLinearPCMIsNonInterleaved: false
-        ]
-
-        let output = AVAssetReaderTrackOutput(track: track, outputSettings: outputSettings)
-        reader.add(output)
-        reader.startReading()
-
-        var pcmData = Data()
-        while let sampleBuffer = output.copyNextSampleBuffer() {
-            if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
-                let length = CMBlockBufferGetDataLength(blockBuffer)
-                var data = Data(count: length)
-                data.withUnsafeMutableBytes { bytes in
-                    CMBlockBufferCopyDataBytes(blockBuffer, atOffset: 0, dataLength: length, destination: bytes.baseAddress!)
-                }
-                pcmData.append(data)
-            }
-        }
-
-        try? FileManager.default.removeItem(at: url)
-        FileTracer.log("[voicebox] MP3 → PCM: \(pcmData.count) bytes")
-        return pcmData
     }
 
     private func bufferToPCMData(_ buffer: AVAudioPCMBuffer) -> Data? {

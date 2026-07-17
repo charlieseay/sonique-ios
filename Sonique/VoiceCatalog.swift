@@ -37,10 +37,14 @@ class VoiceCatalog: NSObject, ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        var request = URLRequest(url: URL(string: "https://api.elevenlabs.io/v1/voices")!)
-        request.setValue(apiKey, forHTTPHeaderField: "xi-api-key")
+        // Load voices from SoniqueBar server (no auth required for /voices endpoint)
+        guard let url = URL(string: "\(Config.commandServerURL)/voices") else {
+            error = "Invalid server URL"
+            return
+        }
+
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.data(from: url)
             guard let http = response as? HTTPURLResponse, http.statusCode == 200,
                   let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let arr = json["voices"] as? [[String: Any]] else {
@@ -48,11 +52,12 @@ class VoiceCatalog: NSObject, ObservableObject {
                 return
             }
             voices = arr.compactMap { v in
-                guard let id = v["voice_id"] as? String,
-                      let name = v["name"] as? String,
-                      let preview = v["preview_url"] as? String, !preview.isEmpty else { return nil }
-                return CatalogVoice(id: id, name: name, previewURL: preview,
-                                    category: v["category"] as? String ?? "premade")
+                guard let id = v["id"] as? String,
+                      let name = v["name"] as? String else { return nil }
+                let description = v["description"] as? String ?? ""
+                // No preview URL from local server - we'll synthesize samples on demand
+                return CatalogVoice(id: id, name: "\(name) - \(description)", previewURL: "",
+                                    category: "elevenlabs")
             }
         } catch {
             self.error = error.localizedDescription
