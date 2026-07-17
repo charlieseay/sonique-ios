@@ -21,73 +21,8 @@ class VoiceBoxTTS: NSObject, TTSProvider {
     }
 
     func speak(_ text: String, completion: @escaping () -> Void) async {
-        FileTracer.log("[voicebox] speak() - playing MP3 directly via AVPlayer")
-
-        // Fetch MP3 from server
-        guard let url = URL(string: "http://\(soniqueBarHost):8890/synthesize") else {
-            FileTracer.log("[voicebox] Invalid URL")
-            await MainActor.run { completion() }
-            return
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        // Add bearer token
-        let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
-        if let token = authToken, !token.isEmpty {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-
-        let payload: [String: Any] = [
-            "text": text,
-            "provider": "voicebox",
-            "voice": "default"
-        ]
-
-        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-                FileTracer.log("[voicebox] HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)")
-                await MainActor.run { completion() }
-                return
-            }
-
-            // Write MP3 to temp file
-            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mp3")
-            try data.write(to: tempURL)
-
-            FileTracer.log("[voicebox] Playing MP3 directly (\(data.count) bytes)")
-
-            // Play via AVPlayer on main thread
-            await MainActor.run {
-                let player = AVPlayer(url: tempURL)
-
-                // Set audio session for playback
-                try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
-                try? AVAudioSession.sharedInstance().setActive(true)
-
-                // Wait for playback to finish
-                NotificationCenter.default.addObserver(
-                    forName: .AVPlayerItemDidPlayToEndTime,
-                    object: player.currentItem,
-                    queue: .main
-                ) { _ in
-                    FileTracer.log("[voicebox] Playback complete")
-                    // Cleanup
-                    try? FileManager.default.removeItem(at: tempURL)
-                    completion()
-                }
-
-                player.play()
-            }
-        } catch {
-            FileTracer.log("[voicebox] Error: \(error)")
-            await MainActor.run { completion() }
-        }
+        // Not used - VoiceLoop calls fetchPCM() instead
+        completion()
     }
 
     func fetchPCM(_ text: String) async -> Data? {
@@ -144,52 +79,74 @@ class VoiceBoxTTS: NSObject, TTSProvider {
     private func convertAudioToPCM(_ audioData: Data, contentType: String) -> Data? {
         FileTracer.log("[voicebox] Converting \(audioData.count) bytes (\(contentType)) to PCM")
 
-        // Write to temp file - let AVAssetReader handle format detection
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".audio")
+        // For MP3: use AVAudioFile instead of AVAssetReader (better MP3 support)
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mp3")
 
         do {
             try audioData.write(to: tempURL)
             defer { try? FileManager.default.removeItem(at: tempURL) }
 
-            // Use AVAssetReader for universal format support (MP3, WAV, AIFF, etc)
-            let asset = AVURLAsset(url: tempURL)
-            guard let track = asset.tracks(withMediaType: .audio).first else {
-                FileTracer.log("[voicebox] ❌ No audio track found")
+            // Load MP3 file
+            let audioFile = try AVAudioFile(forReading: tempURL)
+            let format = audioFile.processingFormat
+
+            FileTracer.log("[voicebox] Source: \(format.sampleRate)Hz, \(format.channelCount)ch")
+
+            // Create target format: 24kHz mono int16
+            guard let targetFormat = AVAudioFormat(
+                commonFormat: .pcmFormatInt16,
+                sampleRate: 24000,
+                channels: 1,
+                interleaved: true
+            ) else {
+                FileTracer.log("[voicebox] ❌ Failed to create target format")
                 return nil
             }
 
-            let reader = try AVAssetReader(asset: asset)
-            let outputSettings: [String: Any] = [
-                AVFormatIDKey: kAudioFormatLinearPCM,
-                AVLinearPCMBitDepthKey: 16,
-                AVLinearPCMIsFloatKey: false,
-                AVLinearPCMIsBigEndianKey: false,
-                AVLinearPCMIsNonInterleaved: false,
-                AVSampleRateKey: 24000,  // 24kHz to match VoiceSession playerFormat
-                AVNumberOfChannelsKey: 1
-            ]
-
-            let output = AVAssetReaderTrackOutput(track: track, outputSettings: outputSettings)
-            reader.add(output)
-
-            guard reader.startReading() else {
-                FileTracer.log("[voicebox] ❌ Failed to start reading")
+            // Read entire file into buffer
+            let frameCapacity = AVAudioFrameCount(audioFile.length)
+            guard let sourceBuffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCapacity) else {
+                FileTracer.log("[voicebox] ❌ Failed to create source buffer")
                 return nil
             }
 
-            var pcmData = Data()
-            while let sampleBuffer = output.copyNextSampleBuffer() {
-                if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
-                    let length = CMBlockBufferGetDataLength(blockBuffer)
-                    var data = Data(count: length)
-                    data.withUnsafeMutableBytes { bytes in
-                        CMBlockBufferCopyDataBytes(blockBuffer, atOffset: 0, dataLength: length, destination: bytes.baseAddress!)
-                    }
-                    pcmData.append(data)
-                }
+            try audioFile.read(into: sourceBuffer)
+            sourceBuffer.frameLength = frameCapacity
+
+            // Convert to target format
+            guard let converter = AVAudioConverter(from: format, to: targetFormat) else {
+                FileTracer.log("[voicebox] ❌ Failed to create converter")
+                return nil
             }
 
-            FileTracer.log("[voicebox] ✓✓✓ Converted to \(pcmData.count) bytes PCM @ 16kHz")
+            let ratio = targetFormat.sampleRate / format.sampleRate
+            let targetFrameCount = AVAudioFrameCount(Double(sourceBuffer.frameLength) * ratio)
+
+            guard let targetBuffer = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: targetFrameCount) else {
+                FileTracer.log("[voicebox] ❌ Failed to create target buffer")
+                return nil
+            }
+
+            var error: NSError?
+            let status = converter.convert(to: targetBuffer, error: &error) { _, outStatus in
+                outStatus.pointee = .haveData
+                return sourceBuffer
+            }
+
+            guard status != .error else {
+                FileTracer.log("[voicebox] ❌ Conversion error: \(error?.localizedDescription ?? "unknown")")
+                return nil
+            }
+
+            targetBuffer.frameLength = targetFrameCount
+
+            // Extract PCM data
+            guard let pcmData = bufferToPCMData(targetBuffer) else {
+                FileTracer.log("[voicebox] ❌ Failed to extract PCM data")
+                return nil
+            }
+
+            FileTracer.log("[voicebox] ✓✓✓ Converted to \(pcmData.count) bytes PCM @ 24kHz")
             return pcmData
 
         } catch {
