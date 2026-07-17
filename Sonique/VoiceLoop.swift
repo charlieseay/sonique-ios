@@ -382,12 +382,13 @@ class VoiceLoop: ObservableObject {
                 }
             }
         } else {
-            // SimpleTTS: plays directly (fetchPCM returns nil)
-            FileTracer.log("[loop] ⚠️  fetchPCM returned NIL - falling back to SimpleTTS")
+            // VoiceBox failed - fall back to on-device SimpleTTS
+            FileTracer.log("[loop] ⚠️  VoiceBox fetchPCM returned NIL - falling back to SimpleTTS")
+            let fallbackTTS = SimpleTTS()
             await withCheckedContinuation { continuation in
                 Task {
-                    await tts.speak(clean) {
-                        FileTracer.log("[loop] SimpleTTS playback complete")
+                    await fallbackTTS.speak(clean) {
+                        FileTracer.log("[loop] SimpleTTS fallback playback complete")
                         continuation.resume()
                     }
                 }
