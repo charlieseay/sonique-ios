@@ -16,6 +16,12 @@ struct HTTPClient {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
+        // Add bearer token authentication
+        let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
+        if let token = authToken, !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
         #if os(iOS)
         await MainActor.run {
             UIDevice.current.isBatteryMonitoringEnabled = true
@@ -55,6 +61,12 @@ struct HTTPClient {
                     var request = URLRequest(url: url)
                     request.httpMethod = "POST"
                     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+                    // Add bearer token authentication
+                    let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
+                    if let token = authToken, !token.isEmpty {
+                        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    }
 
                     // Include device battery level
                     #if os(iOS)

@@ -88,6 +88,7 @@ final class SoniqueBrain {
         var tailscaleFallbackEnabled: Bool?
         var selectedVoiceID: String?
         var selectedVoiceName: String?
+        var authToken: String?  // Bearer token for CommandServer authentication
         var permissionsGranted: PermissionState?
         var discoveredCapabilities: DiscoveredCapabilities?
         var lastCapabilityDiscovery: String?  // ISO8601 timestamp
