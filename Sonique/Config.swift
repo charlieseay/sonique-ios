@@ -42,7 +42,7 @@ enum Config {
     // MARK: - SoniqueBar endpoints (user-configurable, iCloud-backed)
 
     // Defaults used only if Bonjour discovery fails
-    static let defaultLANURL = "http://192.168.68.80:8890"  // Mac Mini M4 Pro (SoniqueBar CommandServer)
+    static let defaultLANURL = "http://192.168.68.78:8890"  // Mac Mini M4 Pro (SoniqueBar CommandServer)
     static let defaultTailscaleURL = "http://100.122.13.35:8890"  // SoniqueBar via Tailscale
 
     @MainActor
