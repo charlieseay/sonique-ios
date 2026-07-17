@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 import CoreMedia
+import Combine
 
 /// TTS provider protocol - supports multiple backends
 protocol TTSProvider {
@@ -20,8 +21,73 @@ class VoiceBoxTTS: NSObject, TTSProvider {
     }
 
     func speak(_ text: String, completion: @escaping () -> Void) async {
-        // Not used - VoiceLoop calls fetchPCM() instead
-        completion()
+        FileTracer.log("[voicebox] speak() - playing MP3 directly via AVPlayer")
+
+        // Fetch MP3 from server
+        guard let url = URL(string: "http://\(soniqueBarHost):8890/synthesize") else {
+            FileTracer.log("[voicebox] Invalid URL")
+            await MainActor.run { completion() }
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        // Add bearer token
+        let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
+        if let token = authToken, !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        let payload: [String: Any] = [
+            "text": text,
+            "provider": "voicebox",
+            "voice": "default"
+        ]
+
+        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+                FileTracer.log("[voicebox] HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)")
+                await MainActor.run { completion() }
+                return
+            }
+
+            // Write MP3 to temp file
+            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mp3")
+            try data.write(to: tempURL)
+
+            FileTracer.log("[voicebox] Playing MP3 directly (\(data.count) bytes)")
+
+            // Play via AVPlayer on main thread
+            await MainActor.run {
+                let player = AVPlayer(url: tempURL)
+
+                // Set audio session for playback
+                try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
+                try? AVAudioSession.sharedInstance().setActive(true)
+
+                // Wait for playback to finish
+                NotificationCenter.default.addObserver(
+                    forName: .AVPlayerItemDidPlayToEndTime,
+                    object: player.currentItem,
+                    queue: .main
+                ) { _ in
+                    FileTracer.log("[voicebox] Playback complete")
+                    // Cleanup
+                    try? FileManager.default.removeItem(at: tempURL)
+                    completion()
+                }
+
+                player.play()
+            }
+        } catch {
+            FileTracer.log("[voicebox] Error: \(error)")
+            await MainActor.run { completion() }
+        }
     }
 
     func fetchPCM(_ text: String) async -> Data? {

@@ -369,10 +369,20 @@ class VoiceLoop: ObservableObject {
 
         FileTracer.log("[loop] Cleaned text: '\(clean.prefix(50))'")
         FileTracer.log("[loop] TTS provider type: \(type(of: tts))")
-        FileTracer.log("[loop] Fetching PCM...")
 
-        // VoiceBox/ElevenLabs: fetch PCM and play through VoiceSession (routes to Bluetooth)
-        if let pcmData = await tts.fetchPCM(clean) {
+        // Use speak() for VoiceBoxTTS (plays MP3 directly via AVPlayer)
+        // Use fetchPCM() for other providers that return PCM data
+        if tts is VoiceBoxTTS {
+            FileTracer.log("[loop] Using VoiceBoxTTS.speak() - direct MP3 playback")
+            await withCheckedContinuation { continuation in
+                Task {
+                    await tts.speak(clean) {
+                        FileTracer.log("[loop] ✓ VoiceBox playback complete")
+                        continuation.resume()
+                    }
+                }
+            }
+        } else if let pcmData = await tts.fetchPCM(clean) {
             FileTracer.log("[loop] ✓✓✓ GOT PCM: \(pcmData.count) bytes")
             FileTracer.log("[loop] Playing via VoiceSession...")
             await withCheckedContinuation { continuation in
@@ -382,8 +392,8 @@ class VoiceLoop: ObservableObject {
                 }
             }
         } else {
-            // VoiceBox failed - fall back to on-device SimpleTTS
-            FileTracer.log("[loop] ⚠️  VoiceBox fetchPCM returned NIL - falling back to SimpleTTS")
+            // Fallback to on-device SimpleTTS
+            FileTracer.log("[loop] ⚠️  TTS failed - falling back to SimpleTTS")
             let fallbackTTS = SimpleTTS()
             await withCheckedContinuation { continuation in
                 Task {
