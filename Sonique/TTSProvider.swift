@@ -41,6 +41,12 @@ class VoiceBoxTTS: NSObject, TTSProvider {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
+        // Add bearer token authentication
+        let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
+        if let token = authToken, !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
         let payload: [String: Any] = [
             "text": text,
             "provider": "voicebox",
@@ -56,10 +62,11 @@ class VoiceBoxTTS: NSObject, TTSProvider {
                 return nil
             }
 
-            FileTracer.log("[voicebox] received \(data.count) bytes AIFF")
+            let contentType = http.value(forHTTPHeaderField: "Content-Type") ?? "unknown"
+            FileTracer.log("[voicebox] received \(data.count) bytes \(contentType)")
 
-            // Convert AIFF to PCM using AVAudioFile
-            return convertAIFFtoPCM(data)
+            // Convert audio to PCM - handles both MP3 and AIFF
+            return convertAudioToPCM(data, contentType: contentType)
 
         } catch {
             FileTracer.log("[voicebox] fetch failed: \(error.localizedDescription)")
@@ -67,12 +74,24 @@ class VoiceBoxTTS: NSObject, TTSProvider {
         }
     }
 
-    private func convertAIFFtoPCM(_ aiffData: Data) -> Data? {
-        // Write AIFF to temp file
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".aiff")
+    private func convertAudioToPCM(_ audioData: Data, contentType: String) -> Data? {
+        // Determine file extension from content type
+        let ext: String
+        if contentType.contains("mpeg") || contentType.contains("mp3") {
+            ext = "mp3"
+        } else if contentType.contains("aiff") || contentType.contains("x-aiff") {
+            ext = "aiff"
+        } else {
+            // Default to trying as audio file
+            ext = "audio"
+        }
+
+        // Write audio to temp file
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".\(ext)")
+        FileTracer.log("[voicebox] converting \(ext) to PCM")
 
         do {
-            try aiffData.write(to: tempURL)
+            try audioData.write(to: tempURL)
 
             // Read as AVAudioFile
             let audioFile = try AVAudioFile(forReading: tempURL)

@@ -40,13 +40,16 @@ class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate, TTSProvider {
             }
         }
 
+        // Try to find Jessica first (user preference), then other premium voices
+        let jessicaVoice = voices.first { $0.name.contains("Jessica") && $0.language == "en-US" }
+
         let premiumVoices = voices.filter { voice in
             voice.language == "en-US" &&
             voice.quality == .premium &&
             (voice.name.contains("Samantha") || voice.name.contains("Ava") || voice.name.contains("Nicky"))
         }
 
-        utterance.voice = premiumVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
+        utterance.voice = jessicaVoice ?? premiumVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
         utterance.rate = 0.52  // Slightly faster than default for more natural conversation
         utterance.pitchMultiplier = 1.0
         utterance.volume = 1.0
