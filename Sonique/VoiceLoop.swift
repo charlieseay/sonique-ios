@@ -342,33 +342,59 @@ class VoiceLoop: ObservableObject {
     }
 
     private func speakSentence(_ sentence: String) async {
-        guard let tts = ttsProvider, let vs = session else { return }
+        FileTracer.log("[loop] ===== SPEAK SENTENCE START =====")
+        FileTracer.log("[loop] Sentence: '\(sentence.prefix(50))'")
+
+        guard let tts = ttsProvider else {
+            FileTracer.log("[loop] ❌ NO TTS PROVIDER!")
+            return
+        }
+
+        guard let vs = session else {
+            FileTracer.log("[loop] ❌ NO VOICE SESSION!")
+            return
+        }
+
         var clean = sentence.trimmingCharacters(in: .whitespaces)
         // Strip markdown formatting so TTS doesn't read "asterisk asterisk"
         clean = clean.replacingOccurrences(of: "**", with: "")  // Bold
         clean = clean.replacingOccurrences(of: "*", with: "")   // Italic
         clean = clean.replacingOccurrences(of: "`", with: "")   // Code
         clean = clean.replacingOccurrences(of: "_", with: "")   // Underscore emphasis
-        guard !clean.isEmpty else { return }
+
+        guard !clean.isEmpty else {
+            FileTracer.log("[loop] ❌ EMPTY after cleaning")
+            return
+        }
+
+        FileTracer.log("[loop] Cleaned text: '\(clean.prefix(50))'")
+        FileTracer.log("[loop] TTS provider type: \(type(of: tts))")
+        FileTracer.log("[loop] Fetching PCM...")
 
         // VoiceBox/ElevenLabs: fetch PCM and play through VoiceSession (routes to Bluetooth)
         if let pcmData = await tts.fetchPCM(clean) {
-            FileTracer.log("[loop] playing PCM via VoiceSession (\(pcmData.count) bytes)")
+            FileTracer.log("[loop] ✓✓✓ GOT PCM: \(pcmData.count) bytes")
+            FileTracer.log("[loop] Playing via VoiceSession...")
             await withCheckedContinuation { continuation in
                 vs.playPCM(data: pcmData) {
+                    FileTracer.log("[loop] ✓ Playback complete")
                     continuation.resume()
                 }
             }
         } else {
             // SimpleTTS: plays directly (fetchPCM returns nil)
+            FileTracer.log("[loop] ⚠️  fetchPCM returned NIL - falling back to SimpleTTS")
             await withCheckedContinuation { continuation in
                 Task {
                     await tts.speak(clean) {
+                        FileTracer.log("[loop] SimpleTTS playback complete")
                         continuation.resume()
                     }
                 }
             }
         }
+
+        FileTracer.log("[loop] ===== SPEAK SENTENCE END =====")
     }
 
     private func extractCompleteSentences(from text: String) -> ([String], String) {
