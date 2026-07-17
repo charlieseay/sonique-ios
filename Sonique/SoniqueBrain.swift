@@ -112,12 +112,27 @@ final class SoniqueBrain {
     }
 
     func loadPreferences() -> Preferences {
+        // Load mobile-specific preferences
         let text = readText(prefsURL)
-        guard !text.isEmpty,
-              let data = text.data(using: .utf8),
-              let prefs = try? JSONDecoder().decode(Preferences.self, from: data) else {
-            return Preferences()
+        var prefs: Preferences
+        if !text.isEmpty,
+           let data = text.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode(Preferences.self, from: data) {
+            prefs = decoded
+        } else {
+            prefs = Preferences()
         }
+
+        // Auth token comes from shared/ (written by macOS SoniqueBar)
+        let sharedPrefsURL = sharedDir.appendingPathComponent("preferences.json")
+        let sharedText = readText(sharedPrefsURL)
+        if !sharedText.isEmpty,
+           let sharedData = sharedText.data(using: .utf8),
+           let sharedPrefs = try? JSONDecoder().decode(Preferences.self, from: sharedData),
+           let authToken = sharedPrefs.authToken {
+            prefs.authToken = authToken
+        }
+
         return prefs
     }
 
