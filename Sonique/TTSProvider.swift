@@ -99,7 +99,8 @@ class VoiceBoxTTS: NSObject, TTSProvider {
                 AVLinearPCMIsFloatKey: false,
                 AVLinearPCMIsBigEndianKey: false,
                 AVLinearPCMIsNonInterleaved: false,
-                AVSampleRateKey: 16000  // 16kHz for voice
+                AVSampleRateKey: 24000,  // 24kHz to match VoiceSession playerFormat
+                AVNumberOfChannelsKey: 1
             ]
 
             let output = AVAssetReaderTrackOutput(track: track, outputSettings: outputSettings)
