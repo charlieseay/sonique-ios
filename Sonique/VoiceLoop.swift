@@ -37,12 +37,13 @@ class VoiceLoop: ObservableObject {
     private var ttsProvider: TTSProvider?
 
     enum TTSMode: String {
-        case voicebox  // VoiceBox/Kokoro via SoniqueBar (best quality)
+        case kokoro  // Kokoro native Swift TTS via SoniqueBar (on-device, free, fast)
+        case voicebox  // VoiceBox/Kokoro via SoniqueBar (deprecated - use .kokoro)
         case elevenlabs  // ElevenLabs API (premium, costs $)
         case ondevice  // Apple AVSpeechSynthesizer (free fallback)
     }
 
-    private var ttsMode: TTSMode = .elevenlabs  // ElevenLabs direct (no SoniqueBar hop)
+    private var ttsMode: TTSMode = .kokoro  // Default to Kokoro (on-device, fast, free)
 
     // Back-compat for ContentView
     var speechRecognition: VoiceSession? { session }
@@ -425,6 +426,11 @@ class VoiceLoop: ObservableObject {
                 FileTracer.log("[conn] Initializing TTS provider: \(ttsMode.rawValue)")
 
                 switch ttsMode {
+                case .kokoro:
+                    ttsProvider = KokoroTTS(soniqueBarHost: Config.soniqueBarHost)
+                    debugLog.append("TTS ready (Kokoro)")
+                    FileTracer.log("[conn] Kokoro TTS initialized")
+
                 case .voicebox:
                     ttsProvider = VoiceBoxTTS(soniqueBarHost: Config.soniqueBarHost)
                     debugLog.append("TTS ready (VoiceBox)")
