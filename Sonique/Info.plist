@@ -19,7 +19,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>2.1.0</string>
 	<key>CFBundleVersion</key>
-	<string>151</string>
+	<string>168</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -43,6 +43,8 @@
 	</array>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Sonique accesses your calendar to show upcoming events and create new calendar entries via voice commands.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Sonique uses your location to provide accurate weather information when you ask about the weather.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Sonique needs local network access to discover your SoniqueBar backend on your home network.</string>
 	<key>NSMicrophoneUsageDescription</key>

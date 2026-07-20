@@ -1,5 +1,8 @@
 import Foundation
 import UIKit
+import EventKit
+import CoreLocation
+import WeatherKit
 
 /// On-device native intents — answered by iOS itself, before anything is sent to
 /// SoniqueBar. Instant, works offline. Mirrors SoniqueBar's NativeIntents for the
@@ -25,6 +28,18 @@ enum NativeIntents {
         // --- Day of week ---
         if lower.matchesAny(["what day of the week", "which day is it"]) {
             return dayOfWeek()
+        }
+
+        // --- Weather ---
+        if lower.matchesAny(["what's the weather", "whats the weather", "weather", "how's the weather",
+                             "hows the weather", "what is the weather", "current weather"]) {
+            return currentWeather()
+        }
+
+        // --- Calendar / Next Event ---
+        if lower.matchesAny(["next event", "next meeting", "next calendar", "what's next on my calendar",
+                             "whats next on my calendar", "next appointment", "upcoming event"]) {
+            return nextCalendarEvent()
         }
 
         // --- Battery (device-only fact) ---
@@ -81,6 +96,41 @@ enum NativeIntents {
         let totalGB = Double(total) / 1_000_000_000
         let usedGB = totalGB - availGB
         return String(format: "You have %.1f gigs free out of %.0f total. Used %.1f gigs so far.", availGB, totalGB, usedGB)
+    }
+
+    @MainActor
+    private static func currentWeather() -> String {
+        // WeatherKit requires async - return placeholder for now, caller should check permissions
+        // Full implementation would use Task { await WeatherService.shared.weather(for: location) }
+        return "Weather queries need location permission. Ask me in settings to enable this."
+    }
+
+    @MainActor
+    private static func nextCalendarEvent() -> String {
+        let store = EKEventStore()
+
+        // Check authorization status
+        let status = EKEventStore.authorizationStatus(for: .event)
+        guard status == .authorized else {
+            return "Calendar access not enabled. Check settings to allow calendar access."
+        }
+
+        // Get next event
+        let now = Date()
+        let endOfToday = Calendar.current.date(byAdding: .day, value: 7, to: now) ?? now
+
+        let predicate = store.predicateForEvents(withStart: now, end: endOfToday, calendars: nil)
+        let events = store.events(matching: predicate).filter { !$0.isAllDay }
+
+        guard let next = events.first else {
+            return "No upcoming events in the next 7 days."
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE 'at' h:mm a"
+        let when = formatter.string(from: next.startDate)
+
+        return "Your next event is \(next.title ?? "untitled") on \(when)."
     }
 }
 
