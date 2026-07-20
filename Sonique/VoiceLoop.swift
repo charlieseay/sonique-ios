@@ -43,7 +43,7 @@ class VoiceLoop: ObservableObject {
         case ondevice  // Apple AVSpeechSynthesizer (free fallback)
     }
 
-    private var ttsMode: TTSMode = .kokoro  // Default to Kokoro (on-device, fast, free)
+    private var ttsMode: TTSMode = .elevenlabs  // ElevenLabs direct (working, stable)
 
     // Back-compat for ContentView
     var speechRecognition: VoiceSession? { session }
@@ -427,9 +427,10 @@ class VoiceLoop: ObservableObject {
 
                 switch ttsMode {
                 case .kokoro:
-                    ttsProvider = KokoroTTS(soniqueBarHost: Config.soniqueBarHost)
-                    debugLog.append("TTS ready (Kokoro)")
-                    FileTracer.log("[conn] Kokoro TTS initialized")
+                    // TODO: Add KokoroTTS.swift to Xcode project
+                    // ttsProvider = KokoroTTS(soniqueBarHost: Config.soniqueBarHost)
+                    // For now, fall through to voicebox
+                    fallthrough
 
                 case .voicebox:
                     ttsProvider = VoiceBoxTTS(soniqueBarHost: Config.soniqueBarHost)
