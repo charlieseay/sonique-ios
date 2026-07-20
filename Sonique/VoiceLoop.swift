@@ -42,7 +42,7 @@ class VoiceLoop: ObservableObject {
         case ondevice  // Apple AVSpeechSynthesizer (free fallback)
     }
 
-    private var ttsMode: TTSMode = .voicebox  // VoiceBox via SoniqueBar (best quality)
+    private var ttsMode: TTSMode = .elevenlabs  // ElevenLabs direct (no SoniqueBar hop)
 
     // Back-compat for ContentView
     var speechRecognition: VoiceSession? { session }
@@ -382,17 +382,9 @@ class VoiceLoop: ObservableObject {
                 }
             }
         } else {
-            // VoiceBox failed - fall back to on-device SimpleTTS
-            FileTracer.log("[loop] ⚠️  VoiceBox fetchPCM returned NIL - falling back to SimpleTTS")
-            let fallbackTTS = SimpleTTS()
-            await withCheckedContinuation { continuation in
-                Task {
-                    await fallbackTTS.speak(clean) {
-                        FileTracer.log("[loop] SimpleTTS fallback playback complete")
-                        continuation.resume()
-                    }
-                }
-            }
+            // No fallback - TTS failed
+            FileTracer.log("[loop] ❌ TTS fetchPCM returned NIL - no audio will play")
+            // Log error but don't fall back to Apple Voice
         }
 
         FileTracer.log("[loop] ===== SPEAK SENTENCE END =====")

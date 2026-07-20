@@ -17,7 +17,14 @@ enum Config {
             throw ConfigError.invalidURL
         }
 
-        let (data, response) = try await URLSession.shared.data(from: url)
+        // Create request with auth token from iCloud preferences
+        var request = URLRequest(url: url)
+        let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
+        if let token = authToken, !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        let (data, response) = try await URLSession.shared.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               httpResponse.statusCode == 200 else {
