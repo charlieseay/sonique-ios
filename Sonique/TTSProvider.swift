@@ -67,7 +67,13 @@ class VoiceBoxTTS: NSObject, TTSProvider {
             let contentType = http.value(forHTTPHeaderField: "Content-Type") ?? "unknown"
             FileTracer.log("[voicebox] received \(data.count) bytes \(contentType)")
 
-            // Convert audio to PCM - handles both MP3 and AIFF
+            // Server now returns PCM directly - no conversion needed!
+            if contentType.contains("audio/pcm") {
+                FileTracer.log("[voicebox] ✓ Received PCM directly from server (\(data.count) bytes)")
+                return data
+            }
+
+            // Legacy fallback: convert MP3/AIFF to PCM if server still returns it
             return convertAudioToPCM(data, contentType: contentType)
 
         } catch {
