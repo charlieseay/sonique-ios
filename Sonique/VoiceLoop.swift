@@ -36,6 +36,17 @@ class VoiceLoop: ObservableObject {
     private var sessionObservation: AnyCancellable?
     private var ttsProvider: TTSProvider?
 
+    /// Interruption predictor for distinguishing real interruptions from backchannels
+    private let interruptionPredictor = InterruptionPredictor()
+
+    /// Load interruption threshold from AppStorage
+    private func syncInterruptionThreshold() {
+        let threshold = UserDefaults.standard.float(forKey: "interruption_threshold")
+        if threshold > 0 {
+            interruptionPredictor.setThreshold(threshold)
+        }
+    }
+
     enum TTSMode: String {
         case kokoro  // Kokoro native Swift TTS via SoniqueBar (on-device, free, fast)
         case voicebox  // VoiceBox/Kokoro via SoniqueBar (deprecated - use .kokoro)
@@ -91,6 +102,7 @@ class VoiceLoop: ObservableObject {
         do {
             FileTracer.reset()
             FileTracer.log("=== LISTEN START (unified engine) ===")
+            syncInterruptionThreshold()  // Load settings threshold
             try vs.configure()
             try vs.start()
             isActive = true
@@ -141,8 +153,23 @@ class VoiceLoop: ObservableObject {
                 continue
             }
 
-            // Barge-in: any new speech while processing cancels the current response.
+            // Barge-in: check if detected speech is a real interruption vs backchannel
             if isProcessing {
+                // Calculate interruption score using prosodic features
+                let duration = 1.0  // TODO: Track actual speech duration from VoiceSession
+                let shouldInterrupt = interruptionPredictor.shouldInterrupt(
+                    transcript: transcript,
+                    duration: duration,
+                    energyLevel: nil,  // TODO: Extract from audio buffer
+                    pitchVariation: nil,  // TODO: Extract from audio buffer
+                    isQuinnSpeaking: true
+                )
+
+                if !shouldInterrupt {
+                    RemoteLogger.log("[loop] backchannel detected: '\(transcript)' (score below threshold) - ignoring")
+                    continue
+                }
+
                 let lower = transcript.lowercased()
                 RemoteLogger.log("[loop] BARGE-IN DETECTED: '\(transcript)' (isProcessing=true) - cancelling task")
                 processingTask?.cancel()

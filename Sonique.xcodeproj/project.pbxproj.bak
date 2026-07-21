@@ -277,7 +277,6 @@
 				FD354B38A1B5A35514512A28 /* ContentView.swift in Sources */,
 				EAC245018BD75F904B3DFA71 /* VoiceSelector.swift in Sources */,
 				91314C8980E6AC4B72F59493 /* VoiceLoop.swift in Sources */,
-				98765432F0E1D2C3B4A59687 /* InterruptionPredictor.swift in Sources */,
 				D1864FD5AF3143B3F0797457 /* HTTPClient.swift in Sources */,
 				A838F9E82DF44648B93F486C /* RemoteLogger.swift in Sources */,
 				1C140EA451B919D9298BE32E /* NativeCapabilities.swift in Sources */,

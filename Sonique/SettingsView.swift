@@ -4,6 +4,7 @@ struct SettingsView: View {
     @AppStorage("serverURL") private var serverURL = ""
     @AppStorage("useTailscale") private var useTailscale = false
     @AppStorage("tts_provider") private var ttsProvider = "elevenlabs"
+    @AppStorage("interruption_threshold") private var interruptionThreshold: Double = 0.4
 
     @Environment(\.dismiss) private var dismiss
 
@@ -48,6 +49,32 @@ struct SettingsView: View {
                 Section(header: Text("Voice")) {
                     LabeledContent("Current Voice", value: Config.selectedVoiceName)
                     Text("Change the voice from the waveform button on the main screen.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Section(header: Text("Interruption Sensitivity")) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Threshold: \(interruptionThreshold, specifier: "%.2f")")
+                                .font(.subheadline)
+                            Spacer()
+                        }
+
+                        Slider(value: $interruptionThreshold, in: 0.0...1.0, step: 0.05)
+
+                        HStack {
+                            Text("Lenient")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text("Aggressive")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    Text("Lower = more backchannels ignored (\"mm-hmm\" won't interrupt). Higher = more sensitive to any speech.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
