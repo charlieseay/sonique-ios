@@ -281,8 +281,9 @@ struct HTTPClient {
                 return false
             }
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  json["status"] as? String == "ok" else {
-                FileTracer.log("[conn] Health check failed: invalid JSON or status != ok")
+                  let status = json["status"] as? String,
+                  status == "ready" || status == "ok" else {
+                FileTracer.log("[conn] Health check failed: invalid JSON or status not ready/ok")
                 return false
             }
             return true

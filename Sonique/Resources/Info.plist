@@ -19,7 +19,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
-	<string>177</string>
+	<string>178</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -28,6 +28,13 @@
 		<true/>
 		<key>NSExceptionDomains</key>
 		<dict>
+			<key>192.168.68.78</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
 			<key>100.122.13.35</key>
 			<dict>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
