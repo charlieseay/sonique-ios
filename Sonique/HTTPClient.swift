@@ -97,6 +97,123 @@ struct HTTPClient {
         return responseText
     }
 
+    static func sendCommandWithImage(_ text: String, imageBase64: String) -> AsyncThrowingStream<StreamChunk, Error> {
+        AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    let url = URL(string: "\(HTTPClient.activeBaseURL)/command/stream")!
+                    var request = URLRequest(url: url)
+                    request.httpMethod = "POST"
+                    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+                    #if os(iOS)
+                    await MainActor.run {
+                        UIDevice.current.isBatteryMonitoringEnabled = true
+                    }
+                    let batteryLevel = await MainActor.run { Int(UIDevice.current.batteryLevel * 100) }
+                    let batteryState = await MainActor.run { UIDevice.current.batteryState }
+                    let isCharging = (batteryState == .charging || batteryState == .full)
+
+                    let profile = await MainActor.run { AssistantProfile.shared }
+                    let payload: [String: Any] = [
+                        "text": text,
+                        "image": imageBase64,  // Base64 encoded image
+                        "device": [
+                            "battery_percent": batteryLevel,
+                            "is_charging": isCharging
+                        ],
+                        "identity": [
+                            "name": await profile.name,
+                            "wake_word": await profile.wakeWord,
+                            "skills": await profile.skills
+                        ]
+                    ]
+                    #else
+                    let profile = await MainActor.run { AssistantProfile.shared }
+                    let payload: [String: Any] = [
+                        "text": text,
+                        "image": imageBase64,
+                        "identity": [
+                            "name": await profile.name,
+                            "wake_word": await profile.wakeWord,
+                            "skills": await profile.skills
+                        ]
+                    ]
+                    #endif
+
+                    let body = try JSONSerialization.data(withJSONObject: payload)
+                    request.httpBody = body
+
+                    let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
+                    addAuthHeaders(to: &request, authToken: authToken, body: body)
+                    request.timeoutInterval = 90
+
+                    let config = URLSessionConfiguration.default
+                    config.timeoutIntervalForRequest = 90
+                    config.timeoutIntervalForResource = 120
+                    let session = URLSession(configuration: config)
+
+                    let (bytes, response) = try await session.bytes(for: request)
+                    guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                        continuation.finish(throwing: HTTPError.badResponse)
+                        return
+                    }
+
+                    var lastDataTime = Date()
+                    let watchdogTask = Task {
+                        while !Task.isCancelled {
+                            try? await Task.sleep(nanoseconds: 5_000_000_000)
+                            let elapsed = Date().timeIntervalSince(lastDataTime)
+                            if elapsed > 30 {
+                                continuation.finish(throwing: HTTPError.streamTimeout)
+                                return
+                            }
+                        }
+                    }
+
+                    var chunkBuffer = [UInt8]()
+                    chunkBuffer.reserveCapacity(512)
+
+                    for try await byte in bytes {
+                        lastDataTime = Date()
+
+                        if byte == UInt8(ascii: "\n") {
+                            if !chunkBuffer.isEmpty {
+                                if let line = String(bytes: chunkBuffer, encoding: .utf8) {
+                                    let trimmed = line.trimmingCharacters(in: .whitespaces)
+                                    chunkBuffer.removeAll(keepingCapacity: true)
+                                    guard !trimmed.isEmpty else { continue }
+
+                                    guard let data = trimmed.data(using: .utf8),
+                                          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                                        continue
+                                    }
+
+                                    if json["done"] as? Bool == true {
+                                        watchdogTask.cancel()
+                                        continuation.finish()
+                                        return
+                                    }
+
+                                    if let chunk = json["chunk"] as? String {
+                                        let isFinal = json["is_final"] as? Bool ?? false
+                                        continuation.yield(StreamChunk(text: chunk, isFinal: isFinal))
+                                    }
+                                }
+                            }
+                        } else {
+                            chunkBuffer.append(byte)
+                        }
+                    }
+                    watchdogTask.cancel()
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+        }
+    }
+
     static func sendCommandStreaming(_ text: String) -> AsyncThrowingStream<StreamChunk, Error> {
         AsyncThrowingStream { continuation in
             Task {

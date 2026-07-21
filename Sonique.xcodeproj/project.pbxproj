@@ -10,12 +10,14 @@
 		07B93A2F0FEA4AD19B86D13D /* KokoroTTS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C928175E672279B0EF11D02 /* KokoroTTS.swift */; };
 		0F043EAB95B04B37A67616F0 /* WakeWordMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08D9A67C2CBC4419B88B3169 /* WakeWordMatcher.swift */; };
 		1C140EA451B919D9298BE32E /* NativeCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62F4F3D0ECD71D878D9DA058 /* NativeCapabilities.swift */; };
+		1F086CC3122C84ACFCF8A7C5 /* ProactiveAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D423C09E52A27BC733FD0C7 /* ProactiveAgent.swift */; };
 		23DA4ACE8CFA741DF5BD9C1B /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CE437189C0E4421DAF830B /* Config.swift */; };
 		307D709226B85346EDA7F35C /* SimpleTTS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78E343F937973D5F45310576 /* SimpleTTS.swift */; };
 		3AD4BE75784BB13A70577E66 /* DeviceContextPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A6EDC914A658CBC3E575AB7 /* DeviceContextPublisher.swift */; };
 		3F73A4442FCE86A90057ED63 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F73A4432FCE86A90057ED63 /* SettingsView.swift */; };
 		3F8E06692F99DA5C00F7E36D /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 3F8E06682F99DA5C00F7E36D /* GoogleMobileAds */; };
 		3FA000000000000000000017 /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3FA000000000000000000016 /* LiveKit */; };
+		53D6F717889645D79E14FFC2 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA179CA93C46680826017095 /* ChatView.swift */; };
 		5A8627754ECF4312B7FC7B61 /* NotificationNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EADEBB50BE145DC80783D10 /* NotificationNames.swift */; };
 		78B954F685307573B5EB423A /* DeviceRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96DDA90423EADA4B1E17B4EA /* DeviceRegistration.swift */; };
 		865B1979F6D2564DBD38C8C0 /* CapabilityExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE57C6A78015FFAD8828EFF9 /* CapabilityExecutor.swift */; };
@@ -66,6 +68,7 @@
 		62F4F3D0ECD71D878D9DA058 /* NativeCapabilities.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NativeCapabilities.swift; path = Sonique/NativeCapabilities.swift; sourceTree = "<group>"; };
 		671A40B7929AC4785513019C /* HTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HTTPClient.swift; path = Sonique/HTTPClient.swift; sourceTree = SOURCE_ROOT; };
 		78E343F937973D5F45310576 /* SimpleTTS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/SimpleTTS.swift; sourceTree = "<group>"; };
+		8D423C09E52A27BC733FD0C7 /* ProactiveAgent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProactiveAgent.swift; path = Sonique/ProactiveAgent.swift; sourceTree = SOURCE_ROOT; };
 		96DDA90423EADA4B1E17B4EA /* DeviceRegistration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Sonique/DeviceRegistration.swift; sourceTree = SOURCE_ROOT; };
 		A1B2C3D4E5F6789012345678 /* InterruptionPredictor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InterruptionPredictor.swift; path = Sonique/Prediction/InterruptionPredictor.swift; sourceTree = SOURCE_ROOT; };
 		A793446A9BBB7A765178A683 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = Sonique/ContentView.swift; sourceTree = SOURCE_ROOT; };
@@ -84,6 +87,7 @@
 		D8F04A6A893C92D026BF8A2F /* VoiceLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VoiceLoop.swift; path = Sonique/VoiceLoop.swift; sourceTree = SOURCE_ROOT; };
 		DBE6BB31F45A485BAF13A5ED /* RemoteLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/RemoteLogger.swift; sourceTree = "<group>"; };
 		E5D54884BF2700547B33C65E /* SoniqueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SoniqueApp.swift; path = Sonique/SoniqueApp.swift; sourceTree = SOURCE_ROOT; };
+		EA179CA93C46680826017095 /* ChatView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ChatView.swift; path = Sonique/ChatView.swift; sourceTree = SOURCE_ROOT; };
 		EE57C6A78015FFAD8828EFF9 /* CapabilityExecutor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CapabilityExecutor.swift; path = Sonique/CapabilityExecutor.swift; sourceTree = "<group>"; };
 		FF1A00000000000000ASSET0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Sonique/Resources/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 		TST000000000000000010A /* SoniqueTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SoniqueTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -159,6 +163,8 @@
 				0C928175E672279B0EF11D02 /* KokoroTTS.swift */,
 				2A23AB4D69778C0A2A9DD563 /* BonjourDiscovery.swift */,
 				96DDA90423EADA4B1E17B4EA /* DeviceRegistration.swift */,
+				EA179CA93C46680826017095 /* ChatView.swift */,
+				8D423C09E52A27BC733FD0C7 /* ProactiveAgent.swift */,
 			);
 			name = Sonique;
 			sourceTree = "<group>";
@@ -291,6 +297,8 @@
 				5A8627754ECF4312B7FC7B61 /* NotificationNames.swift in Sources */,
 				0F043EAB95B04B37A67616F0 /* WakeWordMatcher.swift in Sources */,
 				78B954F685307573B5EB423A /* DeviceRegistration.swift in Sources */,
+				53D6F717889645D79E14FFC2 /* ChatView.swift in Sources */,
+				1F086CC3122C84ACFCF8A7C5 /* ProactiveAgent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -317,7 +325,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 179;
+				CURRENT_PROJECT_VERSION = 184;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -346,7 +354,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 179;
+				CURRENT_PROJECT_VERSION = 184;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -430,7 +438,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 179;
+				CURRENT_PROJECT_VERSION = 184;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -449,7 +457,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 179;
+				CURRENT_PROJECT_VERSION = 184;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;

@@ -43,6 +43,7 @@ class VoiceBoxTTS: NSObject, TTSProvider {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 30  // ElevenLabs API can take 5-15s
 
         // Add bearer token authentication
         let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }

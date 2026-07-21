@@ -14,6 +14,11 @@ class VoiceLoop: ObservableObject {
     @Published var error: String?
     @Published var isInitializing = false
     @Published var isProcessing = false
+    @Published var isSpeaking = false  // True when TTS audio is playing
+
+    // Feature #3: Post-interruption state
+    private var interruptedResponse: String?  // Store response that was interrupted
+    private var interruptedAt: Date?  // When interruption happened
     @Published var isBargeInActive = false
     @Published var isAwake = false   // true = responding to all speech; false = needs wake word
     @Published var artifactURL: URL? = nil   // ephemeral image to display (Snapchat-style)
@@ -54,7 +59,10 @@ class VoiceLoop: ObservableObject {
         case ondevice  // Apple AVSpeechSynthesizer (free fallback)
     }
 
-    private var ttsMode: TTSMode = .kokoro  // On-device Kokoro TTS (native, free, fast)
+    private var ttsMode: TTSMode {
+        let stored = UserDefaults.standard.string(forKey: "tts_provider") ?? "elevenlabs"
+        return TTSMode(rawValue: stored) ?? .elevenlabs
+    }
 
     // Back-compat for ContentView
     var speechRecognition: VoiceSession? { session }
@@ -132,9 +140,10 @@ class VoiceLoop: ObservableObject {
 
     /// Stop speaking immediately and resume listening (barge-in / interrupt)
     func stopSpeaking() {
-        guard isProcessing else { return }
+        guard isProcessing || isSpeaking else { return }
         ttsProvider?.stop()      // Stop TTS playback immediately
         isProcessing = false
+        isSpeaking = false
         partialResponse = ""
         RemoteLogger.log("[vs] interrupted by user - playback stopped, resumed listening")
     }
@@ -154,7 +163,8 @@ class VoiceLoop: ObservableObject {
             }
 
             // Barge-in: check if detected speech is a real interruption vs backchannel
-            if isProcessing {
+            // Check both isProcessing (LLM streaming) and isSpeaking (TTS playback)
+            if isProcessing || isSpeaking {
                 // Calculate interruption score using prosodic features
                 let duration = 1.0  // TODO: Track actual speech duration from VoiceSession
                 let shouldInterrupt = interruptionPredictor.shouldInterrupt(
@@ -172,6 +182,14 @@ class VoiceLoop: ObservableObject {
 
                 let lower = transcript.lowercased()
                 RemoteLogger.log("[loop] BARGE-IN DETECTED: '\(transcript)' (isProcessing=true) - cancelling task")
+
+                // Feature #3: Store interrupted state before cancelling
+                if !partialResponse.isEmpty {
+                    interruptedResponse = partialResponse
+                    interruptedAt = Date()
+                    RemoteLogger.log("[loop] Stored interrupted response (\(partialResponse.count) chars)")
+                }
+
                 processingTask?.cancel()
                 processingTask = nil
                 stopSpeaking()
@@ -222,9 +240,21 @@ class VoiceLoop: ObservableObject {
             partialResponse = ""
             debugLog.append("You: \(request)")
 
+            // Feature #3: Prepend interrupted context if recent (within 30 seconds)
+            var contextualRequest = request
+            if let interrupted = interruptedResponse,
+               let interruptTime = interruptedAt,
+               Date().timeIntervalSince(interruptTime) < 30 {
+                contextualRequest = "[INTERRUPTED: I was saying '\(interrupted.prefix(100))...' when interrupted] \(request)"
+                RemoteLogger.log("[loop] Adding interrupted context to request")
+                // Clear stored interruption after using it
+                interruptedResponse = nil
+                interruptedAt = nil
+            }
+
             // Create cancellable task for processing
             processingTask = Task {
-                try await processAndSpeak(request)
+                try await processAndSpeak(contextualRequest)
             }
 
             do {
@@ -401,11 +431,13 @@ class VoiceLoop: ObservableObject {
 
         // VoiceBox/ElevenLabs: fetch PCM and play through VoiceSession (routes to Bluetooth)
         if let pcmData = await tts.fetchPCM(clean) {
+            isSpeaking = true  // Mark as speaking before playback
             FileTracer.log("[loop] ✓✓✓ GOT PCM: \(pcmData.count) bytes")
             FileTracer.log("[loop] Playing via VoiceSession...")
             await withCheckedContinuation { continuation in
                 vs.playPCM(data: pcmData) {
                     FileTracer.log("[loop] ✓ Playback complete")
+                    self.isSpeaking = false  // Clear speaking flag when done
                     continuation.resume()
                 }
             }
@@ -464,17 +496,10 @@ class VoiceLoop: ObservableObject {
                     FileTracer.log("[conn] VoiceBox TTS initialized")
 
                 case .elevenlabs:
-                    do {
-                        let apiKey = try await Config.getAPIKey()
-                        ttsProvider = ElevenLabsTTS(apiKey: apiKey)
-                        debugLog.append("TTS ready (ElevenLabs)")
-                        FileTracer.log("[conn] ElevenLabs TTS initialized")
-                    } catch {
-                        // Fall back to on-device if API key missing
-                        FileTracer.log("[conn] ElevenLabs API key missing, falling back to on-device")
-                        ttsProvider = SimpleTTS()
-                        debugLog.append("TTS ready (on-device fallback)")
-                    }
+                    // Route through SoniqueBar /synthesize which uses ElevenLabs on the backend
+                    ttsProvider = VoiceBoxTTS(soniqueBarHost: Config.soniqueBarHost)
+                    debugLog.append("TTS ready (ElevenLabs via SoniqueBar)")
+                    FileTracer.log("[conn] ElevenLabs TTS initialized (via SoniqueBar)")
 
                 case .ondevice:
                     ttsProvider = SimpleTTS()

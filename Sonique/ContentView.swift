@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var showAssistantSettings = false
     @State private var showSettings = false
     @State private var showReportSheet = false
+    @State private var showChat = false
     @State private var selectedVoiceID = Config.selectedVoiceID
     @State private var apiKey = ""
 
@@ -58,6 +59,17 @@ struct ContentView: View {
                     .accessibilityHint("Rename your assistant or set a photo")
 
                     Spacer()
+
+                    // Chat button
+                    Button(action: { showChat = true }) {
+                        Image(systemName: "bubble.left.and.bubble.right")
+                            .font(.title3)
+                            .foregroundColor(.white.opacity(0.6))
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Chat")
 
                     // Voice picker
                     Button(action: { showVoicePicker = true }) {
@@ -248,6 +260,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showAssistantSettings) {
             AssistantSettingsView()
+        }
+        .sheet(isPresented: $showChat) {
+            ChatView(voiceLoop: voiceLoop)
         }
         .sheet(isPresented: $showReportSheet) {
             DiagnosticsReportView(connectionOK: voiceLoop.connectionOK,

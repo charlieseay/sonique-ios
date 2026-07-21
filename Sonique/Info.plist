@@ -41,12 +41,14 @@
 	<array>
 		<string>_sonique._tcp</string>
 	</array>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Quinn needs access to your calendar to proactively notify you about upcoming events</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Sonique accesses your calendar to show upcoming events and create new calendar entries via voice commands.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Sonique uses your location to provide accurate weather information when you ask about the weather.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Sonique needs local network access to discover your SoniqueBar backend on your home network.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Sonique uses your location to provide accurate weather information when you ask about the weather.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Sonique uses your microphone to capture your voice so you can issue voice commands to control smart home devices, ask questions, and manage tasks hands-free.</string>
 	<key>NSRemindersUsageDescription</key>

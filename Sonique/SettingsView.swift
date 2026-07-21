@@ -110,6 +110,47 @@ struct SettingsView: View {
                     }
                 }
 
+                Section(header: Text("Proactive Mode (Feature #4)")) {
+                    Toggle("Calendar Events", isOn: Binding(
+                        get: { ProactiveAgent.shared.calendarEnabled },
+                        set: { enabled in
+                            Task {
+                                if enabled {
+                                    await ProactiveAgent.shared.enableCalendar()
+                                } else {
+                                    ProactiveAgent.shared.disableCalendar()
+                                }
+                            }
+                        }
+                    ))
+
+                    Toggle("Weather Updates", isOn: Binding(
+                        get: { ProactiveAgent.shared.weatherEnabled },
+                        set: { enabled in
+                            if enabled {
+                                ProactiveAgent.shared.enableWeather()
+                            } else {
+                                ProactiveAgent.shared.disableWeather()
+                            }
+                        }
+                    ))
+
+                    Toggle("Task Reminders", isOn: Binding(
+                        get: { ProactiveAgent.shared.tasksEnabled },
+                        set: { enabled in
+                            if enabled {
+                                ProactiveAgent.shared.enableTasks()
+                            } else {
+                                ProactiveAgent.shared.disableTasks()
+                            }
+                        }
+                    ))
+
+                    Text("Quinn will proactively notify you about upcoming events")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
                 Section(header: Text("About")) {
                     LabeledContent("App Version", value: appVersion)
                     LabeledContent("TTS Provider", value: ttsProvider == "kokoro" ? "Kokoro (Local)" : "ElevenLabs")
