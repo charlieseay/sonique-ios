@@ -270,6 +270,13 @@ struct HTTPClient {
         guard let url = URL(string: "\(base)/health") else { return false }
         var req = URLRequest(url: url)
         req.timeoutInterval = 10   // Longer timeout for Tailscale over cellular
+
+        // Add auth token to health check (required by SoniqueBar)
+        let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
+        if let token = authToken, !token.isEmpty {
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
         do {
             let (data, response) = try await URLSession.shared.data(for: req)
             guard let http = response as? HTTPURLResponse else {

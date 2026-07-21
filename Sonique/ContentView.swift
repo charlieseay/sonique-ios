@@ -223,6 +223,11 @@ struct ContentView: View {
         .animation(.easeInOut(duration: 0.2), value: voiceLoop.isProcessing)
         .animation(.easeInOut(duration: 0.2), value: voiceLoop.partialResponse)
         .task {
+            // Register device and get auth token if needed
+            if let token = try? await DeviceRegistration.registerIfNeeded() {
+                print("[App] Device registered, token: \(token.prefix(8))...")
+            }
+
             isHealthy = await voiceLoop.checkConnection()
             apiKey = (try? await Config.getAPIKey()) ?? ""
             await maybeAutoStart()

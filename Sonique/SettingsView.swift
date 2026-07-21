@@ -6,6 +6,7 @@ struct SettingsView: View {
     @AppStorage("tts_provider") private var ttsProvider = "elevenlabs"
     @AppStorage("interruption_threshold") private var interruptionThreshold: Double = 0.4
 
+    @State private var connectionTestResult: String?
     @Environment(\.dismiss) private var dismiss
 
     private var appVersion: String {
@@ -42,6 +43,18 @@ struct SettingsView: View {
                         .keyboardType(.URL)
 
                     Text("Default: \(Config.defaultLANURL) (LAN) or \(Config.defaultTailscaleURL) (Tailscale)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    TextField("Auth Token", text: Binding(
+                        get: { UserDefaults.standard.string(forKey: "authToken") ?? "" },
+                        set: { UserDefaults.standard.set($0, forKey: "authToken") }
+                    ))
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .font(.system(.body, design: .monospaced))
+
+                    Text("Required for SoniqueBar authentication. Default: 5FA5EE09-442D-4969-B091-9AC331E1C39C")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -107,6 +120,12 @@ struct SettingsView: View {
                     Button(action: testConnection) {
                         Label("Test Connection", systemImage: "network")
                     }
+
+                    if let result = connectionTestResult {
+                        Text(result)
+                            .font(.caption)
+                            .foregroundColor(result.hasPrefix("✓") ? .green : .red)
+                    }
                 }
             }
             .navigationTitle("Settings")
@@ -124,19 +143,34 @@ struct SettingsView: View {
     private func testConnection() {
         Task {
             do {
-                guard let url = URL(string: "\(serverURL)/health") else { return }
-
-                let (data, response) = try await URLSession.shared.data(from: url)
-
-                guard let httpResponse = response as? HTTPURLResponse,
-                      httpResponse.statusCode == 200 else {
-                    print("[Settings] Connection test failed: bad status")
+                let testURL = serverURL.isEmpty ? Config.defaultLANURL : serverURL
+                guard let url = URL(string: "\(testURL)/health") else {
+                    await MainActor.run { connectionTestResult = "Invalid URL: \(testURL)" }
                     return
                 }
 
-                print("[Settings] Connection test succeeded")
+                let (data, response) = try await URLSession.shared.data(from: url)
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    await MainActor.run { connectionTestResult = "Not an HTTP response" }
+                    return
+                }
+
+                guard httpResponse.statusCode == 200 else {
+                    await MainActor.run { connectionTestResult = "Failed: HTTP \(httpResponse.statusCode)" }
+                    return
+                }
+
+                // Check JSON
+                guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let status = json["status"] as? String else {
+                    await MainActor.run { connectionTestResult = "Invalid JSON response" }
+                    return
+                }
+
+                await MainActor.run { connectionTestResult = "✓ Connected! Status: \(status)" }
             } catch {
-                print("[Settings] Connection test failed: \(error)")
+                await MainActor.run { connectionTestResult = "Error: \(error.localizedDescription)" }
             }
         }
     }
