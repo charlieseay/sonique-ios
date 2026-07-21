@@ -78,7 +78,7 @@
 		AC1B00100000000000VS01A /* VoiceSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/VoiceSession.swift; sourceTree = "<group>"; };
 		CDEE4E65BD1368173EB33E93 /* VoiceSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VoiceSelector.swift; path = Sonique/VoiceSelector.swift; sourceTree = SOURCE_ROOT; };
 		D8F04A6A893C92D026BF8A2F /* VoiceLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VoiceLoop.swift; path = Sonique/VoiceLoop.swift; sourceTree = SOURCE_ROOT; };
-		A1B2C3D4E5F6789012345678 /* InterruptionPredictor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterruptionPredictor.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6789012345678 /* InterruptionPredictor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InterruptionPredictor.swift; path = Sonique/Prediction/InterruptionPredictor.swift; sourceTree = SOURCE_ROOT; };
 		DBE6BB31F45A485BAF13A5ED /* RemoteLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/RemoteLogger.swift; sourceTree = "<group>"; };
 		E5D54884BF2700547B33C65E /* SoniqueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SoniqueApp.swift; path = Sonique/SoniqueApp.swift; sourceTree = SOURCE_ROOT; };
 		EE57C6A78015FFAD8828EFF9 /* CapabilityExecutor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CapabilityExecutor.swift; path = Sonique/CapabilityExecutor.swift; sourceTree = "<group>"; };
