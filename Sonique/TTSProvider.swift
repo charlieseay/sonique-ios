@@ -2,6 +2,7 @@ import Foundation
 import AVFoundation
 import CoreMedia
 import Combine
+import CryptoKit
 
 /// TTS provider protocol - supports multiple backends
 protocol TTSProvider {
@@ -21,8 +22,8 @@ class VoiceBoxTTS: NSObject, TTSProvider {
     }
 
     func speak(_ text: String, completion: @escaping () -> Void) async {
-        // Not used - VoiceLoop calls fetchPCM() instead
-        completion()
+        // Unused protocol method - VoiceLoop uses fetchPCM() only
+        fatalError("VoiceBoxTTS.speak() should not be called; use fetchPCM() instead")
     }
 
     func fetchPCM(_ text: String) async -> Data? {
@@ -55,7 +56,17 @@ class VoiceBoxTTS: NSObject, TTSProvider {
             "voice": "default"
         ]
 
-        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+        guard let body = try? JSONSerialization.data(withJSONObject: payload) else {
+            FileTracer.log("[voicebox] Failed to serialize payload")
+            return nil
+        }
+        request.httpBody = body
+
+        // Add request signature for integrity check
+        if let authToken = authToken, !authToken.isEmpty,
+           let signature = signRequest(body, with: authToken) {
+            request.setValue(signature, forHTTPHeaderField: "X-Request-Signature")
+        }
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -180,6 +191,12 @@ class VoiceBoxTTS: NSObject, TTSProvider {
 
     func stop() {
         // Not used - VoiceSession handles stopping
+    }
+
+    private func signRequest(_ body: Data, with authToken: String) -> String? {
+        guard let keyData = authToken.data(using: .utf8) else { return nil }
+        let signature = HMAC<SHA256>.authenticationCode(for: body, using: SymmetricKey(data: keyData))
+        return Data(signature).base64EncodedString()
     }
 }
 

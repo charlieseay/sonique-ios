@@ -138,13 +138,15 @@ class VoiceSession: NSObject, ObservableObject {
         let format = input.outputFormat(forBus: 0)
         input.removeTap(onBus: 0)
         do {
-            input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
+            // Use 4096-byte buffer to reduce callback frequency (fewer interrupts, better battery)
+            // At 16kHz mono 16-bit: 1024 bytes = 32ms, 4096 bytes = 128ms intervals
+            input.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
                 // Always feed the recognizer - AEC handles echo cancellation.
                 // This allows barge-in commands like "stop" to be heard while speaking.
                 guard let self else { return }
                 self.request?.append(buffer)
             }
-            FileTracer.log("[vs] tap installed, recognition active")
+            FileTracer.log("[vs] tap installed (4096-byte buffer), recognition active")
         } catch {
             FileTracer.log("[vs] ERROR: installTap failed: \(error.localizedDescription)")
             return

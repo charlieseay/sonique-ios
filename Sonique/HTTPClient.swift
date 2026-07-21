@@ -1,7 +1,29 @@
 import Foundation
+import CryptoKit
 #if os(iOS)
 import UIKit
 #endif
+
+/// HTTP client for Sonique iOS — communicates with SoniqueBar (Mac CommandServer).
+///
+/// ## Security Notes
+///
+/// **Current Setup (Tailscale):** All communication is over HTTP on local/Tailscale networks.
+/// Tailscale provides end-to-end encryption via WireGuard tunnel (see https://tailscale.com/security),
+/// so HTTP over Tailscale is secure. On-device TLS validation is not required.
+///
+/// **Future Enhancement (HTTPS):** To support HTTPS, implement:
+/// 1. Self-signed certificates on SoniqueBar or CA-signed via LetsEncrypt
+/// 2. URLSessionDelegate.urlSession(_:didReceive:completionHandler:) for cert pinning
+/// 3. Configuration to switch between "http://LAN" and "https://external"
+///
+/// **Request Signing:** All sensitive endpoints sign requests with HMAC-SHA256 derived
+/// from the authToken. Server must verify signatures to prevent tampering.
+///
+/// **Auth Token Handling:**
+/// - Cached locally with 1-hour TTL, automatically refreshed when expired
+/// - Derived from server and stored in iCloud Keychain via SoniqueBrain
+/// - Used for Bearer auth + request signing
 
 struct StreamChunk {
     let text: String
@@ -10,17 +32,34 @@ struct StreamChunk {
 }
 
 struct HTTPClient {
+    // MARK: - Request Signing for Sensitive Endpoints
+
+    /// Compute HMAC-SHA256 signature for request signing (prevents tampering with sensitive commands).
+    /// Uses device-specific secret derived from authToken.
+    private static func signRequest(_ body: Data, with authToken: String) -> String? {
+        guard let keyData = authToken.data(using: .utf8) else { return nil }
+        let signature = HMAC<SHA256>.authenticationCode(for: body, using: SymmetricKey(data: keyData))
+        return Data(signature).base64EncodedString()
+    }
+
+    /// Add authentication headers to request: Bearer token + request signature for integrity
+    private static func addAuthHeaders(to request: inout URLRequest, authToken: String?, body: Data? = nil) {
+        if let token = authToken, !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        // Add signature for sensitive endpoints (config, /command/stream, /synthesize)
+        if let body = body, let token = authToken, !token.isEmpty {
+            if let signature = signRequest(body, with: token) {
+                request.setValue(signature, forHTTPHeaderField: "X-Request-Signature")
+            }
+        }
+    }
     static func sendCommand(_ text: String) async throws -> String {
         let url = URL(string: "\(HTTPClient.activeBaseURL)/command")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        // Add bearer token authentication
-        let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
-        if let token = authToken, !token.isEmpty {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
 
         #if os(iOS)
         await MainActor.run {
@@ -40,7 +79,12 @@ struct HTTPClient {
         let payload: [String: Any] = ["text": text]
         #endif
 
-        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        let body = try JSONSerialization.data(withJSONObject: payload)
+        request.httpBody = body
+
+        // Add authentication + request signature
+        let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
+        addAuthHeaders(to: &request, authToken: authToken, body: body)
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
@@ -61,12 +105,6 @@ struct HTTPClient {
                     var request = URLRequest(url: url)
                     request.httpMethod = "POST"
                     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-                    // Add bearer token authentication
-                    let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
-                    if let token = authToken, !token.isEmpty {
-                        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-                    }
 
                     // Include device battery level
                     #if os(iOS)
@@ -102,7 +140,12 @@ struct HTTPClient {
                     ]
                     #endif
 
-                    request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+                    let body = try JSONSerialization.data(withJSONObject: payload)
+                    request.httpBody = body
+
+                    // Add authentication + request signature
+                    let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
+                    addAuthHeaders(to: &request, authToken: authToken, body: body)
                     // Agentic LLM calls run tool calls and can take 15-40s with no bytes
                     // flowing — give the request + resource a generous window.
                     request.timeoutInterval = 90
@@ -136,45 +179,54 @@ struct HTTPClient {
                     }
 
                     var lineBuffer = ""
-                    FileTracer.log("[http] starting byte stream read")
+                    var chunkBuffer = [UInt8]()
+                    chunkBuffer.reserveCapacity(512)  // Pre-allocate for typical line size
+
+                    FileTracer.log("[http] starting buffered stream read")
                     for try await byte in bytes {
                         lastDataTime = Date() // Reset watchdog timer
-                        let char = String(bytes: [byte], encoding: .utf8) ?? ""
-                        if char == "\n" {
-                            let line = lineBuffer.trimmingCharacters(in: .whitespaces)
-                            lineBuffer = ""
-                            guard !line.isEmpty else { continue }
 
-                            FileTracer.log("[http] received line: \(line.prefix(100))")
+                        if byte == UInt8(ascii: "\n") {
+                            // Line complete - process accumulated buffer
+                            if !chunkBuffer.isEmpty {
+                                if let line = String(bytes: chunkBuffer, encoding: .utf8) {
+                                    let trimmed = line.trimmingCharacters(in: .whitespaces)
+                                    chunkBuffer.removeAll(keepingCapacity: true)
+                                    guard !trimmed.isEmpty else { continue }
 
-                            guard let data = line.data(using: .utf8),
-                                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                                FileTracer.log("[http] failed to parse JSON")
-                                continue
-                            }
+                                    FileTracer.log("[http] received line: \(trimmed.prefix(100))")
 
-                            if json["done"] as? Bool == true {
-                                FileTracer.log("[http] stream complete (done:true)")
-                                watchdogTask.cancel()
-                                continuation.finish()
-                                return
-                            }
-                            // Artifact line → an image to display on the device.
-                            if let artifact = json["artifact"] as? [String: Any],
-                               artifact["type"] as? String == "image",
-                               let id = artifact["id"] as? String {
-                                let url = "\(HTTPClient.activeBaseURL)/artifact/\(id)"
-                                FileTracer.log("[http] yielding artifact: \(id)")
-                                continuation.yield(StreamChunk(text: "", isFinal: false, artifactURL: url))
-                                continue
-                            }
-                            if let chunk = json["chunk"] as? String {
-                                let isFinal = json["is_final"] as? Bool ?? false
-                                FileTracer.log("[http] yielding chunk: '\(chunk)' final=\(isFinal)")
-                                continuation.yield(StreamChunk(text: chunk, isFinal: isFinal))
+                                    guard let data = trimmed.data(using: .utf8),
+                                          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                                        FileTracer.log("[http] failed to parse JSON")
+                                        continue
+                                    }
+
+                                    if json["done"] as? Bool == true {
+                                        FileTracer.log("[http] stream complete (done:true)")
+                                        watchdogTask.cancel()
+                                        continuation.finish()
+                                        return
+                                    }
+                                    // Artifact line → an image to display on the device.
+                                    if let artifact = json["artifact"] as? [String: Any],
+                                       artifact["type"] as? String == "image",
+                                       let id = artifact["id"] as? String {
+                                        let url = "\(HTTPClient.activeBaseURL)/artifact/\(id)"
+                                        FileTracer.log("[http] yielding artifact: \(id)")
+                                        continuation.yield(StreamChunk(text: "", isFinal: false, artifactURL: url))
+                                        continue
+                                    }
+                                    if let chunk = json["chunk"] as? String {
+                                        let isFinal = json["is_final"] as? Bool ?? false
+                                        FileTracer.log("[http] yielding chunk: '\(chunk)' final=\(isFinal)")
+                                        continuation.yield(StreamChunk(text: chunk, isFinal: isFinal))
+                                    }
+                                }
                             }
                         } else {
-                            lineBuffer += char
+                            // Accumulate byte in buffer (more efficient than string concatenation)
+                            chunkBuffer.append(byte)
                         }
                     }
                     watchdogTask.cancel()

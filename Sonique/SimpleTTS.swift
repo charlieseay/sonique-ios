@@ -57,6 +57,10 @@ class SimpleTTS: NSObject, AVSpeechSynthesizerDelegate, TTSProvider {
         synthesizer.speak(utterance)
     }
 
+    /// SimpleTTS is only used as fallback; all playback goes through VoiceSession.playPCM()
+    /// This method is never called in the normal flow.
+    /// Kept for protocol compliance but routing is: VoiceLoop → PCM → VoiceSession
+
     /// Stop speaking immediately
     func stop() {
         synthesizer.stopSpeaking(at: .immediate)

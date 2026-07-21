@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage("serverURL") private var serverURL = "http://192.168.0.221:8890"
+    @AppStorage("serverURL") private var serverURL = ""
     @AppStorage("useTailscale") private var useTailscale = false
     @AppStorage("tts_provider") private var ttsProvider = "elevenlabs"
 
@@ -11,6 +11,13 @@ struct SettingsView: View {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
         return "\(version) (Build \(build))"
+    }
+
+    private var effectiveServerURL: String {
+        if serverURL.isEmpty {
+            return useTailscale ? Config.tailscaleURL : Config.defaultLANURL
+        }
+        return serverURL
     }
 
     var body: some View {
@@ -33,7 +40,7 @@ struct SettingsView: View {
                         .autocorrectionDisabled()
                         .keyboardType(.URL)
 
-                    Text("Default: http://192.168.0.221:8890 (LAN)")
+                    Text("Default: \(Config.defaultLANURL) (LAN) or \(Config.defaultTailscaleURL) (Tailscale)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

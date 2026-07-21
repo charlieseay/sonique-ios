@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import CryptoKit
 
 /// Kokoro TTS via SoniqueBar - native Swift on-device synthesis
 @MainActor
@@ -12,8 +13,8 @@ class KokoroTTS: NSObject, TTSProvider {
     }
 
     func speak(_ text: String, completion: @escaping () -> Void) async {
-        // Not used - VoiceLoop calls fetchPCM() instead
-        completion()
+        // Unused protocol method - VoiceLoop uses fetchPCM() only
+        fatalError("KokoroTTS.speak() should not be called; use fetchPCM() instead")
     }
 
     func fetchPCM(_ text: String) async -> Data? {
@@ -53,6 +54,12 @@ class KokoroTTS: NSObject, TTSProvider {
         request.httpBody = jsonData
         request.timeoutInterval = 30
 
+        // Add request signature for integrity check
+        if let authToken = authToken, !authToken.isEmpty,
+           let signature = signRequest(jsonData, with: authToken) {
+            request.setValue(signature, forHTTPHeaderField: "X-Request-Signature")
+        }
+
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -91,5 +98,11 @@ class KokoroTTS: NSObject, TTSProvider {
     func stop() {
         // Kokoro synthesis is synchronous on SoniqueBar side
         // iOS playback stop is handled by VoiceSession
+    }
+
+    private func signRequest(_ body: Data, with authToken: String) -> String? {
+        guard let keyData = authToken.data(using: .utf8) else { return nil }
+        let signature = HMAC<SHA256>.authenticationCode(for: body, using: SymmetricKey(data: keyData))
+        return Data(signature).base64EncodedString()
     }
 }

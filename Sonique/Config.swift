@@ -2,13 +2,18 @@ import Foundation
 
 enum Config {
     /// ElevenLabs API key for STT/TTS streaming
-    /// Fetched from SoniqueBar at runtime
+    /// Cached locally with expiration tracking. Fetched from SoniqueBar at runtime.
     private static var _cachedAPIKey: String?
+    private static var _apiKeyFetchTime: Date?
+    private static let apiKeyCacheTTL: TimeInterval = 3600  // 1 hour
 
     static func getAPIKey() async throws -> String {
-        // Return cached key if available
-        if let cached = _cachedAPIKey {
-            return cached
+        // Return cached key if available and not expired
+        if let cached = _cachedAPIKey, let fetchTime = _apiKeyFetchTime {
+            let elapsed = Date().timeIntervalSince(fetchTime)
+            if elapsed < apiKeyCacheTTL {
+                return cached
+            }
         }
 
         // Fetch from SoniqueBar /config endpoint using the active (working) endpoint
@@ -37,7 +42,14 @@ enum Config {
         }
 
         _cachedAPIKey = apiKey
+        _apiKeyFetchTime = Date()
         return apiKey
+    }
+
+    /// Invalidate cached API key to force refetch on next use
+    static func invalidateAPIKey() {
+        _cachedAPIKey = nil
+        _apiKeyFetchTime = nil
     }
 
     enum ConfigError: Error {
@@ -175,11 +187,16 @@ enum Config {
 
     /// Extract host from commandServerURL for TTS client
     static var soniqueBarHost: String {
-        // Extract host from URL like "http://192.168.0.221:8890" -> "192.168.0.221"
-        if let url = URL(string: commandServerURL) {
-            return url.host() ?? "192.168.0.221"
+        // Extract host from URL like "http://192.168.68.78:8890" -> "192.168.68.78"
+        // Falls back to first endpoint in endpointsToTry if parsing fails
+        if let url = URL(string: commandServerURL), let host = url.host() {
+            return host
         }
-        // Last resort: default LAN IP
-        return "192.168.0.221"
+        // Fall back to primary endpoint host
+        if let url = URL(string: defaultLANURL), let host = url.host() {
+            return host
+        }
+        // Last resort fallback
+        return "192.168.68.78"  // Default Mac Mini LAN address
     }
 }
