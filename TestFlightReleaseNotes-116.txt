@@ -1,0 +1,39 @@
+Native iOS Capabilities - Build 116
+
+NEW FEATURES:
+
+📅 Calendar Integration
+- View today's events: "What's on my calendar?"
+- Create events: "Create an event for tomorrow at 3pm"
+
+✅ Reminders
+- List reminders: "What are my reminders?"
+- Create reminders: "Remind me to call Sarah"
+
+💬 Messages & Mail
+- Send texts: "Send a message to John saying I'm on my way"
+- Send emails: "Email support about my question"
+
+🤖 Apple Intelligence (iOS 18.1+)
+- Writing Tools integration
+- Image Playground support
+- Auto-detects device capabilities
+
+IMPROVEMENTS:
+
+- Smart routing: iOS capabilities execute locally first
+- Better voice command parsing
+- Seamless message/mail composition
+
+KNOWN ISSUES:
+
+- HomeKit temporarily disabled (returning in next build)
+
+TEST THIS BUILD:
+
+1. Grant Calendar and Reminders permissions when prompted
+2. Try voice commands: "Hey Quinn, what's on my calendar?"
+3. Test message composition via voice
+4. Verify Apple Intelligence on compatible devices
+
+Feedback welcome!

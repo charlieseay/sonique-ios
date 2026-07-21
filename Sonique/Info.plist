@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Sonique</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>2.1.0</string>
+	<key>CFBundleVersion</key>
+	<string>169</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>100.122.13.35</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<false/>
+			</dict>
+		</dict>
+	</dict>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_sonique._tcp</string>
+	</array>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Sonique accesses your calendar to show upcoming events and create new calendar entries via voice commands.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Sonique uses your location to provide accurate weather information when you ask about the weather.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Sonique needs local network access to discover your SoniqueBar backend on your home network.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Sonique uses your microphone to capture your voice so you can issue voice commands to control smart home devices, ask questions, and manage tasks hands-free.</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>Sonique accesses your reminders to show and create reminders via voice commands.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Sonique uses speech recognition to convert your voice commands into text, enabling you to control smart home devices, query information, and interact with your personal assistant through natural voice input.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<true/>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+</dict>
+</plist>

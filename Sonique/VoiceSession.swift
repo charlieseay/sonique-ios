@@ -1,0 +1,308 @@
+import Foundation
+import Speech
+import AVFoundation
+
+/// Single AVAudioEngine that hosts BOTH the speech-recognition input tap and the
+/// TTS player node, per Apple's guidance: acoustic echo cancellation only works when
+/// mic input and speaker output share one engine. This is the Siri / voice-assistant
+/// pattern — a persistent .playAndRecord/.voiceChat session, voice processing on the
+/// input node, and a player node for playback. No session teardown between turns.
+@MainActor
+class VoiceSession: NSObject, ObservableObject {
+    @Published var isListening = false
+    @Published var transcript = ""
+    @Published var callbackCount = 0
+    @Published var lastError = ""
+    @Published var error: String?
+
+    // One engine for the whole session.
+    private let engine = AVAudioEngine()
+    private let playerNode = AVAudioPlayerNode()
+    private var playerFormat: AVAudioFormat!
+
+    // Recognition
+    private let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    private var request: SFSpeechAudioBufferRecognitionRequest?
+    private var task: SFSpeechRecognitionTask?
+
+    // Endpointing (stable-partial → submit)
+    private var endpointTimer: Task<Void, Never>?
+    private var lastStablePartial = ""
+    private let endpointSilence: TimeInterval = 1.2
+    private var hasSubmitted = false  // Prevent duplicate submissions
+
+    // TTS playback gating
+    private var isSpeaking = false
+    private var playbackContinuation: CheckedContinuation<Void, Never>?
+
+    // MARK: - Permissions
+
+    func requestPermission() async -> Bool {
+        let speech = await withCheckedContinuation { c in
+            SFSpeechRecognizer.requestAuthorization { c.resume(returning: $0) }
+        }
+        guard speech == .authorized else { error = "Speech permission denied"; return false }
+        let mic = await withCheckedContinuation { c in
+            AVAudioApplication.requestRecordPermission { c.resume(returning: $0) }
+        }
+        guard mic else { error = "Microphone permission denied"; return false }
+
+        // Save permission state to iCloud
+        var prefs = SoniqueBrain.shared.loadPreferences()
+        prefs.permissionsGranted = SoniqueBrain.Preferences.PermissionState(
+            speech: true,
+            microphone: true
+        )
+        SoniqueBrain.shared.savePreferences(prefs)
+
+        return true
+    }
+
+    // MARK: - Lifecycle
+
+    /// Configure the persistent session + engine once. Call before start().
+    func configure() throws {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.playAndRecord, mode: .voiceChat,
+                                options: [.allowBluetoothHFP, .allowBluetoothA2DP, .defaultToSpeaker])
+        try session.setActive(true, options: .notifyOthersOnDeactivation)
+        FileTracer.log("[vs] session active (.playAndRecord/.voiceChat)")
+
+        let input = engine.inputNode
+        // Voice processing on the input node = AEC + AGC. With the player node on the
+        // same engine, this cancels Sonique's own TTS out of the mic signal (no echo).
+        do {
+            try input.setVoiceProcessingEnabled(true)
+            FileTracer.log("[vs] voice processing enabled (AEC+AGC)")
+        } catch {
+            FileTracer.log("[vs] voice processing unavailable: \(error.localizedDescription)")
+        }
+
+        // Player node for TTS. ElevenLabs gives 24kHz mono 16-bit PCM.
+        playerFormat = AVAudioFormat(commonFormat: .pcmFormatInt16,
+                                     sampleRate: 24000, channels: 1, interleaved: false)
+        engine.attach(playerNode)
+        engine.connect(playerNode, to: engine.mainMixerNode, format: playerFormat)
+
+        engine.prepare()
+        try engine.start()
+        FileTracer.log("[vs] engine running (shared input+player)")
+    }
+
+    func start() throws {
+        guard let recognizer, recognizer.isAvailable else {
+            throw RecognitionError.recognizerUnavailable
+        }
+        if !engine.isRunning { try configure() }
+        beginRecognition(recognizer)
+        isListening = true
+        FileTracer.log("[vs] LISTENING ✓")
+    }
+
+    func stop() {
+        isListening = false
+        endpointTimer?.cancel(); endpointTimer = nil
+        endRecognition()
+        engine.inputNode.removeTap(onBus: 0)
+        playerNode.stop()
+        engine.stop()
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        FileTracer.log("[vs] stopped")
+    }
+
+    // MARK: - Recognition
+
+    private func beginRecognition(_ recognizer: SFSpeechRecognizer) {
+        endRecognition()  // clean any prior pass
+
+        // Ensure engine is running before installing tap
+        if !engine.isRunning {
+            FileTracer.log("[vs] engine stopped - restarting before recognition")
+            do {
+                try engine.start()
+                FileTracer.log("[vs] engine restarted")
+            } catch {
+                FileTracer.log("[vs] ERROR: engine start failed: \(error.localizedDescription)")
+                return
+            }
+        }
+
+        let req = SFSpeechAudioBufferRecognitionRequest()
+        req.shouldReportPartialResults = true
+        if recognizer.supportsOnDeviceRecognition { req.requiresOnDeviceRecognition = true }
+        request = req
+        lastStablePartial = ""
+        hasSubmitted = false  // Reset for new recognition pass
+
+        let input = engine.inputNode
+        let format = input.outputFormat(forBus: 0)
+        input.removeTap(onBus: 0)
+        do {
+            // Use 4096-byte buffer to reduce callback frequency (fewer interrupts, better battery)
+            // At 16kHz mono 16-bit: 1024 bytes = 32ms, 4096 bytes = 128ms intervals
+            input.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
+                // Always feed the recognizer - AEC handles echo cancellation.
+                // This allows barge-in commands like "stop" to be heard while speaking.
+                guard let self else { return }
+                self.request?.append(buffer)
+            }
+            FileTracer.log("[vs] tap installed (4096-byte buffer), recognition active")
+        } catch {
+            FileTracer.log("[vs] ERROR: installTap failed: \(error.localizedDescription)")
+            return
+        }
+
+        task = recognizer.recognitionTask(with: req) { [weak self] result, error in
+            Task { @MainActor in
+                guard let self else { return }
+                if let result {
+                    self.callbackCount += 1
+                    let text = result.bestTranscription.formattedString
+                    self.transcript = text
+                    FileTracer.log("[vs] result '\(text)' final=\(result.isFinal)")
+                    if result.isFinal {
+                        self.endpointTimer?.cancel()  // Cancel endpoint timer
+                        self.lastStablePartial = ""   // Clear to prevent duplicate submit
+                        self.submit(text)
+                        return
+                    }
+                    if !text.isEmpty { self.lastStablePartial = text; self.armEndpoint() }
+                }
+                if let error {
+                    let ns = error as NSError
+                    self.lastError = "\(ns.domain) \(ns.code)"
+
+                    // Error 1110 = "No speech detected" - this is NORMAL after ~1s silence.
+                    // Don't restart, just wait for the next audio input.
+                    if ns.code == 1110 {
+                        FileTracer.log("[vs] silence timeout (1110) - waiting for speech")
+                        return
+                    }
+
+                    FileTracer.log("[vs] ERROR: recognition failed: \(ns.domain) \(ns.code) - \(error.localizedDescription)")
+                    if !self.lastStablePartial.isEmpty {
+                        self.submit(self.lastStablePartial)
+                    } else {
+                        // 301 or other errors — restart the recognition pass
+                        guard self.isListening && !self.isSpeaking else {
+                            FileTracer.log("[vs] skipping restart: isListening=\(self.isListening) isSpeaking=\(self.isSpeaking)")
+                            return
+                        }
+                        FileTracer.log("[vs] restarting recognition after error")
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
+                            guard self.isListening else { return }
+                            self.beginRecognition(recognizer)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func endRecognition() {
+        task?.cancel(); task = nil
+        request = nil
+    }
+
+    private func armEndpoint() {
+        endpointTimer?.cancel()
+        endpointTimer = Task { @MainActor [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(nanoseconds: UInt64(endpointSilence * 1_000_000_000))
+            guard !Task.isCancelled, self.isListening, !self.lastStablePartial.isEmpty else { return }
+            FileTracer.log("[vs] endpoint (\(self.endpointSilence)s) → submit")
+            self.submit(self.lastStablePartial)
+        }
+    }
+
+    private func submit(_ text: String) {
+        // Prevent duplicate submissions from endpoint + final result
+        guard !hasSubmitted else {
+            FileTracer.log("[vs] SKIP duplicate submit '\(text)'")
+            return
+        }
+        hasSubmitted = true
+
+        endpointTimer?.cancel(); endpointTimer = nil
+        let final = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        lastStablePartial = ""
+        guard !final.isEmpty else {
+            hasSubmitted = false  // Reset if empty
+            if isListening, let r = recognizer { beginRecognition(r) }
+            return
+        }
+        FileTracer.log("[vs] SUBMIT '\(final)'")
+
+        // CRITICAL: Stop recognition task IMMEDIATELY to prevent further results
+        task?.finish()
+        task = nil
+        request = nil
+
+        NotificationCenter.default.post(name: .speechTranscriptComplete, object: nil,
+                                        userInfo: ["transcript": final])
+        // Caller (VoiceLoop) will speak, then call resumeListening(); meanwhile pause input.
+    }
+
+    // MARK: - TTS playback (same engine → AEC cancels echo)
+
+    private func isSpeakingNow() -> Bool { isSpeaking }
+
+    /// Begin speaking but keep recognition running for barge-in (AEC prevents echo).
+    func beginSpeaking() {
+        isSpeaking = true
+        endpointTimer?.cancel(); endpointTimer = nil
+        // Clear the transcript buffer so we don't re-submit the previous utterance
+        transcript = ""
+        lastStablePartial = ""
+        // Keep recognition running - AEC will prevent speaker output from being heard as input
+        FileTracer.log("[vs] begin speaking (recognition active for barge-in, AEC enabled)")
+    }
+
+    /// Play raw 16-bit PCM (24kHz mono) through the shared engine's player node.
+    func playPCM(data pcm: Data, completion: @escaping () -> Void) {
+        guard pcm.count > 1 else { return }
+        let frames = AVAudioFrameCount(pcm.count / 2)
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: playerFormat, frameCapacity: frames),
+              let channel = buffer.int16ChannelData?[0] else {
+            FileTracer.log("[vs] PCM buffer alloc failed")
+            return
+        }
+        buffer.frameLength = frames
+        pcm.withUnsafeBytes { raw in
+            let src = raw.bindMemory(to: Int16.self)
+            channel.update(from: src.baseAddress!, count: Int(frames))
+        }
+        if !engine.isRunning { try? engine.start() }
+        if !playerNode.isPlaying { playerNode.play() }
+
+        playerNode.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { _ in
+            Task { @MainActor in
+                completion()
+            }
+        }
+    }
+
+    /// Resume recognition after speaking finishes.
+    func endSpeaking() {
+        isSpeaking = false
+        guard isListening, let r = recognizer else { return }
+        FileTracer.log("[vs] end speaking → resume recognition")
+        // Cancel the old task AND remove the tap to clear any buffered audio
+        task?.cancel()
+        task = nil
+        engine.inputNode.removeTap(onBus: 0)
+        // Small delay to ensure tap is fully removed before reinstalling
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            guard self.isListening else { return }
+            self.beginRecognition(r)
+        }
+    }
+
+    /// Stop playback immediately (for voice barge-in / interrupt)
+    func stopPlayback() {
+        playerNode.stop()
+        FileTracer.log("[vs] playback stopped (barge-in)")
+    }
+}

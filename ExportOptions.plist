@@ -11,7 +11,7 @@
     <key>teamID</key>
     <string>7NSS5CJL9E</string>
     <key>uploadSymbols</key>
-    <true/>
+    <false/>
     <key>manageAppVersionAndBuildNumber</key>
     <false/>
     <key>provisioningProfiles</key>

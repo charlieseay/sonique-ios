@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sonique Test Plan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            padding: 1.5rem 2rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.25rem;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .category {
+            margin-bottom: 2rem;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .category-header:hover {
+            background: linear-gradient(135deg, #667eea25 0%, #764ba225 100%);
+        }
+
+        .category-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .category-icon {
+            font-size: 1.5rem;
+        }
+
+        .category-progress {
+            font-size: 0.875rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .test-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .test-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .test-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .test-item.completed {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .test-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .test-content {
+            flex: 1;
+        }
+
+        .test-title {
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 0.25rem;
+        }
+
+        .test-item.completed .test-title {
+            color: #155724;
+        }
+
+        .test-description {
+            font-size: 0.875rem;
+            color: #6c757d;
+            line-height: 1.5;
+        }
+
+        .test-command {
+            font-family: "SF Mono", Monaco, Consolas, monospace;
+            font-size: 0.8rem;
+            background: #fff;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            border: 1px solid #dee2e6;
+            overflow-x: auto;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 4px;
+            margin-left: 0.5rem;
+        }
+
+        .priority-p0 {
+            background: #dc3545;
+            color: white;
+        }
+
+        .priority-p1 {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .priority-p2 {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .footer {
+            padding: 1.5rem 2rem;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .collapse-icon {
+            transition: transform 0.2s ease;
+        }
+
+        .category.collapsed .test-list {
+            display: none;
+        }
+
+        .category.collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎙️ Sonique Test Plan</h1>
+            <p>Voice Assistant — Build 86 (2026-06-16)</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="completedCount">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">Total Tests</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="progressPercent">0%</div>
+                <div class="stat-label">Progress</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- P0: Critical Features -->
+            <div class="category" data-category="p0">
+                <div class="category-header">
+                    <div class="category-title">
+                        <span class="category-icon">🔴</span>
+                        <span>P0: Critical Features</span>
+                        <span class="priority-badge priority-p0">MUST PASS</span>
+                    </div>
+                    <span class="category-progress"><span class="cat-completed">0</span>/<span class="cat-total">0</span></span>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="test-list">
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Wake Word Detection</div>
+                            <div class="test-description">
+                                Say "Sonique" or your configured wake word. Watch for visual feedback (waveform animation).
+                                Expected: App activates within 1 second, shows listening state.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Voice Recognition Accuracy</div>
+                            <div class="test-description">
+                                Say: "What time is it?"
+                                Expected: Correct transcription shown in UI, accurate response with current time.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Text-to-Speech Quality</div>
+                            <div class="test-description">
+                                Listen for natural voice, clear pronunciation, appropriate pacing.
+                                Expected: ElevenLabs voice sounds natural, no robotic artifacts.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Home Control — Turn Off Light</div>
+                            <div class="test-description">
+                                Say: "Turn off my bedroom light"
+                                Expected: light.bedroom_3 turns off, verbal confirmation "Done".
+                            </div>
+                            <div class="test-command">Verify: curl -H "Authorization: Bearer $(cat /Volumes/data/secrets/ha_token)" http://homeassistant.local:8123/api/states/light.bedroom_3 | grep '"state"'</div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Home Control — Turn On Light</div>
+                            <div class="test-description">
+                                Say: "Turn on bedroom light"
+                                Expected: light.bedroom_3 turns on, verbal confirmation "Done".
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Multi-Turn Conversation</div>
+                            <div class="test-description">
+                                Say: "What's the weather?" (wait for response) → "How about tomorrow?"
+                                Expected: Context maintained, followup understood without repeating "weather".
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Response Latency</div>
+                            <div class="test-description">
+                                Say any simple query (time/date/math).
+                                Expected: Response starts within 2 seconds of finishing speech.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- P1: Important Features -->
+            <div class="category" data-category="p1">
+                <div class="category-header">
+                    <div class="category-title">
+                        <span class="category-icon">🟡</span>
+                        <span>P1: Important Features</span>
+                        <span class="priority-badge priority-p1">HIGH VALUE</span>
+                    </div>
+                    <span class="category-progress"><span class="cat-completed">0</span>/<span class="cat-total">0</span></span>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="test-list">
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Barge-In Interrupt</div>
+                            <div class="test-description">
+                                Say: "Tell me a long story" → while Sonique is speaking, say "Stop"
+                                Expected: Speech halts immediately, ready for new command.
+                                Note: Build 81 fix not yet verified with logs.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">No Duplicate Transcripts</div>
+                            <div class="test-description">
+                                Say 3 questions in succession. Check UI transcript list.
+                                Expected: No duplicate entries, clean conversation history.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Backend Connectivity</div>
+                            <div class="test-description">
+                                Check Settings → shows backend IP (192.168.0.221:8890), green status indicator.
+                                Expected: "Connected" badge visible.
+                            </div>
+                            <div class="test-command">Verify: curl http://192.168.0.221:8890/health</div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Capability Discovery</div>
+                            <div class="test-description">
+                                Open Settings → check Skills list.
+                                Expected: Shows "Home Assistant", "21st-dev-magic", "stitch-mcp", "slack" + core capabilities.
+                            </div>
+                            <div class="test-command">Verify: curl http://192.168.0.221:8890/capabilities | python3 -m json.tool</div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Memory Persistence (30s Sleep)</div>
+                            <div class="test-description">
+                                Say: "Remember my favorite color is blue" → wait 30 seconds → wake and say "What's my favorite color?"
+                                Expected: Recalls "blue" correctly.
+                                Note: Currently resets after 30s — feature not yet implemented.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Home Control — Brightness</div>
+                            <div class="test-description">
+                                Say: "Set bedroom light to 50 percent"
+                                Expected: light.bedroom_3 brightness set to ~127/255, verbal confirmation.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- P2: Nice-to-Have -->
+            <div class="category" data-category="p2">
+                <div class="category-header">
+                    <div class="category-title">
+                        <span class="category-icon">🔵</span>
+                        <span>P2: Nice-to-Have</span>
+                        <span class="priority-badge priority-p2">FUTURE</span>
+                    </div>
+                    <span class="category-progress"><span class="cat-completed">0</span>/<span class="cat-total">0</span></span>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="test-list">
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Screenshot Analysis (Vision)</div>
+                            <div class="test-description">
+                                Say: "Take a screenshot and tell me what you see"
+                                Expected: Screenshot captured, Claude Vision describes content, image shown in UI.
+                                Note: Backend saves to /tmp/sonique-artifacts/, iOS displays via /artifact/<id>.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Web Search</div>
+                            <div class="test-description">
+                                Say: "Search for latest Claude API updates"
+                                Expected: Backend queries Brave API or Perplexity, returns current results with sources.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Vault/Notes Access</div>
+                            <div class="test-description">
+                                Say: "Search my notes for Sonique"
+                                Expected: Returns relevant vault notes via MCP or direct file access.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Battery Optimization</div>
+                            <div class="test-description">
+                                Run for 1 hour with periodic wake word triggers.
+                                Expected: Battery drain < 15% per hour, no thermal throttling.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Background Mode</div>
+                            <div class="test-description">
+                                Lock iPhone, say wake word with screen off.
+                                Expected: Wake word still detected, app responds without unlocking.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edge Cases -->
+            <div class="category" data-category="edge">
+                <div class="category-header">
+                    <div class="category-title">
+                        <span class="category-icon">⚠️</span>
+                        <span>Edge Cases & Error Handling</span>
+                    </div>
+                    <span class="category-progress"><span class="cat-completed">0</span>/<span class="cat-total">0</span></span>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="test-list">
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Backend Offline Recovery</div>
+                            <div class="test-description">
+                                Stop backend (killall SoniqueBar) → try voice command → restart backend.
+                                Expected: Clear error message, auto-reconnects when backend returns.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Network Switch (WiFi → Cellular)</div>
+                            <div class="test-description">
+                                Disable WiFi mid-conversation → continue query.
+                                Expected: Graceful degradation, error message if backend unreachable.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Simultaneous Speech (False Trigger)</div>
+                            <div class="test-description">
+                                Play audio/video containing "Sonique" sound-alike.
+                                Expected: No false activations, or cancels quickly if activated.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Home Control — Unknown Device</div>
+                            <div class="test-description">
+                                Say: "Turn on kitchen sink"
+                                Expected: Clear error message "Device not found" or similar, doesn't crash.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-item">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="test-checkbox">
+                        </div>
+                        <div class="test-content">
+                            <div class="test-title">Long Response Handling</div>
+                            <div class="test-description">
+                                Say: "Explain quantum computing in detail"
+                                Expected: Response streams without timeout, can still interrupt mid-response.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Last updated: 2026-06-16 | Build 86 | Test results auto-saved to localStorage
+        </div>
+    </div>
+
+    <script>
+        // Load saved state from localStorage
+        function loadState() {
+            const saved = localStorage.getItem('soniqueTestState');
+            if (saved) {
+                const state = JSON.parse(saved);
+                document.querySelectorAll('.test-checkbox').forEach((checkbox, index) => {
+                    checkbox.checked = state[index] || false;
+                    if (checkbox.checked) {
+                        checkbox.closest('.test-item').classList.add('completed');
+                    }
+                });
+            }
+            updateStats();
+            updateCategoryStats();
+        }
+
+        // Save state to localStorage
+        function saveState() {
+            const state = Array.from(document.querySelectorAll('.test-checkbox')).map(cb => cb.checked);
+            localStorage.setItem('soniqueTestState', JSON.stringify(state));
+        }
+
+        // Update overall stats
+        function updateStats() {
+            const checkboxes = document.querySelectorAll('.test-checkbox');
+            const total = checkboxes.length;
+            const completed = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('progressPercent').textContent = percent + '%';
+        }
+
+        // Update category-specific stats
+        function updateCategoryStats() {
+            document.querySelectorAll('.category').forEach(category => {
+                const checkboxes = category.querySelectorAll('.test-checkbox');
+                const total = checkboxes.length;
+                const completed = Array.from(checkboxes).filter(cb => cb.checked).length;
+
+                category.querySelector('.cat-total').textContent = total;
+                category.querySelector('.cat-completed').textContent = completed;
+            });
+        }
+
+        // Checkbox change handler
+        document.querySelectorAll('.test-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    this.closest('.test-item').classList.add('completed');
+                } else {
+                    this.closest('.test-item').classList.remove('completed');
+                }
+                saveState();
+                updateStats();
+                updateCategoryStats();
+            });
+        });
+
+        // Category collapse/expand
+        document.querySelectorAll('.category-header').forEach(header => {
+            header.addEventListener('click', function() {
+                this.closest('.category').classList.toggle('collapsed');
+            });
+        });
+
+        // Initialize
+        loadState();
+    </script>
+</body>
+</html>
