@@ -391,6 +391,11 @@ class VoiceLoop: ObservableObject {
         lastResponse = fullResponse.trimmingCharacters(in: .whitespaces)
         partialResponse = ""
 
+        // Check for shortcut intent markers from IntentRouter
+        if lastResponse.contains("[SHORTCUT:") {
+            await executeShortcutIntent(from: lastResponse)
+        }
+
         // Grow the iCloud brain (mobile folder).
         SoniqueBrain.shared.recordExchange(user: transcript, assistant: lastResponse)
 
@@ -533,5 +538,74 @@ class VoiceLoop: ObservableObject {
             session?.endSpeaking()
         }
         return false
+    }
+
+    // MARK: - Shortcuts Integration
+
+    /// Parse and execute shortcut intent markers from backend responses
+    /// Format: [SHORTCUT:SET_TIMER:10] or [SHORTCUT:TOGGLE_DND:true] or [SHORTCUT:CREATE_REMINDER:text]
+    private func executeShortcutIntent(from response: String) async {
+        guard let range = response.range(of: "\\[SHORTCUT:[^\\]]+\\]", options: .regularExpression) else {
+            return
+        }
+
+        let marker = String(response[range])
+        FileTracer.log("[shortcuts] Detected intent: \(marker)")
+
+        // Extract components: [SHORTCUT:ACTION:PARAM]
+        let parts = marker
+            .dropFirst()  // Remove [
+            .dropLast()   // Remove ]
+            .split(separator: ":")
+            .map(String.init)
+
+        guard parts.count >= 2, parts[0] == "SHORTCUT" else {
+            FileTracer.log("[shortcuts] Invalid marker format: \(marker)")
+            return
+        }
+
+        let action = parts[1]
+        let param = parts.count > 2 ? parts[2] : ""
+
+        switch action {
+        case "SET_TIMER":
+            if let minutes = Int(param) {
+                let result = await ShortcutsManager.shared.setTimer(minutes: minutes)
+                switch result {
+                case .success(let message):
+                    FileTracer.log("[shortcuts] Timer set: \(message)")
+                    await speakSentence(message)
+                case .failure(let error):
+                    FileTracer.log("[shortcuts] Timer failed: \(error.localizedDescription)")
+                    await speakSentence("I couldn't set the timer. \(error.localizedDescription)")
+                }
+            }
+
+        case "TOGGLE_DND":
+            let enable = param == "true"
+            let result = await ShortcutsManager.shared.toggleDoNotDisturb(enable: enable)
+            switch result {
+            case .success(let message):
+                FileTracer.log("[shortcuts] DND toggled: \(message)")
+                await speakSentence(message)
+            case .failure(let error):
+                FileTracer.log("[shortcuts] DND failed: \(error.localizedDescription)")
+                await speakSentence("I couldn't toggle Do Not Disturb. \(error.localizedDescription)")
+            }
+
+        case "CREATE_REMINDER":
+            let result = await ShortcutsManager.shared.createReminder(title: param)
+            switch result {
+            case .success(let message):
+                FileTracer.log("[shortcuts] Reminder created: \(message)")
+                await speakSentence(message)
+            case .failure(let error):
+                FileTracer.log("[shortcuts] Reminder failed: \(error.localizedDescription)")
+                await speakSentence("I couldn't create the reminder. \(error.localizedDescription)")
+            }
+
+        default:
+            FileTracer.log("[shortcuts] Unknown action: \(action)")
+        }
     }
 }

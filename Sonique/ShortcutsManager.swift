@@ -1,6 +1,7 @@
 import Foundation
 import Intents
 import EventKit
+import UIKit
 
 /// Manages execution of iOS Shortcuts and system intents
 /// Enables Quinn to actually DO things (set timers, toggle DND, create reminders)
@@ -17,22 +18,25 @@ class ShortcutsManager: NSObject {
     // MARK: - Timer Management
 
     /// Set a timer for the specified duration
+    /// Note: Requires user to have a "Set Timer" shortcut in Shortcuts app
     func setTimer(minutes: Int) async -> Result<String, ShortcutError> {
-        // iOS doesn't have a direct Timer API via Intents
-        // Use INSetTimerIntent (iOS 13+)
-        let intent = INSetTimerIntent()
-        intent.duration = Double(minutes * 60)
-        intent.label = INSpeakableString(spokenPhrase: "Voice timer")
+        // iOS doesn't expose timer APIs directly - must use Shortcuts app
+        let shortcutName = "Set Timer"
+        var urlComponents = URLComponents(string: "shortcuts://run-shortcut")!
+        urlComponents.queryItems = [
+            URLQueryItem(name: "name", value: shortcutName),
+            URLQueryItem(name: "input", value: String(minutes))
+        ]
 
-        do {
-            let interaction = INInteraction(intent: intent, response: nil)
-            try await interaction.donate()
+        guard let url = urlComponents.url else {
+            return .failure(.invalidParameters("Invalid shortcut URL"))
+        }
 
+        if await UIApplication.shared.open(url) {
             FileTracer.log("[shortcuts] Timer set for \(minutes) minutes")
             return .success("Timer set for \(minutes) minute\(minutes == 1 ? "" : "s")")
-        } catch {
-            FileTracer.log("[shortcuts] Failed to set timer: \(error)")
-            return .failure(.executionFailed("Couldn't set timer: \(error.localizedDescription)"))
+        } else {
+            return .failure(.shortcutNotFound("Couldn't find '\(shortcutName)' shortcut - create it in Shortcuts app"))
         }
     }
 
@@ -63,15 +67,13 @@ class ShortcutsManager: NSObject {
 
     /// Create a reminder
     func createReminder(title: String, dueDate: Date? = nil) async -> Result<String, ShortcutError> {
-        // Request permission if needed
-        let status = EKEventStore.authorizationStatus(for: .reminder)
-
-        if status == .notDetermined {
-            let granted = try? await eventStore.requestAccess(to: .reminder)
-            if granted != true {
+        // Request permission if needed (iOS 17+ API)
+        do {
+            let granted = try await eventStore.requestFullAccessToReminders()
+            if !granted {
                 return .failure(.permissionDenied("Need reminders permission"))
             }
-        } else if status != .authorized {
+        } catch {
             return .failure(.permissionDenied("Reminders permission denied - enable in Settings"))
         }
 

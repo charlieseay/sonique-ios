@@ -35,6 +35,8 @@
 		AC1B00100000000000SB02B /* SoniqueBrain.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000SB02A /* SoniqueBrain.swift */; };
 		AC1B00100000000000SC01B /* SoundCues.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000SC01A /* SoundCues.swift */; };
 		AC1B00100000000000SH01B /* SoniqueShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000SH01A /* SoniqueShortcuts.swift */; };
+		3663253F567B4057A31D6109 /* ShortcutsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25381ECBF1984A48BC515678 /* ShortcutsManager.swift */; };
+		75D8922039334DD792DF8CC5 /* StatusIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7F9667F6B145BD9EA37177 /* StatusIndicatorView.swift */; };
 		AC1B00100000000000VC01B /* VoiceCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000VC01A /* VoiceCatalog.swift */; };
 		AC1B00100000000000VS01B /* VoiceSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000VS01A /* VoiceSession.swift */; };
 		B8272780DFB86587B6CD08CD /* TTSProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CB785A30EAAFF93FC27484B /* TTSProvider.swift */; };
@@ -83,6 +85,8 @@
 		AC1B00100000000000SB02A /* SoniqueBrain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SoniqueBrain.swift; sourceTree = "<group>"; };
 		AC1B00100000000000SC01A /* SoundCues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SoundCues.swift; sourceTree = "<group>"; };
 		AC1B00100000000000SH01A /* SoniqueShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SoniqueShortcuts.swift; sourceTree = "<group>"; };
+		25381ECBF1984A48BC515678 /* ShortcutsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/ShortcutsManager.swift; sourceTree = "<group>"; };
+		3F7F9667F6B145BD9EA37177 /* StatusIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/StatusIndicatorView.swift; sourceTree = "<group>"; };
 		AC1B00100000000000VC01A /* VoiceCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/VoiceCatalog.swift; sourceTree = "<group>"; };
 		AC1B00100000000000VS01A /* VoiceSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/VoiceSession.swift; sourceTree = "<group>"; };
 		CDEE4E65BD1368173EB33E93 /* VoiceSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VoiceSelector.swift; path = Sonique/VoiceSelector.swift; sourceTree = SOURCE_ROOT; };
@@ -282,6 +286,8 @@
 				AC1B00100000000000DR01B /* DiagnosticsReportView.swift in Sources */,
 				AC1B00100000000000AO01B /* ArtifactOverlay.swift in Sources */,
 				AC1B00100000000000SH01B /* SoniqueShortcuts.swift in Sources */,
+				3663253F567B4057A31D6109 /* ShortcutsManager.swift in Sources */,
+				75D8922039334DD792DF8CC5 /* StatusIndicatorView.swift in Sources */,
 				23DA4ACE8CFA741DF5BD9C1B /* Config.swift in Sources */,
 				FD354B38A1B5A35514512A28 /* ContentView.swift in Sources */,
 				EAC245018BD75F904B3DFA71 /* VoiceSelector.swift in Sources */,
