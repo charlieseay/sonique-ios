@@ -2,11 +2,12 @@ import Foundation
 import AVFoundation
 
 /// ElevenLabs TTS via SoniqueBar - server-side synthesis
-/// Replaces client-side MP3→PCM conversion (which caused static/slow audio)
-/// Server handles ElevenLabs API call + returns clean MP3
+/// Server returns MP3, iOS plays it directly via AVAudioPlayer (no conversion needed)
 @MainActor
-class ElevenLabsDirectTTS: NSObject, TTSProvider {
+class ElevenLabsDirectTTS: NSObject, TTSProvider, AVAudioPlayerDelegate {
     private let soniqueBarHost: String
+    private var audioPlayer: AVAudioPlayer?
+    private var completion: (() -> Void)?
 
     init(soniqueBarHost: String) {
         self.soniqueBarHost = soniqueBarHost
@@ -14,13 +15,37 @@ class ElevenLabsDirectTTS: NSObject, TTSProvider {
     }
 
     func speak(_ text: String, completion: @escaping () -> Void) async {
-        // Unused protocol method - VoiceLoop uses fetchPCM() only
-        fatalError("ElevenLabsDirectTTS.speak() should not be called; use fetchPCM() instead")
+        // Store completion for delegate callback
+        self.completion = completion
+
+        guard let mp3Data = await fetchMP3(text) else {
+            FileTracer.log("[elevenlabs] Failed to fetch MP3")
+            completion()
+            return
+        }
+
+        // Play MP3 directly with AVAudioPlayer
+        do {
+            audioPlayer = try AVAudioPlayer(data: mp3Data)
+            audioPlayer?.delegate = self
+            audioPlayer?.prepareToPlay()
+            audioPlayer?.play()
+            FileTracer.log("[elevenlabs] ✓ Playing MP3 (\(mp3Data.count) bytes)")
+        } catch {
+            FileTracer.log("[elevenlabs] AVAudioPlayer error: \(error.localizedDescription)")
+            completion()
+        }
     }
 
     func fetchPCM(_ text: String) async -> Data? {
+        // VoiceLoop doesn't use this path for ElevenLabs
+        // It uses the speak() method above instead
+        return nil
+    }
+
+    private func fetchMP3(_ text: String) async -> Data? {
         guard !text.isEmpty else {
-            FileTracer.log("[elevenlabs] fetchPCM called with empty text")
+            FileTracer.log("[elevenlabs] fetchMP3 called with empty text")
             return nil
         }
 
@@ -72,63 +97,32 @@ class ElevenLabsDirectTTS: NSObject, TTSProvider {
                 return nil
             }
 
-            // Check Content-Type - should be audio/mpeg (MP3)
-            let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type") ?? ""
-            FileTracer.log("[elevenlabs] Content-Type: \(contentType)")
+            return data
 
-            if contentType.contains("audio/mpeg") {
-                // Server returned MP3 - convert to PCM for AVAudioEngine
-                FileTracer.log("[elevenlabs] Converting MP3 to PCM...")
-                return convertMP3ToPCM(data)
-            } else {
-                FileTracer.log("[elevenlabs] Unexpected Content-Type: \(contentType)")
-                return nil
-            }
         } catch {
             FileTracer.log("[elevenlabs] Request failed: \(error.localizedDescription)")
             return nil
         }
     }
 
-    private func convertMP3ToPCM(_ mp3Data: Data) -> Data? {
-        // Write MP3 to temp file
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mp3")
-
-        do {
-            try mp3Data.write(to: tempURL)
-
-            // Read as AVAudioFile
-            let audioFile = try AVAudioFile(forReading: tempURL)
-            let format = audioFile.processingFormat
-
-            // Create buffer for entire file
-            let frameCount = UInt32(audioFile.length)
-            guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
-                FileTracer.log("[elevenlabs] Failed to create PCM buffer")
-                try? FileManager.default.removeItem(at: tempURL)
-                return nil
-            }
-
-            try audioFile.read(into: buffer, frameCount: frameCount)
-
-            // Convert to Data
-            let audioBuffer = buffer.audioBufferList.pointee.mBuffers
-            let pcmData = Data(bytes: audioBuffer.mData!, count: Int(audioBuffer.mDataByteSize))
-
-            // Cleanup
-            try? FileManager.default.removeItem(at: tempURL)
-
-            FileTracer.log("[elevenlabs] ✓ Converted MP3 to \(pcmData.count) bytes PCM")
-            return pcmData
-
-        } catch {
-            FileTracer.log("[elevenlabs] MP3→PCM conversion failed: \(error.localizedDescription)")
-            try? FileManager.default.removeItem(at: tempURL)
-            return nil
-        }
+    func stop() {
+        audioPlayer?.stop()
+        audioPlayer = nil
+        completion?()
+        completion = nil
     }
 
-    func stop() {
-        // Server-side synthesis - nothing to stop
+    // MARK: - AVAudioPlayerDelegate
+
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        FileTracer.log("[elevenlabs] Playback finished (success: \(flag))")
+        completion?()
+        completion = nil
+    }
+
+    func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+        FileTracer.log("[elevenlabs] Decode error: \(error?.localizedDescription ?? "unknown")")
+        completion?()
+        completion = nil
     }
 }
