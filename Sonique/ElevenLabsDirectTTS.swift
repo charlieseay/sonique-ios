@@ -1,62 +1,16 @@
 import Foundation
 import AVFoundation
 
-/// Direct ElevenLabs TTS provider - connects directly to ElevenLabs websocket
-/// Fetches credentials from SoniqueBar /config endpoint, then streams audio directly
-/// Enables real barge-in by owning the websocket connection
+/// ElevenLabs TTS via SoniqueBar - server-side synthesis
+/// Replaces client-side MP3→PCM conversion (which caused static/slow audio)
+/// Server handles ElevenLabs API call + returns clean MP3
 @MainActor
 class ElevenLabsDirectTTS: NSObject, TTSProvider {
     private let soniqueBarHost: String
-    private var webSocketTask: URLSessionWebSocketTask?
-    private var audioQueue: [Data] = []
-    private var isPlaying = false
-
-    // Configuration from /config endpoint
-    private var apiKey: String?
-    private var voiceId: String?
-    private var model: String?
 
     init(soniqueBarHost: String) {
         self.soniqueBarHost = soniqueBarHost
         super.init()
-    }
-
-    /// Fetch configuration from SoniqueBar before first TTS request
-    private func fetchConfig() async -> Bool {
-        guard let url = URL(string: "http://\(soniqueBarHost):8890/config") else {
-            FileTracer.log("[elevenlabs] Invalid config URL")
-            return false
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.timeoutInterval = 5
-
-        // Add bearer token authentication
-        let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
-        if let token = authToken, !token.isEmpty {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-                FileTracer.log("[elevenlabs] Config fetch failed: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
-                return false
-            }
-
-            let config = try JSONDecoder().decode(ConfigResponse.self, from: data)
-            self.apiKey = config.elevenlabs.api_key
-            self.voiceId = config.elevenlabs.voice_id
-            self.model = config.elevenlabs.model
-
-            FileTracer.log("[elevenlabs] ✓ Config loaded: voice=\(config.elevenlabs.voice_id)")
-            return true
-
-        } catch {
-            FileTracer.log("[elevenlabs] Config parse error: \(error.localizedDescription)")
-            return false
-        }
     }
 
     func speak(_ text: String, completion: @escaping () -> Void) async {
@@ -70,23 +24,10 @@ class ElevenLabsDirectTTS: NSObject, TTSProvider {
             return nil
         }
 
-        // Fetch config if not already loaded
-        if apiKey == nil {
-            guard await fetchConfig() else {
-                FileTracer.log("[elevenlabs] Failed to fetch config")
-                return nil
-            }
-        }
-
-        guard let apiKey = apiKey, let voiceId = voiceId, let model = model else {
-            FileTracer.log("[elevenlabs] Missing configuration")
-            return nil
-        }
-
         FileTracer.log("[elevenlabs] fetching TTS for: '\(text.prefix(50))'")
 
-        // ElevenLabs text-to-speech endpoint (non-streaming for now)
-        guard let url = URL(string: "https://api.elevenlabs.io/v1/text-to-speech/\(voiceId)") else {
+        // Call SoniqueBar /synthesize/elevenlabs endpoint
+        guard let url = URL(string: "http://\(soniqueBarHost):8890/synthesize/elevenlabs") else {
             FileTracer.log("[elevenlabs] Invalid URL")
             return nil
         }
@@ -94,37 +35,57 @@ class ElevenLabsDirectTTS: NSObject, TTSProvider {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(apiKey, forHTTPHeaderField: "xi-api-key")
-        request.timeoutInterval = 30
 
-        let payload: [String: Any] = [
-            "text": text,
-            "model_id": model,
-            "voice_settings": [
-                "stability": 0.5,
-                "similarity_boost": 0.75
-            ]
-        ]
+        // Add bearer token authentication
+        let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
+        if let token = authToken, !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
 
-        guard let body = try? JSONSerialization.data(withJSONObject: payload) else {
-            FileTracer.log("[elevenlabs] Failed to serialize payload")
+        let payload: [String: Any] = ["text": text]
+
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: payload) else {
+            FileTracer.log("[elevenlabs] Failed to serialize JSON")
             return nil
         }
-        request.httpBody = body
+
+        request.httpBody = jsonData
+        request.timeoutInterval = 30
+
+        let startTime = Date()
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-                FileTracer.log("[elevenlabs] API error: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
+            let latencyMs = Int(Date().timeIntervalSince(startTime) * 1000)
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                FileTracer.log("[elevenlabs] Invalid response type")
                 return nil
             }
 
-            // ElevenLabs returns MP3 by default - convert to PCM
-            FileTracer.log("[elevenlabs] received \(data.count) bytes MP3")
-            return convertMP3ToPCM(data)
+            FileTracer.log("[elevenlabs] HTTP \(httpResponse.statusCode), received \(data.count) bytes, latency \(latencyMs)ms")
 
+            guard httpResponse.statusCode == 200 else {
+                if let errorString = String(data: data, encoding: .utf8) {
+                    FileTracer.log("[elevenlabs] Server error: \(errorString)")
+                }
+                return nil
+            }
+
+            // Check Content-Type - should be audio/mpeg (MP3)
+            let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type") ?? ""
+            FileTracer.log("[elevenlabs] Content-Type: \(contentType)")
+
+            if contentType.contains("audio/mpeg") {
+                // Server returned MP3 - convert to PCM for AVAudioEngine
+                FileTracer.log("[elevenlabs] Converting MP3 to PCM...")
+                return convertMP3ToPCM(data)
+            } else {
+                FileTracer.log("[elevenlabs] Unexpected Content-Type: \(contentType)")
+                return nil
+            }
         } catch {
-            FileTracer.log("[elevenlabs] fetch failed: \(error.localizedDescription)")
+            FileTracer.log("[elevenlabs] Request failed: \(error.localizedDescription)")
             return nil
         }
     }
@@ -168,33 +129,6 @@ class ElevenLabsDirectTTS: NSObject, TTSProvider {
     }
 
     func stop() {
-        webSocketTask?.cancel(with: .goingAway, reason: nil)
-        webSocketTask = nil
-        audioQueue.removeAll()
-        FileTracer.log("[elevenlabs] Stopped")
+        // Server-side synthesis - nothing to stop
     }
-}
-
-// MARK: - Config Response Models
-
-private struct ConfigResponse: Codable {
-    let elevenlabs: ElevenLabsConfig
-    let kokoro: KokoroConfig
-    let conversation: ConversationConfig
-}
-
-private struct ElevenLabsConfig: Codable {
-    let api_key: String
-    let voice_id: String
-    let model: String
-}
-
-private struct KokoroConfig: Codable {
-    let enabled: Bool
-    let url: String
-}
-
-private struct ConversationConfig: Codable {
-    let session_id: String
-    let interface: String
 }
