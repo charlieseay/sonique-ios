@@ -261,20 +261,44 @@ class VoiceSession: NSObject, ObservableObject {
 
     /// Play raw 16-bit PCM (24kHz mono) through the shared engine's player node.
     func playPCM(data pcm: Data, completion: @escaping () -> Void) {
-        guard pcm.count > 1 else { return }
+        guard pcm.count > 1 else {
+            FileTracer.log("[vs] playPCM called with invalid buffer size: \(pcm.count)")
+            return
+        }
+
+        FileTracer.log("[vs] playPCM called with buffer size: \(pcm.count) bytes")
+
         let frames = AVAudioFrameCount(pcm.count / 2)
         guard let buffer = AVAudioPCMBuffer(pcmFormat: playerFormat, frameCapacity: frames),
               let channel = buffer.int16ChannelData?[0] else {
             FileTracer.log("[vs] PCM buffer alloc failed")
+            sendFeedback(type: "error", message: "Failed to allocate PCM buffer", metadata: ["buffer_size": pcm.count])
             return
         }
+
         buffer.frameLength = frames
         pcm.withUnsafeBytes { raw in
             let src = raw.bindMemory(to: Int16.self)
             channel.update(from: src.baseAddress!, count: Int(frames))
         }
-        if !engine.isRunning { try? engine.start() }
-        if !playerNode.isPlaying { playerNode.play() }
+
+        // Ensure engine is running
+        if !engine.isRunning {
+            do {
+                try engine.start()
+                FileTracer.log("[vs] Engine started for playback")
+            } catch {
+                FileTracer.log("[vs] Failed to start engine: \(error)")
+                sendFeedback(type: "error", message: "Failed to start audio engine for playback", metadata: ["error": error.localizedDescription])
+                return
+            }
+        }
+
+        // Start player node if not already playing
+        if !playerNode.isPlaying {
+            playerNode.play()
+            FileTracer.log("[vs] PlayerNode started")
+        }
 
         playerNode.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { _ in
             Task { @MainActor in
@@ -304,5 +328,39 @@ class VoiceSession: NSObject, ObservableObject {
     func stopPlayback() {
         playerNode.stop()
         FileTracer.log("[vs] playback stopped (barge-in)")
+    }
+
+    // MARK: - Feedback Reporting
+
+    /// Send feedback to SoniqueBar for diagnostics
+    private func sendFeedback(type: String, message: String, metadata: [String: Any]) {
+        let serverURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://192.168.68.80:8890"
+        let authToken = "5FA5EE09-442D-4969-B091-9AC331E1C39C"
+
+        guard let url = URL(string: "\(serverURL)/feedback") else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 5
+
+        let payload: [String: Any] = [
+            "type": type,
+            "message": message,
+            "metadata": metadata
+        ]
+
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: payload) else { return }
+        request.httpBody = jsonData
+
+        Task {
+            do {
+                _ = try await URLSession.shared.data(for: request)
+                FileTracer.log("[feedback] Sent: [\(type)] \(message)")
+            } catch {
+                FileTracer.log("[feedback] Failed: \(error.localizedDescription)")
+            }
+        }
     }
 }

@@ -280,20 +280,27 @@ class VoiceLoop: ObservableObject {
 
                 // Different messages for different error types
                 if let httpError = error as? HTTPError, httpError == .streamTimeout {
+                    // Report timeout to SoniqueBar for diagnostics
+                    await sendFeedback(type: "timeout", message: "Query timed out after 90s", metadata: ["query": String(contextualRequest.prefix(100)), "timeout_seconds": 90])
+
                     await speakSentence("The connection timed out. Let me try again.")
                     FileTracer.log("[loop] AUTO-RECOVERY: stream timeout, will retry")
                     // Retry the same request once
                     processingTask = Task {
-                        try await processAndSpeak(request)
+                        try await processAndSpeak(contextualRequest)
                     }
                     do {
                         try await processingTask!.value
                         RemoteLogger.log("[loop] RETRY SUCCEEDED: '\(lastResponse)'")
                     } catch {
+                        // Report retry failure
+                        await sendFeedback(type: "connection_failure", message: "Retry after timeout also failed", metadata: ["query": String(contextualRequest.prefix(100))])
                         await speakSentence("Sorry, I'm still having connection issues. Please try again.")
                         session?.endSpeaking()
                     }
                 } else {
+                    // Report general error
+                    await sendFeedback(type: "error", message: "Query processing failed: \(error.localizedDescription)", metadata: ["query": String(contextualRequest.prefix(100))])
                     await speakSentence("Sorry, I ran into an issue. Please try again.")
                     session?.endSpeaking()
                 }
@@ -370,12 +377,15 @@ class VoiceLoop: ObservableObject {
 
         var sentenceBuffer = ""
         var fullResponse = ""
+        var chunkCount = 0
+        let streamStartTime = Date()
 
         FileTracer.log("[http] streaming \(HTTPClient.activeBaseURL)/command/stream")
         for try await chunk in HTTPClient.sendCommandStreaming(transcript) {
             // Check for cancellation
             try Task.checkCancellation()
 
+            chunkCount += 1
             FileTracer.log("[loop] received chunk: '\(chunk.text)' final=\(chunk.isFinal)")
 
             // Artifact → show the image (ephemeral). No text on this chunk.
@@ -401,6 +411,14 @@ class VoiceLoop: ObservableObject {
         lastResponse = fullResponse.trimmingCharacters(in: .whitespaces)
         partialResponse = ""
 
+        // Report stream completion metrics
+        let streamDuration = Date().timeIntervalSince(streamStartTime)
+        await sendFeedback(type: "performance", message: "LLM stream complete", metadata: [
+            "chunks": chunkCount,
+            "response_length": lastResponse.count,
+            "stream_duration_seconds": String(format: "%.2f", streamDuration)
+        ])
+
         // Check for shortcut intent markers from IntentRouter
         if lastResponse.contains("[SHORTCUT:") {
             await executeShortcutIntent(from: lastResponse)
@@ -419,12 +437,14 @@ class VoiceLoop: ObservableObject {
         FileTracer.log("[loop] Sentence: '\(sentence.prefix(50))'")
 
         guard let tts = ttsProvider else {
-            FileTracer.log("[loop] ❌ NO TTS PROVIDER!")
+            FileTracer.log("[loop] NO TTS PROVIDER!")
+            await sendFeedback(type: "error", message: "TTS provider not initialized", metadata: [:])
             return
         }
 
         guard let vs = session else {
-            FileTracer.log("[loop] ❌ NO VOICE SESSION!")
+            FileTracer.log("[loop] NO VOICE SESSION!")
+            await sendFeedback(type: "error", message: "Voice session not available", metadata: [:])
             return
         }
 
@@ -436,7 +456,8 @@ class VoiceLoop: ObservableObject {
         clean = clean.replacingOccurrences(of: "_", with: "")   // Underscore emphasis
 
         guard !clean.isEmpty else {
-            FileTracer.log("[loop] ❌ EMPTY after cleaning")
+            FileTracer.log("[loop] EMPTY after cleaning")
+            await sendFeedback(type: "error", message: "Text empty after markdown stripping", metadata: ["original_length": sentence.count])
             return
         }
 
@@ -444,22 +465,61 @@ class VoiceLoop: ObservableObject {
         FileTracer.log("[loop] TTS provider type: \(type(of: tts))")
         FileTracer.log("[loop] Fetching PCM...")
 
+        // Report TTS synthesis start
+        await sendFeedback(type: "performance", message: "Starting TTS synthesis", metadata: [
+            "text_length": clean.count,
+            "provider": String(describing: type(of: tts))
+        ])
+
+        let ttsStartTime = Date()
+
         // VoiceBox/ElevenLabs: fetch PCM and play through VoiceSession (routes to Bluetooth)
         if let pcmData = await tts.fetchPCM(clean) {
+            let ttsDuration = Date().timeIntervalSince(ttsStartTime)
+
+            // Report successful TTS completion
+            await sendFeedback(type: "performance", message: "TTS synthesis complete", metadata: [
+                "audio_size": pcmData.count,
+                "synthesis_time_seconds": String(format: "%.2f", ttsDuration),
+                "text_length": clean.count
+            ])
+
             isSpeaking = true  // Mark as speaking before playback
-            FileTracer.log("[loop] ✓✓✓ GOT PCM: \(pcmData.count) bytes")
+            FileTracer.log("[loop] GOT PCM: \(pcmData.count) bytes")
             FileTracer.log("[loop] Playing via VoiceSession...")
+
+            // Report playback start
+            await sendFeedback(type: "performance", message: "Starting audio playback", metadata: [
+                "audio_size": pcmData.count
+            ])
+
+            let playbackStartTime = Date()
+
             await withCheckedContinuation { continuation in
                 vs.playPCM(data: pcmData) {
-                    FileTracer.log("[loop] ✓ Playback complete")
+                    let playbackDuration = Date().timeIntervalSince(playbackStartTime)
+
+                    FileTracer.log("[loop] Playback complete")
+
+                    // Report playback completion
+                    Task {
+                        await self.sendFeedback(type: "performance", message: "Audio playback complete", metadata: [
+                            "playback_duration_seconds": String(format: "%.2f", playbackDuration),
+                            "audio_size": pcmData.count
+                        ])
+                    }
+
                     self.isSpeaking = false  // Clear speaking flag when done
 
                     // Resume listening after speaking (continuous conversation mode)
                     do {
                         try vs.start()
-                        FileTracer.log("[loop] ✓ Resumed listening after TTS")
+                        FileTracer.log("[loop] Resumed listening after TTS")
                     } catch {
-                        FileTracer.log("[loop] ❌ Failed to resume listening: \(error)")
+                        FileTracer.log("[loop] Failed to resume listening: \(error)")
+                        Task {
+                            await self.sendFeedback(type: "error", message: "Failed to resume listening after TTS", metadata: ["error": error.localizedDescription])
+                        }
                     }
 
                     continuation.resume()
@@ -467,8 +527,13 @@ class VoiceLoop: ObservableObject {
             }
         } else {
             // No fallback - TTS failed
-            FileTracer.log("[loop] ❌ TTS fetchPCM returned NIL - no audio will play")
-            // Log error but don't fall back to Apple Voice
+            FileTracer.log("[loop] TTS fetchPCM returned NIL - no audio will play")
+
+            // Report TTS failure
+            await sendFeedback(type: "error", message: "TTS synthesis failed (returned nil)", metadata: [
+                "text_length": clean.count,
+                "provider": String(describing: type(of: tts))
+            ])
         }
 
         FileTracer.log("[loop] ===== SPEAK SENTENCE END =====")
@@ -616,6 +681,39 @@ class VoiceLoop: ObservableObject {
 
         default:
             FileTracer.log("[shortcuts] Unknown action: \(action)")
+        }
+    }
+
+    // MARK: - Feedback Reporting
+
+    /// Send feedback to SoniqueBar for diagnostics
+    private func sendFeedback(type: String, message: String, metadata: [String: Any]) async {
+        let serverURL = UserDefaults.standard.string(forKey: "serverURL") ?? Config.defaultLANURL
+        let authToken = SoniqueBrain.shared.loadPreferences().authToken ?? "5FA5EE09-442D-4969-B091-9AC331E1C39C"
+
+        guard let url = URL(string: "\(serverURL)/feedback") else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 5
+
+        let payload: [String: Any] = [
+            "type": type,
+            "message": message,
+            "metadata": metadata
+        ]
+
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: payload) else { return }
+        request.httpBody = jsonData
+
+        do {
+            _ = try await URLSession.shared.data(for: request)
+            FileTracer.log("[feedback] Sent: [\(type)] \(message)")
+        } catch {
+            // Silent failure
+            FileTracer.log("[feedback] Failed: \(error.localizedDescription)")
         }
     }
 }

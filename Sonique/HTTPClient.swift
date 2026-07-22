@@ -281,6 +281,11 @@ struct HTTPClient {
                         return
                     }
 
+                    // Track streaming response metrics
+                    let streamStartTime = Date()
+                    var chunkCount = 0
+                    var totalBytesReceived = 0
+
                     // Stream watchdog: if no data received for 30s, abort and recover
                     var lastDataTime = Date()
                     let watchdogTask = Task {
@@ -336,6 +341,8 @@ struct HTTPClient {
                                     }
                                     if let chunk = json["chunk"] as? String {
                                         let isFinal = json["is_final"] as? Bool ?? false
+                                        chunkCount += 1
+                                        totalBytesReceived += chunk.count
                                         FileTracer.log("[http] yielding chunk: '\(chunk)' final=\(isFinal)")
                                         continuation.yield(StreamChunk(text: chunk, isFinal: isFinal))
                                     }
@@ -347,6 +354,31 @@ struct HTTPClient {
                         }
                     }
                     watchdogTask.cancel()
+
+                    // Report stream completion metrics
+                    let streamDuration = Date().timeIntervalSince(streamStartTime)
+                    let serverURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://192.168.68.80:8890"
+                    if let feedbackURL = URL(string: "\(serverURL)/feedback") {
+                        var feedbackRequest = URLRequest(url: feedbackURL)
+                        feedbackRequest.httpMethod = "POST"
+                        feedbackRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                        feedbackRequest.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+                        let feedbackPayload: [String: Any] = [
+                            "type": "performance",
+                            "message": "HTTP stream completed",
+                            "metadata": [
+                                "chunks_received": chunkCount,
+                                "total_bytes": totalBytesReceived,
+                                "stream_duration_seconds": String(format: "%.2f", streamDuration),
+                                "request_text": String(text.prefix(100))
+                            ]
+                        ]
+                        if let jsonData = try? JSONSerialization.data(withJSONObject: feedbackPayload) {
+                            feedbackRequest.httpBody = jsonData
+                            _ = try? await URLSession.shared.data(for: feedbackRequest)
+                        }
+                    }
+
                     continuation.finish()
                 } catch {
                     continuation.finish(throwing: error)
