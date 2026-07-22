@@ -151,6 +151,39 @@ struct SettingsView: View {
                         .foregroundColor(.secondary)
                 }
 
+                Section(header: Text("Wake Word Setup")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Enable \"Hey Quinn\" from anywhere")
+                            .font(.headline)
+
+                        Text("Option 1: Siri (Default)")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        Text("Say: \"Hey Siri, Hey Sonique\"")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Divider()
+
+                        Text("Option 2: Voice Control (Single Phrase)")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        Text("Say: \"Hey Quinn\" (no Siri prefix)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Button(action: openVoiceControlSettings) {
+                            Label("Setup Voice Control", systemImage: "gearshape")
+                        }
+                        .buttonStyle(.bordered)
+
+                        Text("Accessibility → Voice Control → Create Custom Command")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                }
+
                 Section(header: Text("About")) {
                     LabeledContent("App Version", value: appVersion)
                     LabeledContent("TTS Provider", value: ttsProvider == "kokoro" ? "Kokoro (Local)" : "ElevenLabs")
@@ -178,6 +211,16 @@ struct SettingsView: View {
                     }
                 }
             }
+        }
+    }
+
+    private func openVoiceControlSettings() {
+        // Deep link to Accessibility → Voice Control settings
+        if let url = URL(string: "App-Prefs:root=ACCESSIBILITY&path=VOICE_CONTROL") {
+            UIApplication.shared.open(url)
+        } else if let url = URL(string: UIApplication.openSettingsURLString) {
+            // Fallback to general Settings if deep link fails
+            UIApplication.shared.open(url)
         }
     }
 
