@@ -236,7 +236,7 @@ class VoiceLoop: ObservableObject {
             isProcessing = true
             objectWillChange.send()  // Force SwiftUI update
             RemoteLogger.log("[loop] START processing request: '\(request)' (isProcessing=true)")
-            lastTranscript = request
+            lastTranscript = ""  // Clear so barge-in transcripts aren't filtered as duplicates
             partialResponse = ""
             debugLog.append("You: \(request)")
 
@@ -438,6 +438,15 @@ class VoiceLoop: ObservableObject {
                 vs.playPCM(data: pcmData) {
                     FileTracer.log("[loop] ✓ Playback complete")
                     self.isSpeaking = false  // Clear speaking flag when done
+
+                    // Resume listening after speaking (continuous conversation mode)
+                    do {
+                        try vs.start()
+                        FileTracer.log("[loop] ✓ Resumed listening after TTS")
+                    } catch {
+                        FileTracer.log("[loop] ❌ Failed to resume listening: \(error)")
+                    }
+
                     continuation.resume()
                 }
             }
