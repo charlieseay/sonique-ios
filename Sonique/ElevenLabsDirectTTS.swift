@@ -41,7 +41,11 @@ class ElevenLabsDirectTTS: NSObject, TTSProvider {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 
-        let payload: [String: Any] = ["text": text]
+        // Get selected voice ID from preferences
+        let prefs = await MainActor.run { SoniqueBrain.shared.loadPreferences() }
+        let voiceId = prefs.selectedVoiceID ?? "EXAVITQu4vr4xnSDxMaL" // Default voice
+
+        let payload: [String: Any] = ["text": text, "voice_id": voiceId]
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: payload) else {
             FileTracer.log("[elevenlabs] Failed to serialize JSON")
