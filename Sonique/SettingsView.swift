@@ -3,7 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @AppStorage("serverURL") private var serverURL = ""
     @AppStorage("useTailscale") private var useTailscale = false
-    @AppStorage("tts_provider") private var ttsProvider = "elevenlabs"
+    @AppStorage("tts_provider") private var ttsProvider = "kokoro"
     @AppStorage("interruption_threshold") private var interruptionThreshold: Double = 0.4
 
     @State private var connectionTestResult: String?

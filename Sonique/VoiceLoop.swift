@@ -60,7 +60,7 @@ class VoiceLoop: ObservableObject {
     }
 
     private var ttsMode: TTSMode {
-        let stored = UserDefaults.standard.string(forKey: "tts_provider") ?? "elevenlabs"
+        let stored = UserDefaults.standard.string(forKey: "tts_provider") ?? "kokoro"
         return TTSMode(rawValue: stored) ?? .elevenlabs
     }
 
