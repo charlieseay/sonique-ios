@@ -2,6 +2,7 @@ import Foundation
 
 /// Matches spoken transcripts against a wake word, tolerating ASR spelling variants.
 /// "Cael" → "Kale", "Sonique" → "Sonic", etc. are all considered hits.
+/// Now includes confidence scoring to filter false positives.
 enum WakeWordMatcher {
 
     /// Strip the wake word from `text` and return the remainder.
@@ -20,6 +21,23 @@ enum WakeWordMatcher {
             .trimmingCharacters(in: CharacterSet(charactersIn: " ,.!?"))
     }
 
+    /// Calculate confidence score for wake word match (0.0 = no match, 1.0 = perfect match).
+    /// Use this to filter false positives.
+    static func confidence(wakeWord wake: String, in text: String) -> Double {
+        let words = text.split(whereSeparator: { $0 == " " || $0 == "," })
+            .map { String($0).trimmingCharacters(in: CharacterSet(charactersIn: " ,.!?")) }
+            .filter { !$0.isEmpty }
+
+        var bestScore = 0.0
+        for word in words {
+            let score = wordMatchConfidence(word, wake: wake)
+            if score > bestScore {
+                bestScore = score
+            }
+        }
+        return bestScore
+    }
+
     // MARK: - Internal
 
     private static func wordMatches(_ word: String, wake: String) -> Bool {
@@ -27,6 +45,43 @@ enum WakeWordMatcher {
         if w == wake || w.contains(wake) || wake.contains(w) { return true }
         if levenshtein(w, wake) <= 1 { return true }
         return phoneticKey(w) == phoneticKey(wake)
+    }
+
+    /// Calculate confidence score for a single word match (0.0-1.0).
+    /// 1.0 = exact match, 0.9+ = very close, 0.5-0.9 = phonetic/fuzzy, 0.0 = no match.
+    private static func wordMatchConfidence(_ word: String, wake: String) -> Double {
+        let w = word.lowercased()
+        let wakeLower = wake.lowercased()
+
+        // Exact match = perfect confidence
+        if w == wakeLower { return 1.0 }
+
+        // Contains check (substring match)
+        if w.contains(wakeLower) {
+            let ratio = Double(wakeLower.count) / Double(w.count)
+            return 0.9 * ratio  // Scale by coverage
+        }
+        if wakeLower.contains(w) {
+            let ratio = Double(w.count) / Double(wakeLower.count)
+            return 0.85 * ratio
+        }
+
+        // Levenshtein distance (1-2 char edits)
+        let distance = levenshtein(w, wakeLower)
+        if distance == 0 { return 1.0 }
+        if distance == 1 { return 0.85 }
+        if distance == 2 { return 0.7 }
+        if distance <= 3 {
+            return 0.5 + (0.2 * (3.0 - Double(distance)) / 3.0)  // 0.5-0.7 range
+        }
+
+        // Phonetic match (last resort)
+        if phoneticKey(w) == phoneticKey(wakeLower) {
+            // Phonetic matches are less reliable - penalize heavily
+            return 0.4
+        }
+
+        return 0.0
     }
 
     /// Drop vowels (except leading), collapse common homophones, dedupe doubles.

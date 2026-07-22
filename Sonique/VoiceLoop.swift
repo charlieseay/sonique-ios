@@ -207,10 +207,20 @@ class VoiceLoop: ObservableObject {
             let request: String
             if !isAwake {
                 let wake = AssistantProfile.shared.wakeWord
+
+                // Check confidence score (require >= 0.5 to reduce false positives)
+                let confidence = WakeWordMatcher.confidence(wakeWord: wake, in: transcript)
+                if confidence < 0.5 {
+                    FileTracer.log("[loop] asleep, wake word confidence too low (\(String(format: "%.2f", confidence))) in '\(transcript)' — ignoring")
+                    continue
+                }
+
                 guard let stripped = WakeWordMatcher.strip(wakeWord: wake, from: transcript) else {
                     FileTracer.log("[loop] asleep, no wake word ('\(wake)') in '\(transcript)' — ignoring")
                     continue
                 }
+
+                FileTracer.log("[loop] wake word detected with confidence \(String(format: "%.2f", confidence))")
                 isAwake = true
                 SoundCues.shared.playReady()
                 cancelSleepTimer()
