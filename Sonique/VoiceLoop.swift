@@ -505,10 +505,10 @@ class VoiceLoop: ObservableObject {
                     FileTracer.log("[conn] VoiceBox TTS initialized")
 
                 case .elevenlabs:
-                    // Route through SoniqueBar /synthesize which uses ElevenLabs on the backend
-                    ttsProvider = VoiceBoxTTS(soniqueBarHost: Config.soniqueBarHost)
-                    debugLog.append("TTS ready (ElevenLabs via SoniqueBar)")
-                    FileTracer.log("[conn] ElevenLabs TTS initialized (via SoniqueBar)")
+                    // Connect directly to ElevenLabs - enables real barge-in
+                    ttsProvider = ElevenLabsDirectTTS(soniqueBarHost: Config.soniqueBarHost)
+                    debugLog.append("TTS ready (ElevenLabs Direct)")
+                    FileTracer.log("[conn] ElevenLabs TTS initialized (direct connection)")
 
                 case .ondevice:
                     ttsProvider = SimpleTTS()

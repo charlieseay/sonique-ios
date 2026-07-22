@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2DB3C58CB53040F4AF462036 /* ElevenLabsDirectTTS.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE6F55C394164D9585151A81 /* ElevenLabsDirectTTS.swift */; };
 		07B93A2F0FEA4AD19B86D13D /* KokoroTTS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C928175E672279B0EF11D02 /* KokoroTTS.swift */; };
 		0F043EAB95B04B37A67616F0 /* WakeWordMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08D9A67C2CBC4419B88B3169 /* WakeWordMatcher.swift */; };
 		1C140EA451B919D9298BE32E /* NativeCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62F4F3D0ECD71D878D9DA058 /* NativeCapabilities.swift */; };
@@ -58,6 +59,7 @@
 		08D9A67C2CBC4419B88B3169 /* WakeWordMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/WakeWordMatcher.swift; sourceTree = "<group>"; };
 		0C928175E672279B0EF11D02 /* KokoroTTS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/KokoroTTS.swift; sourceTree = "<group>"; };
 		0CB785A30EAAFF93FC27484B /* TTSProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/TTSProvider.swift; sourceTree = "<group>"; };
+		DE6F55C394164D9585151A81 /* ElevenLabsDirectTTS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/ElevenLabsDirectTTS.swift; sourceTree = "<group>"; };
 		14CE437189C0E4421DAF830B /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Config.swift; path = Sonique/Config.swift; sourceTree = SOURCE_ROOT; };
 		2A23AB4D69778C0A2A9DD563 /* BonjourDiscovery.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BonjourDiscovery.swift; path = Sonique/BonjourDiscovery.swift; sourceTree = "<group>"; };
 		3A6EDC914A658CBC3E575AB7 /* DeviceContextPublisher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Sonique/DeviceContextPublisher.swift; sourceTree = SOURCE_ROOT; };
@@ -299,7 +301,8 @@
 				78B954F685307573B5EB423A /* DeviceRegistration.swift in Sources */,
 				53D6F717889645D79E14FFC2 /* ChatView.swift in Sources */,
 				1F086CC3122C84ACFCF8A7C5 /* ProactiveAgent.swift in Sources */,
-			);
+							2DB3C58CB53040F4AF462036 /* ElevenLabsDirectTTS.swift in Sources */,
+);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		TST000000000000000012P /* Sources */ = {
