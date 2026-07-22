@@ -496,6 +496,14 @@ class VoiceLoop: ObservableObject {
             FileTracer.log("[loop] GOT PCM: \(pcmData.count) bytes")
             FileTracer.log("[loop] Playing via VoiceSession...")
 
+            // Start listening BEFORE playback so "stop" can be heard during speech
+            do {
+                try vs.start()
+                FileTracer.log("[loop] Started listening for barge-in (AEC enabled)")
+            } catch {
+                FileTracer.log("[loop] Failed to start listening for barge-in: \(error)")
+            }
+
             // Report playback start
             await sendFeedback(type: "performance", message: "Starting audio playback", metadata: [
                 "audio_size": pcmData.count
@@ -518,18 +526,7 @@ class VoiceLoop: ObservableObject {
                     }
 
                     self.isSpeaking = false  // Clear speaking flag when done
-
-                    // Resume listening after speaking (continuous conversation mode)
-                    do {
-                        try vs.start()
-                        FileTracer.log("[loop] Resumed listening after TTS")
-                    } catch {
-                        FileTracer.log("[loop] Failed to resume listening: \(error)")
-                        Task {
-                            await self.sendFeedback(type: "error", message: "Failed to resume listening after TTS", metadata: ["error": error.localizedDescription])
-                        }
-                    }
-
+                    // Recognition already active (started before playback for barge-in)
                     continuation.resume()
                 }
             }
