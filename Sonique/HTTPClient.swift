@@ -68,15 +68,25 @@ struct HTTPClient {
         let batteryLevel = await MainActor.run { Int(UIDevice.current.batteryLevel * 100) }
         let batteryState = await MainActor.run { UIDevice.current.batteryState }
         let isCharging = (batteryState == .charging || batteryState == .full)
+        let conversationHistory = await MainActor.run {
+            SoniqueBrain.shared.getRecentConversations(limit: 10)
+        }
         let payload: [String: Any] = [
             "text": text,
+            "conversation_history": conversationHistory,
             "device": [
                 "battery_percent": batteryLevel,
                 "is_charging": isCharging
             ]
         ]
         #else
-        let payload: [String: Any] = ["text": text]
+        let conversationHistory = await MainActor.run {
+            SoniqueBrain.shared.getRecentConversations(limit: 10)
+        }
+        let payload: [String: Any] = [
+            "text": text,
+            "conversation_history": conversationHistory
+        ]
         #endif
 
         let body = try JSONSerialization.data(withJSONObject: payload)
@@ -115,9 +125,13 @@ struct HTTPClient {
                     let isCharging = (batteryState == .charging || batteryState == .full)
 
                     let profile = await MainActor.run { AssistantProfile.shared }
+                    let conversationHistory = await MainActor.run {
+                        SoniqueBrain.shared.getRecentConversations(limit: 10)
+                    }
                     let payload: [String: Any] = [
                         "text": text,
                         "image": imageBase64,  // Base64 encoded image
+                        "conversation_history": conversationHistory,
                         "device": [
                             "battery_percent": batteryLevel,
                             "is_charging": isCharging

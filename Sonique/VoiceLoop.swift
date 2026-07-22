@@ -202,6 +202,14 @@ class VoiceLoop: ObservableObject {
                 RemoteLogger.log("[loop] barge-in with new command '\(transcript)' - will process")
             }
 
+            // Control commands that don't need server processing
+            let lower = transcript.lowercased()
+            if lower == "stop" || lower == "cancel" || lower == "nevermind" || lower == "never mind" {
+                RemoteLogger.log("[loop] control command '\(transcript)' - stopping without server query")
+                stopSpeaking()  // Ensure playback stops
+                continue
+            }
+
             // Wake-word gating: when asleep, only respond if the user said the assistant's
             // name; strip it from the request. When awake, respond to everything.
             let request: String

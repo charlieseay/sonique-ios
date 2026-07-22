@@ -61,6 +61,33 @@ final class SoniqueBrain {
         return parts.joined(separator: "\n\n")
     }
 
+    // MARK: - Reads (Conversation History)
+
+    /// Get recent conversation history for context
+    func getRecentConversations(limit: Int = 10) -> [[String: String]] {
+        let conversationsURL = deviceDir.appendingPathComponent("conversations.jsonl")
+        let text = readText(conversationsURL)
+        guard !text.isEmpty else { return [] }
+
+        var exchanges: [[String: String]] = []
+        let lines = text.components(separatedBy: "\n").filter { !$0.isEmpty }
+
+        // Take last N lines (most recent)
+        let recentLines = lines.suffix(limit)
+
+        for line in recentLines {
+            guard let data = line.data(using: .utf8),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let user = json["user"] as? String,
+                  let assistant = json["assistant"] as? String else {
+                continue
+            }
+            exchanges.append(["user": user, "assistant": assistant])
+        }
+
+        return exchanges
+    }
+
     // MARK: - Writes
 
     func recordExchange(user: String, assistant: String) {
