@@ -35,8 +35,6 @@ class ClaudeSessionManager {
     func saveSession(cookies: [HTTPCookie]) throws {
         logger.info("[ClaudeSession] Saving \(cookies.count) cookies")
 
-        let encoder = JSONEncoder()
-
         // Convert HTTPCookie to codable format
         let cookieData: [[String: Any]] = cookies.map { cookie in
             var data: [String: Any] = [
