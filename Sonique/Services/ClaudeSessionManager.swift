@@ -116,6 +116,10 @@ class ClaudeSessionManager {
         }
     }
 
+    // Session monitoring
+    private var sessionMonitorTask: Task<Void, Never>?
+    private var onSessionExpired: (() -> Void)?
+
     /// Query Claude with saved session
     func query(_ prompt: String) async throws -> String {
         guard let cookies = loadCookies() else {
@@ -127,6 +131,37 @@ class ClaudeSessionManager {
         // TODO: Implement iOS-specific query mechanism
         // (ClaudeWebClient is macOS-only)
         throw SessionError.queryFailed("iOS query not yet implemented")
+    }
+
+    /// Start monitoring session validity
+    /// - Parameter onExpired: Callback when session expires
+    func startSessionMonitoring(onExpired: @escaping () -> Void) {
+        self.onSessionExpired = onExpired
+
+        // Cancel existing monitor
+        sessionMonitorTask?.cancel()
+
+        sessionMonitorTask = Task { @MainActor in
+            while !Task.isCancelled {
+                // Check every hour
+                try? await Task.sleep(nanoseconds: 3_600_000_000_000)
+
+                if !isValid {
+                    logger.warning("[ClaudeSession] Session expired, triggering re-auth")
+                    onExpired()
+                    break
+                }
+            }
+        }
+
+        logger.info("[ClaudeSession] Session monitoring started")
+    }
+
+    /// Stop session monitoring
+    func stopSessionMonitoring() {
+        sessionMonitorTask?.cancel()
+        sessionMonitorTask = nil
+        logger.info("[ClaudeSession] Session monitoring stopped")
     }
 }
 
