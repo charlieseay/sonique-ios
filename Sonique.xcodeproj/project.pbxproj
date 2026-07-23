@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E517F3E423DE4B52942BFCDD /* LLMAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C46E3757124E6E84CBA42B /* LLMAuthView.swift */; };
+		C6E85413C22B4647AD4D4CC4 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F646B4CDA3924C5EB179E3FD /* OnboardingView.swift */; };
 		2DB3C58CB53040F4AF462036 /* ElevenLabsDirectTTS.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE6F55C394164D9585151A81 /* ElevenLabsDirectTTS.swift */; };
 		07B93A2F0FEA4AD19B86D13D /* KokoroTTS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C928175E672279B0EF11D02 /* KokoroTTS.swift */; };
 		0F043EAB95B04B37A67616F0 /* WakeWordMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08D9A67C2CBC4419B88B3169 /* WakeWordMatcher.swift */; };
@@ -57,6 +59,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		E8C46E3757124E6E84CBA42B /* LLMAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMAuthView.swift; sourceTree = "<group>"; };
+		F646B4CDA3924C5EB179E3FD /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		08D9A67C2CBC4419B88B3169 /* WakeWordMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/WakeWordMatcher.swift; sourceTree = "<group>"; };
 		0C928175E672279B0EF11D02 /* KokoroTTS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/KokoroTTS.swift; sourceTree = "<group>"; };
 		0CB785A30EAAFF93FC27484B /* TTSProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/TTSProvider.swift; sourceTree = "<group>"; };
@@ -259,6 +263,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E517F3E423DE4B52942BFCDD /* LLMAuthView.swift in Sources */,
+				C6E85413C22B4647AD4D4CC4 /* OnboardingView.swift in Sources */,
 				FF1A00000000000000ASSET1 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
