@@ -3,7 +3,7 @@ import SwiftUI
 
 /// The user-configurable identity of the assistant: its name (default "Sonique",
 /// which doubles as the wake word) and an optional profile photo. Persisted in the
-/// iCloud brain's mobile/ folder (assistant.json + photo.jpg) with a UserDefaults
+/// iCloud brain's shared/ folder (assistant.json + photo.jpg) with a UserDefaults
 /// mirror so it's available instantly at launch.
 @MainActor
 final class AssistantProfile: ObservableObject {
@@ -116,7 +116,7 @@ final class AssistantProfile: ObservableObject {
             base = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
                 .appendingPathComponent("SoniqueProfiles")
         }
-        let dir = base.appendingPathComponent("mobile")
+        let dir = base.appendingPathComponent("shared")
         try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }

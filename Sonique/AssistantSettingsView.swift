@@ -12,6 +12,7 @@ struct AssistantSettingsView: View {
     @State private var lanURL: String = ""
     @State private var tailscaleURL: String = ""
     @State private var tailscaleOn: Bool = true
+    @State private var showTrademarkAlert: Bool = false
 
     var body: some View {
         NavigationView {
@@ -112,12 +113,31 @@ struct AssistantSettingsView: View {
                     }
                 }
             }
+            .alert("Trademarked Name", isPresented: $showTrademarkAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("That name is trademarked by another voice assistant. Please choose a different name for your assistant.")
+            }
         }
     }
 
     private func commitName() {
         let trimmed = draftName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Trademark validation: reject well-known voice assistant names
+        let trademarkedNames = ["alexa", "siri", "google", "cortana", "bixby"]
+        let wakeWord = trimmed.lowercased().split(separator: " ").first.map(String.init) ?? trimmed.lowercased()
+
+        if trademarkedNames.contains(wakeWord) {
+            // Reset to current profile name (reject the change)
+            draftName = profile.name
+            showTrademarkAlert = true
+            print("[AssistantSettings] ⚠️  Rejected trademarked wake word: \(wakeWord)")
+            return
+        }
+
         profile.name = trimmed.isEmpty ? "Sonique" : trimmed
+
         // Persist connection settings too.
         let lan = lanURL.trimmingCharacters(in: .whitespacesAndNewlines)
         Config.commandServerURL = lan.isEmpty ? Config.defaultLANURL : lan

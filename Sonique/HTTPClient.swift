@@ -55,6 +55,30 @@ struct HTTPClient {
             }
         }
     }
+
+    /// Retry wrapper for network requests with exponential backoff
+    /// Retries 3 times: 1s, 2s, 4s delays (total ~7s max)
+    private static func withRetry<T>(
+        maxAttempts: Int = 3,
+        operation: @escaping () async throws -> T
+    ) async throws -> T {
+        var lastError: Error?
+
+        for attempt in 1...maxAttempts {
+            do {
+                return try await operation()
+            } catch {
+                lastError = error
+                if attempt < maxAttempts {
+                    let delay = Double(1 << (attempt - 1))  // 1s, 2s, 4s
+                    print("[HTTPClient] Attempt \(attempt) failed, retrying in \(delay)s...")
+                    try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                }
+            }
+        }
+
+        throw lastError ?? NSError(domain: "HTTPClient", code: -1, userInfo: [NSLocalizedDescriptionKey: "All retry attempts failed"])
+    }
     static func sendCommand(_ text: String) async throws -> String {
         let url = URL(string: "\(HTTPClient.activeBaseURL)/command")!
         var request = URLRequest(url: url)
@@ -96,15 +120,18 @@ struct HTTPClient {
         let authToken = await MainActor.run { SoniqueBrain.shared.loadPreferences().authToken }
         addAuthHeaders(to: &request, authToken: authToken, body: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw HTTPError.badResponse
+        // Retry network call with exponential backoff
+        return try await withRetry {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                throw HTTPError.badResponse
+            }
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let responseText = json["response"] as? String else {
+                throw HTTPError.invalidJSON
+            }
+            return responseText
         }
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let responseText = json["response"] as? String else {
-            throw HTTPError.invalidJSON
-        }
-        return responseText
     }
 
     static func sendCommandWithImage(_ text: String, imageBase64: String) -> AsyncThrowingStream<StreamChunk, Error> {
