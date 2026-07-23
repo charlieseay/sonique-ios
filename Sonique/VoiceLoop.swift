@@ -584,21 +584,17 @@ class VoiceLoop: ObservableObject {
                     debugLog.append("TTS ready (Kokoro)")
                     FileTracer.log("[conn] Kokoro TTS initialized")
 
-                case .voicebox:
-                    ttsProvider = VoiceBoxTTS(soniqueBarHost: Config.soniqueBarHost)
-                    debugLog.append("TTS ready (VoiceBox)")
-                    FileTracer.log("[conn] VoiceBox TTS initialized")
-
                 case .elevenlabs:
                     // Server-side ElevenLabs TTS (via SoniqueBar)
                     ttsProvider = ElevenLabsDirectTTS(soniqueBarHost: Config.soniqueBarHost)
                     debugLog.append("TTS ready (ElevenLabs)")
                     FileTracer.log("[conn] ElevenLabs TTS initialized (server-side)")
 
-                case .ondevice:
-                    ttsProvider = SimpleTTS()
-                    debugLog.append("TTS ready (on-device)")
-                    FileTracer.log("[conn] On-device TTS initialized")
+                case .voicebox, .ondevice:
+                    // Fallback to Kokoro for removed TTS modes
+                    ttsProvider = KokoroTTS(soniqueBarHost: Config.soniqueBarHost)
+                    debugLog.append("TTS ready (Kokoro fallback)")
+                    FileTracer.log("[conn] Kokoro TTS initialized (fallback from \(ttsMode.rawValue))")
                 }
 
                 self.error = nil

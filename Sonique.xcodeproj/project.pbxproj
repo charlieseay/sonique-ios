@@ -13,7 +13,6 @@
 		1C140EA451B919D9298BE32E /* NativeCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62F4F3D0ECD71D878D9DA058 /* NativeCapabilities.swift */; };
 		1F086CC3122C84ACFCF8A7C5 /* ProactiveAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D423C09E52A27BC733FD0C7 /* ProactiveAgent.swift */; };
 		23DA4ACE8CFA741DF5BD9C1B /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CE437189C0E4421DAF830B /* Config.swift */; };
-		307D709226B85346EDA7F35C /* SimpleTTS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78E343F937973D5F45310576 /* SimpleTTS.swift */; };
 		3AD4BE75784BB13A70577E66 /* DeviceContextPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A6EDC914A658CBC3E575AB7 /* DeviceContextPublisher.swift */; };
 		3F73A4442FCE86A90057ED63 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F73A4432FCE86A90057ED63 /* SettingsView.swift */; };
 		3F8E06692F99DA5C00F7E36D /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 3F8E06682F99DA5C00F7E36D /* GoogleMobileAds */; };
@@ -71,7 +70,6 @@
 		3FC595A32F998A2100BEFC6F /* Sonique.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Sonique.entitlements; sourceTree = "<group>"; };
 		62F4F3D0ECD71D878D9DA058 /* NativeCapabilities.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NativeCapabilities.swift; path = Sonique/NativeCapabilities.swift; sourceTree = "<group>"; };
 		671A40B7929AC4785513019C /* HTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HTTPClient.swift; path = Sonique/HTTPClient.swift; sourceTree = SOURCE_ROOT; };
-		78E343F937973D5F45310576 /* SimpleTTS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/SimpleTTS.swift; sourceTree = "<group>"; };
 		8D423C09E52A27BC733FD0C7 /* ProactiveAgent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProactiveAgent.swift; path = Sonique/ProactiveAgent.swift; sourceTree = SOURCE_ROOT; };
 		96DDA90423EADA4B1E17B4EA /* DeviceRegistration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Sonique/DeviceRegistration.swift; sourceTree = SOURCE_ROOT; };
 		A1B2C3D4E5F6789012345678 /* InterruptionPredictor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InterruptionPredictor.swift; path = Sonique/Prediction/InterruptionPredictor.swift; sourceTree = SOURCE_ROOT; };
@@ -164,7 +162,6 @@
 			isa = PBXGroup;
 			children = (
 				3A6EDC914A658CBC3E575AB7 /* DeviceContextPublisher.swift */,
-				78E343F937973D5F45310576 /* SimpleTTS.swift */,
 				0CB785A30EAAFF93FC27484B /* TTSProvider.swift */,
 				0C928175E672279B0EF11D02 /* KokoroTTS.swift */,
 				2A23AB4D69778C0A2A9DD563 /* BonjourDiscovery.swift */,
@@ -298,7 +295,6 @@
 				1C140EA451B919D9298BE32E /* NativeCapabilities.swift in Sources */,
 				865B1979F6D2564DBD38C8C0 /* CapabilityExecutor.swift in Sources */,
 				3AD4BE75784BB13A70577E66 /* DeviceContextPublisher.swift in Sources */,
-				307D709226B85346EDA7F35C /* SimpleTTS.swift in Sources */,
 				B8272780DFB86587B6CD08CD /* TTSProvider.swift in Sources */,
 				07B93A2F0FEA4AD19B86D13D /* KokoroTTS.swift in Sources */,
 				9799BFC0599B37F5FBC462FE /* BonjourDiscovery.swift in Sources */,
