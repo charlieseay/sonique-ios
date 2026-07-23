@@ -79,7 +79,8 @@ struct LLMAuthView: View {
                 // Set as active provider
                 await ProviderManager.shared.setActiveProvider(provider)
 
-                // Success - dismiss and callback
+                // Success - show success screen, then dismiss
+                // Note: Success screen will be shown by the parent (OnboardingView)
                 isPresented = false
                 onSuccess()
 

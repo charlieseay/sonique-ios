@@ -3,6 +3,7 @@ import SwiftUI
 struct OnboardingView: View {
     @State private var currentStep = 0
     @State private var showingAuth = false
+    @State private var showingSuccess = false
     @State private var selectedProvider: LLMProvider?
     @Environment(\.dismiss) var dismiss
 
@@ -121,10 +122,14 @@ struct OnboardingView: View {
                     provider: provider,
                     isPresented: $showingAuth,
                     onSuccess: {
-                        dismiss()
+                        // Show success screen
+                        showingSuccess = true
                     }
                 )
             }
+        }
+        .fullScreenCover(isPresented: $showingSuccess) {
+            SetupSuccessView()
         }
     }
 }
