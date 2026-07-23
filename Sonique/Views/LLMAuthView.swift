@@ -1,25 +1,33 @@
 import SwiftUI
 import WebKit
+import AuthenticationServices
 
 struct LLMAuthView: View {
     let provider: LLMProvider
     @Binding var isPresented: Bool
     let onSuccess: () -> Void
 
-    @State private var isLoading = true
+    @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var authSession: ASWebAuthenticationSession?
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
+            VStack(spacing: 30) {
+                Spacer()
+
                 if isLoading {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 20) {
                         ProgressView()
-                        Text("Loading \(provider.displayName)...")
-                            .font(.subheadline)
+                            .scaleEffect(1.5)
+
+                        Text("Opening Safari...")
+                            .font(.headline)
+
+                        Text("Sign in to \(provider.displayName)")
+                            .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let error = errorMessage {
                     VStack(spacing: 20) {
                         Image(systemName: "exclamationmark.triangle")
@@ -37,32 +45,41 @@ struct LLMAuthView: View {
 
                         Button("Try Again") {
                             errorMessage = nil
-                            isLoading = true
+                            startAuthSession()
                         }
                         .buttonStyle(.borderedProminent)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    WebAuthView(
-                        provider: provider,
-                        onLoadingStateChange: { loading in
-                            isLoading = loading
-                        },
-                        onSuccess: { cookies in
-                            handleAuthSuccess(cookies: cookies)
-                        },
-                        onError: { error in
-                            errorMessage = error
-                            isLoading = false
+                    VStack(spacing: 20) {
+                        Image(systemName: provider == .claude ? "brain" : "bubble.left.and.bubble.right")
+                            .font(.system(size: 60))
+                            .foregroundColor(.blue)
+
+                        Text("Sign in to \(provider.displayName)")
+                            .font(.title2)
+                            .bold()
+
+                        Text("Safari will open for secure authentication")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+
+                        Button("Continue") {
+                            startAuthSession()
                         }
-                    )
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                    }
                 }
+
+                Spacer()
             }
-            .navigationTitle("Sign in to \(provider.displayName)")
+            .navigationTitle("Authentication")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Cancel") {
+                        authSession?.cancel()
                         isPresented = false
                     }
                 }
