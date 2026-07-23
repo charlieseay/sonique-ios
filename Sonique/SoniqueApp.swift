@@ -39,12 +39,33 @@ struct SoniqueApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
                 .onAppear {
                     // Auto-discover SoniqueBar backend on launch
                     bonjourDiscovery.start()
                 }
                 .environmentObject(bonjourDiscovery)
+        }
+    }
+}
+
+/// Root view that shows onboarding or main app
+struct RootView: View {
+    @StateObject private var providerManager = ProviderManager.shared
+    @State private var showOnboarding = false
+
+    var body: some View {
+        Group {
+            if providerManager.isConfigured {
+                ContentView()
+            } else {
+                OnboardingView()
+            }
+        }
+        .onAppear {
+            Task { @MainActor in
+                await providerManager.updateConfiguredState()
+            }
         }
     }
 }
