@@ -23,6 +23,24 @@ class BonjourDiscovery: NSObject, ObservableObject {
         browser?.searchForServices(ofType: "_sonique._tcp.", inDomain: "local.")
 
         logger.info("[Bonjour] Started browsing for _sonique._tcp.local")
+        NSLog("[Bonjour] 🔍 Started browsing for _sonique._tcp.local")
+
+        // Fallback: try iCloud-synced URL after 5 seconds
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            if discoveredURL == nil {
+                NSLog("[Bonjour] ⏱️ 5s timeout, trying iCloud-synced URL from SoniqueBrain")
+                let prefs = SoniqueBrain.shared.loadSharedPreferences()
+                if let syncedURL = prefs.serverURL {
+                    NSLog("[Bonjour] ✅ Found iCloud URL: \(syncedURL)")
+                    self.discoveredURL = syncedURL
+                    Config.commandServerURL = syncedURL
+                    stop()
+                } else {
+                    NSLog("[Bonjour] ❌ No serverURL in iCloud preferences")
+                }
+            }
+        }
     }
 
     /// Stop browsing
@@ -39,6 +57,7 @@ class BonjourDiscovery: NSObject, ObservableObject {
 extension BonjourDiscovery: NetServiceBrowserDelegate {
     func netServiceBrowser(_ browser: NetServiceBrowser, didFind service: NetService, moreComing: Bool) {
         logger.info("[Bonjour] Found service: \(service.name)")
+        NSLog("[Bonjour] 🎯 Found service: \(service.name)")
 
         // Resolve the service to get IP and port
         service.delegate = self
@@ -48,10 +67,12 @@ extension BonjourDiscovery: NetServiceBrowserDelegate {
 
     func netServiceBrowser(_ browser: NetServiceBrowser, didRemove service: NetService, moreComing: Bool) {
         logger.info("[Bonjour] Service removed: \(service.name)")
+        NSLog("[Bonjour] ⬇️ Service removed: \(service.name)")
     }
 
     func netServiceBrowser(_ browser: NetServiceBrowser, didNotSearch errorDict: [String : NSNumber]) {
         logger.error("[Bonjour] ❌ Failed to search: \(errorDict)")
+        NSLog("[Bonjour] ❌ Failed to search: \(errorDict)")
         isSearching = false
     }
 }

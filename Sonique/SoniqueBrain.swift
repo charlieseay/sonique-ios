@@ -108,6 +108,18 @@ final class SoniqueBrain {
     // MARK: - Preferences (iCloud-backed, survives reinstalls)
 
     private var prefsURL: URL { deviceDir.appendingPathComponent("preferences.json") }
+    private var sharedPrefsURL: URL { sharedDir.appendingPathComponent("preferences.json") }
+
+    /// Load SHARED preferences (written by SoniqueBar, contains serverURL + authToken)
+    func loadSharedPreferences() -> Preferences {
+        let text = readText(sharedPrefsURL)
+        if !text.isEmpty,
+           let data = text.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode(Preferences.self, from: data) {
+            return decoded
+        }
+        return Preferences()
+    }
 
     struct Preferences: Codable {
         var serverURL: String?

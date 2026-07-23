@@ -1,11 +1,12 @@
 import SwiftUI
+import AVFoundation
 
 struct OnboardingView: View {
     @State private var currentStep = 0
-    @State private var showingAuth = false
-    @State private var showingSuccess = false
-    @State private var selectedProvider: LLMProvider?
+    @State private var micPermissionGranted = false
+    @State private var isCheckingPermission = false
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var bonjourDiscovery: BonjourDiscovery
 
     var body: some View {
         TabView(selection: $currentStep) {
@@ -16,13 +17,12 @@ struct OnboardingView: View {
                 Image(systemName: "waveform.circle.fill")
                     .font(.system(size: 100))
                     .foregroundColor(.blue)
-                    .symbolEffect(.pulse)
 
                 Text("Meet Quinn")
                     .font(.largeTitle)
                     .bold()
 
-                Text("Your AI voice assistant with superpowers")
+                Text("Your voice assistant\nPowered by your Mac")
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -48,168 +48,156 @@ struct OnboardingView: View {
             }
             .tag(0)
 
-            // Step 2: Provider Selection
-            VStack(spacing: 20) {
-                Text("Connect Your AI")
-                    .font(.largeTitle)
-                    .bold()
-                    .padding(.top, 40)
+            // Step 2: Microphone Permission
+            VStack(spacing: 30) {
+                Spacer()
 
-                Text("Quinn works with your existing AI subscription")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 70))
+                    .foregroundColor(.blue)
+
+                Text("Microphone Access")
+                    .font(.title)
+                    .bold()
+
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Why:")
+                            .font(.headline)
+                            .foregroundColor(.blue)
+
+                        Text("Quinn listens for your voice commands and questions")
+                            .font(.body)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Without it:")
+                            .font(.headline)
+                            .foregroundColor(.orange)
+
+                        Text("Quinn won't be able to hear you")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .frame(maxWidth: 600)
+                .padding(.horizontal, 50)
 
                 Spacer()
 
                 VStack(spacing: 12) {
-                    ProviderButton(
-                        provider: .claude,
-                        recommended: true,
-                        action: {
-                            selectedProvider = .claude
-                            showingAuth = true
+                    if micPermissionGranted {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                            Text("Permission granted!")
+                                .foregroundColor(.green)
                         }
-                    )
+                        .padding()
 
-                    ProviderButton(
-                        provider: .chatgpt,
-                        action: {
-                            selectedProvider = .chatgpt
-                            showingAuth = true
+                        Button("Continue") {
+                            withAnimation {
+                                currentStep = 2
+                            }
                         }
-                    )
-
-                    ProviderButton(
-                        provider: .gemini,
-                        action: {
-                            selectedProvider = .gemini
-                            showingAuth = true
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                    } else {
+                        Button(action: requestMicPermission) {
+                            Text("Grant Microphone Access")
+                                .font(.headline)
+                                .frame(maxWidth: 300)
                         }
-                    )
-
-                    Button(action: {
-                        selectedProvider = .ollama
-                        showingAuth = true
-                    }) {
-                        Text("Advanced: Local Ollama")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.top, 8)
-                }
-                .padding(.horizontal, 20)
-
-                Spacer()
-
-                Button("Back") {
-                    withAnimation {
-                        currentStep = 0
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                        .disabled(isCheckingPermission)
                     }
                 }
-                .font(.subheadline)
-                .foregroundColor(.secondary)
                 .padding(.bottom, 40)
             }
             .tag(1)
-        }
-        .tabViewStyle(.page)
-        .indexViewStyle(.page(backgroundDisplayMode: .always))
-        .sheet(isPresented: $showingAuth) {
-            if let provider = selectedProvider {
-                LLMAuthView(
-                    provider: provider,
-                    isPresented: $showingAuth,
-                    onSuccess: {
-                        // Show success screen
-                        showingSuccess = true
-                    }
-                )
+            .onAppear {
+                checkMicPermission()
             }
-        }
-        .fullScreenCover(isPresented: $showingSuccess) {
-            SetupSuccessView()
-        }
-    }
-}
 
-struct ProviderButton: View {
-    let provider: LLMProvider
-    var recommended: Bool = false
-    let action: () -> Void
+            // Step 3: Connect to SoniqueBar
+            VStack(spacing: 30) {
+                Spacer()
 
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                Image(systemName: iconName)
-                    .font(.title2)
-                    .foregroundColor(.blue)
-                    .frame(width: 40)
+                if bonjourDiscovery.discoveredURL == nil {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                        .padding()
 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
-                        Text(provider.displayName)
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                    Text("Looking for SoniqueBar...")
+                        .font(.headline)
 
-                        if recommended {
-                            Text("RECOMMENDED")
-                                .font(.caption2)
-                                .bold()
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.blue)
-                                .cornerRadius(4)
-                        }
-                    }
-
-                    Text(description)
+                    Text("Make sure SoniqueBar is running on your Mac")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                } else {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(.green)
+
+                    Text("Connected!")
+                        .font(.title)
+                        .bold()
+
+                    Text("Found SoniqueBar on your Mac")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+
+                    Button("Get Started") {
+                        // Mark onboarding complete
+                        UserDefaults.standard.set(true, forKey: "onboarding_complete")
+                        dismiss()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
                 }
 
                 Spacer()
-
-                Image(systemName: "chevron.right")
-                    .foregroundColor(.secondary)
-                    .font(.caption)
             }
-            .padding(16)
-            .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .tag(2)
+            .onAppear {
+                // Start Bonjour discovery when this step appears
+                bonjourDiscovery.start()
+            }
         }
-        .buttonStyle(.plain)
+        .tabViewStyle(.page)
+        .indexViewStyle(.page(backgroundDisplayMode: .always))
     }
 
-    var iconName: String {
-        switch provider {
-        case .claude:
-            return "brain"
-        case .chatgpt:
-            return "bubble.left.and.bubble.right"
-        case .gemini:
-            return "sparkles"
-        case .ollama:
-            return "server.rack"
-        }
+    private func checkMicPermission() {
+        micPermissionGranted = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
     }
 
-    var description: String {
-        switch provider {
-        case .claude:
-            return "Best for reasoning and coding"
-        case .chatgpt:
-            return "Fast and conversational"
-        case .gemini:
-            return "Google's AI assistant"
-        case .ollama:
-            return "Run AI models on your device"
+    private func requestMicPermission() {
+        isCheckingPermission = true
+
+        AVCaptureDevice.requestAccess(for: .audio) { granted in
+            DispatchQueue.main.async {
+                micPermissionGranted = granted
+                isCheckingPermission = false
+                if granted {
+                    // Auto-advance after brief delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        withAnimation {
+                            currentStep = 2
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 #Preview {
     OnboardingView()
+        .environmentObject(BonjourDiscovery())
 }

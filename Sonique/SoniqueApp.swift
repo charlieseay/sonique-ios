@@ -56,18 +56,11 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if providerManager.isConfigured {
+            // Check if onboarding completed (server discovered)
+            if UserDefaults.standard.bool(forKey: "onboarding_complete") {
                 ContentView()
             } else {
                 OnboardingView()
-            }
-        }
-        .onAppear {
-            Task { @MainActor in
-                await providerManager.updateConfiguredState()
-
-                // Start session monitoring
-                startSessionMonitoring()
             }
         }
     }
