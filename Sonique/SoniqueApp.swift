@@ -65,6 +65,20 @@ struct RootView: View {
         .onAppear {
             Task { @MainActor in
                 await providerManager.updateConfiguredState()
+
+                // Start session monitoring
+                startSessionMonitoring()
+            }
+        }
+    }
+
+    private func startSessionMonitoring() {
+        Task { @MainActor in
+            await ClaudeSessionManager.shared.startSessionMonitoring {
+                NSLog("[Sonique] Session expired - prompting for re-auth")
+
+                // Show re-auth sheet
+                showOnboarding = true
             }
         }
     }

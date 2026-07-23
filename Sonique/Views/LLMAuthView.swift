@@ -87,122 +87,75 @@ struct LLMAuthView: View {
         }
     }
 
-    private func handleAuthSuccess(cookies: [HTTPCookie]) {
-        // Save cookies to session manager
-        Task { @MainActor in
-            do {
-                try await ClaudeSessionManager.shared.saveSession(cookies: cookies)
+    private func startAuthSession() {
+        isLoading = true
+        errorMessage = nil
 
-                // Set as active provider
-                await ProviderManager.shared.setActiveProvider(provider)
+        // Use ASWebAuthenticationSession - shares cookies with Safari
+        // Callback URL scheme - we just need any valid URL to detect completion
+        let callbackScheme = "sonique"
 
-                // Success - show success screen, then dismiss
-                // Note: Success screen will be shown by the parent (OnboardingView)
-                isPresented = false
-                onSuccess()
+        authSession = ASWebAuthenticationSession(
+            url: provider.authURL,
+            callbackURLScheme: callbackScheme
+        ) { callbackURL, error in
+            isLoading = false
 
-            } catch {
-                errorMessage = "Failed to save session: \(error.localizedDescription)"
-                isLoading = false
-            }
-        }
-    }
-}
-
-struct WebAuthView: UIViewRepresentable {
-    let provider: LLMProvider
-    let onLoadingStateChange: (Bool) -> Void
-    let onSuccess: ([HTTPCookie]) -> Void
-    let onError: (String) -> Void
-
-    func makeUIView(context: Context) -> WKWebView {
-        let config = WKWebViewConfiguration()
-
-        // Enable JavaScript
-        let preferences = WKWebpagePreferences()
-        preferences.allowsContentJavaScript = true
-        config.defaultWebpagePreferences = preferences
-
-        let webView = WKWebView(frame: .zero, configuration: config)
-        webView.navigationDelegate = context.coordinator
-
-        // Load provider auth URL
-        let request = URLRequest(url: provider.authURL)
-        webView.load(request)
-
-        return webView
-    }
-
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    class Coordinator: NSObject, WKNavigationDelegate {
-        let parent: WebAuthView
-        private var hasCheckedAuth = false
-
-        init(_ parent: WebAuthView) {
-            self.parent = parent
-        }
-
-        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-            parent.onLoadingStateChange(true)
-        }
-
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            parent.onLoadingStateChange(false)
-
-            // Check if user is authenticated (URL changed to chat/new page)
-            guard let url = webView.url?.absoluteString else { return }
-
-            let isAuthenticated: Bool = {
-                switch parent.provider {
-                case .claude:
-                    return url.contains("/new") || url.contains("/chat")
-                case .chatgpt:
-                    return url.contains("chat.openai.com") && !url.contains("/auth/")
-                case .gemini:
-                    return url.contains("/app") || url.contains("/chat")
-                case .ollama:
-                    return true // Local, no auth needed
+            if let error = error {
+                // User cancelled or error occurred
+                if (error as NSError).code != ASWebAuthenticationSessionError.canceledLogin.rawValue {
+                    errorMessage = "Authentication error: \(error.localizedDescription)"
                 }
-            }()
+                return
+            }
 
-            if isAuthenticated && !hasCheckedAuth {
-                hasCheckedAuth = true
-                extractCookies(from: webView)
+            // Auth completed - now extract cookies from shared cookie storage
+            Task { @MainActor in
+                await extractCookiesFromSharedStorage()
             }
         }
 
-        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-            parent.onLoadingStateChange(false)
-            parent.onError(error.localizedDescription)
+        // Present the session
+        authSession?.prefersEphemeralWebBrowserSession = false // Share cookies with Safari
+        authSession?.start()
+    }
+
+    private func extractCookiesFromSharedStorage() async {
+        // Get cookies from HTTPCookieStorage (shared with Safari)
+        let cookieStorage = HTTPCookieStorage.shared
+        guard let allCookies = cookieStorage.cookies else {
+            errorMessage = "No cookies found"
+            return
         }
 
-        private func extractCookies(from webView: WKWebView) {
-            webView.configuration.websiteDataStore.httpCookieStore.getAllCookies { cookies in
-                // Filter to only provider-relevant cookies
-                let relevantCookies = cookies.filter { cookie in
-                    switch self.parent.provider {
-                    case .claude:
-                        return cookie.domain.contains("claude.ai")
-                    case .chatgpt:
-                        return cookie.domain.contains("openai.com")
-                    case .gemini:
-                        return cookie.domain.contains("google.com")
-                    case .ollama:
-                        return cookie.domain.contains("localhost")
-                    }
-                }
-
-                if !relevantCookies.isEmpty {
-                    self.parent.onSuccess(relevantCookies)
-                } else {
-                    self.parent.onError("No authentication cookies found")
-                }
+        // Filter to provider-specific cookies
+        let relevantCookies = allCookies.filter { cookie in
+            switch provider {
+            case .claude:
+                return cookie.domain.contains("claude.ai")
+            case .chatgpt:
+                return cookie.domain.contains("openai.com")
+            case .gemini:
+                return cookie.domain.contains("google.com")
+            case .ollama:
+                return cookie.domain.contains("localhost")
             }
+        }
+
+        if relevantCookies.isEmpty {
+            errorMessage = "No \(provider.displayName) cookies found. Please try signing in again."
+            return
+        }
+
+        // Save cookies
+        do {
+            try await ClaudeSessionManager.shared.saveSession(cookies: relevantCookies)
+            await ProviderManager.shared.setActiveProvider(provider)
+
+            isPresented = false
+            onSuccess()
+        } catch {
+            errorMessage = "Failed to save session: \(error.localizedDescription)"
         }
     }
 }
