@@ -7,22 +7,26 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E517F3E423DE4B52942BFCDD /* LLMAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C46E3757124E6E84CBA42B /* LLMAuthView.swift */; };
-		C6E85413C22B4647AD4D4CC4 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F646B4CDA3924C5EB179E3FD /* OnboardingView.swift */; };
-		2DB3C58CB53040F4AF462036 /* ElevenLabsDirectTTS.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE6F55C394164D9585151A81 /* ElevenLabsDirectTTS.swift */; };
 		07B93A2F0FEA4AD19B86D13D /* KokoroTTS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C928175E672279B0EF11D02 /* KokoroTTS.swift */; };
 		0F043EAB95B04B37A67616F0 /* WakeWordMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08D9A67C2CBC4419B88B3169 /* WakeWordMatcher.swift */; };
+		175B58261F154273C2746187 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F646B4CDA3924C5EB179E3FD /* OnboardingView.swift */; };
 		1C140EA451B919D9298BE32E /* NativeCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62F4F3D0ECD71D878D9DA058 /* NativeCapabilities.swift */; };
 		1F086CC3122C84ACFCF8A7C5 /* ProactiveAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D423C09E52A27BC733FD0C7 /* ProactiveAgent.swift */; };
+		2046C1DA733015DE7BC5ADC0 /* ProviderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4F178DCA2B6736F4F68ADF /* ProviderManager.swift */; };
 		23DA4ACE8CFA741DF5BD9C1B /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14CE437189C0E4421DAF830B /* Config.swift */; };
+		2DB3C58CB53040F4AF462036 /* ElevenLabsDirectTTS.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE6F55C394164D9585151A81 /* ElevenLabsDirectTTS.swift */; };
+		3663253F567B4057A31D6109 /* ShortcutsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25381ECBF1984A48BC515678 /* ShortcutsManager.swift */; };
+		37380BD5FF622B109411644C /* LLMAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C46E3757124E6E84CBA42B /* LLMAuthView.swift */; };
 		3AD4BE75784BB13A70577E66 /* DeviceContextPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A6EDC914A658CBC3E575AB7 /* DeviceContextPublisher.swift */; };
 		3F73A4442FCE86A90057ED63 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F73A4432FCE86A90057ED63 /* SettingsView.swift */; };
 		3F8E06692F99DA5C00F7E36D /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 3F8E06682F99DA5C00F7E36D /* GoogleMobileAds */; };
 		3FA000000000000000000017 /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3FA000000000000000000016 /* LiveKit */; };
 		53D6F717889645D79E14FFC2 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA179CA93C46680826017095 /* ChatView.swift */; };
 		5A8627754ECF4312B7FC7B61 /* NotificationNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EADEBB50BE145DC80783D10 /* NotificationNames.swift */; };
+		75D8922039334DD792DF8CC5 /* StatusIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7F9667F6B145BD9EA37177 /* StatusIndicatorView.swift */; };
 		78B954F685307573B5EB423A /* DeviceRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96DDA90423EADA4B1E17B4EA /* DeviceRegistration.swift */; };
 		865B1979F6D2564DBD38C8C0 /* CapabilityExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE57C6A78015FFAD8828EFF9 /* CapabilityExecutor.swift */; };
+		87AFDF4B17D8C9BE4FFA4DA4 /* ClaudeSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B8E7D6AB0BB86B629B0A209 /* ClaudeSessionManager.swift */; };
 		91314C8980E6AC4B72F59493 /* VoiceLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F04A6A893C92D026BF8A2F /* VoiceLoop.swift */; };
 		9799BFC0599B37F5FBC462FE /* BonjourDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A23AB4D69778C0A2A9DD563 /* BonjourDiscovery.swift */; };
 		98765432F0E1D2C3B4A59687 /* InterruptionPredictor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6789012345678 /* InterruptionPredictor.swift */; };
@@ -36,11 +40,11 @@
 		AC1B00100000000000SB02B /* SoniqueBrain.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000SB02A /* SoniqueBrain.swift */; };
 		AC1B00100000000000SC01B /* SoundCues.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000SC01A /* SoundCues.swift */; };
 		AC1B00100000000000SH01B /* SoniqueShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000SH01A /* SoniqueShortcuts.swift */; };
-		3663253F567B4057A31D6109 /* ShortcutsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25381ECBF1984A48BC515678 /* ShortcutsManager.swift */; };
-		75D8922039334DD792DF8CC5 /* StatusIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7F9667F6B145BD9EA37177 /* StatusIndicatorView.swift */; };
 		AC1B00100000000000VC01B /* VoiceCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000VC01A /* VoiceCatalog.swift */; };
 		AC1B00100000000000VS01B /* VoiceSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1B00100000000000VS01A /* VoiceSession.swift */; };
 		B8272780DFB86587B6CD08CD /* TTSProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CB785A30EAAFF93FC27484B /* TTSProvider.swift */; };
+		C25CAB5D439682BC10BDAF9A /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98882DC276D47836717C1A6 /* KeychainHelper.swift */; };
+		C7080D7E7C4D28493841A0B5 /* SetupSuccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F83C688F3B3F47769C639E0 /* SetupSuccessView.swift */; };
 		D1864FD5AF3143B3F0797457 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 671A40B7929AC4785513019C /* HTTPClient.swift */; };
 		EAC245018BD75F904B3DFA71 /* VoiceSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDEE4E65BD1368173EB33E93 /* VoiceSelector.swift */; };
 		EDAD47EA8D3B00AC2541F23A /* SoniqueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5D54884BF2700547B33C65E /* SoniqueApp.swift */; };
@@ -59,25 +63,27 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		E8C46E3757124E6E84CBA42B /* LLMAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMAuthView.swift; sourceTree = "<group>"; };
-		F646B4CDA3924C5EB179E3FD /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		08D9A67C2CBC4419B88B3169 /* WakeWordMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/WakeWordMatcher.swift; sourceTree = "<group>"; };
 		0C928175E672279B0EF11D02 /* KokoroTTS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/KokoroTTS.swift; sourceTree = "<group>"; };
 		0CB785A30EAAFF93FC27484B /* TTSProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/TTSProvider.swift; sourceTree = "<group>"; };
-		DE6F55C394164D9585151A81 /* ElevenLabsDirectTTS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/ElevenLabsDirectTTS.swift; sourceTree = "<group>"; };
 		14CE437189C0E4421DAF830B /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Config.swift; path = Sonique/Config.swift; sourceTree = SOURCE_ROOT; };
+		25381ECBF1984A48BC515678 /* ShortcutsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/ShortcutsManager.swift; sourceTree = "<group>"; };
 		2A23AB4D69778C0A2A9DD563 /* BonjourDiscovery.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BonjourDiscovery.swift; path = Sonique/BonjourDiscovery.swift; sourceTree = "<group>"; };
 		3A6EDC914A658CBC3E575AB7 /* DeviceContextPublisher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Sonique/DeviceContextPublisher.swift; sourceTree = SOURCE_ROOT; };
 		3EADEBB50BE145DC80783D10 /* NotificationNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/NotificationNames.swift; sourceTree = "<group>"; };
 		3F73A4432FCE86A90057ED63 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SettingsView.swift; sourceTree = "<group>"; };
+		3F7F9667F6B145BD9EA37177 /* StatusIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/StatusIndicatorView.swift; sourceTree = "<group>"; };
 		3FA000000000000000000018 /* Sonique.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sonique.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FC595A32F998A2100BEFC6F /* Sonique.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Sonique.entitlements; sourceTree = "<group>"; };
+		5F83C688F3B3F47769C639E0 /* SetupSuccessView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SetupSuccessView.swift; path = Sonique/Views/SetupSuccessView.swift; sourceTree = "<group>"; };
 		62F4F3D0ECD71D878D9DA058 /* NativeCapabilities.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NativeCapabilities.swift; path = Sonique/NativeCapabilities.swift; sourceTree = "<group>"; };
 		671A40B7929AC4785513019C /* HTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HTTPClient.swift; path = Sonique/HTTPClient.swift; sourceTree = SOURCE_ROOT; };
 		8D423C09E52A27BC733FD0C7 /* ProactiveAgent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProactiveAgent.swift; path = Sonique/ProactiveAgent.swift; sourceTree = SOURCE_ROOT; };
 		96DDA90423EADA4B1E17B4EA /* DeviceRegistration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Sonique/DeviceRegistration.swift; sourceTree = SOURCE_ROOT; };
+		9B8E7D6AB0BB86B629B0A209 /* ClaudeSessionManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ClaudeSessionManager.swift; path = Sonique/Services/ClaudeSessionManager.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6789012345678 /* InterruptionPredictor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InterruptionPredictor.swift; path = Sonique/Prediction/InterruptionPredictor.swift; sourceTree = SOURCE_ROOT; };
 		A793446A9BBB7A765178A683 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = Sonique/ContentView.swift; sourceTree = SOURCE_ROOT; };
+		A98882DC276D47836717C1A6 /* KeychainHelper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KeychainHelper.swift; path = Sonique/Services/KeychainHelper.swift; sourceTree = "<group>"; };
 		AC1B00100000000000AO01A /* ArtifactOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/ArtifactOverlay.swift; sourceTree = "<group>"; };
 		AC1B00100000000000AP01A /* AssistantProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/AssistantProfile.swift; sourceTree = "<group>"; };
 		AC1B00100000000000AS01A /* AssistantSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/AssistantSettingsView.swift; sourceTree = "<group>"; };
@@ -87,16 +93,18 @@
 		AC1B00100000000000SB02A /* SoniqueBrain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SoniqueBrain.swift; sourceTree = "<group>"; };
 		AC1B00100000000000SC01A /* SoundCues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SoundCues.swift; sourceTree = "<group>"; };
 		AC1B00100000000000SH01A /* SoniqueShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/SoniqueShortcuts.swift; sourceTree = "<group>"; };
-		25381ECBF1984A48BC515678 /* ShortcutsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/ShortcutsManager.swift; sourceTree = "<group>"; };
-		3F7F9667F6B145BD9EA37177 /* StatusIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/StatusIndicatorView.swift; sourceTree = "<group>"; };
 		AC1B00100000000000VC01A /* VoiceCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/VoiceCatalog.swift; sourceTree = "<group>"; };
 		AC1B00100000000000VS01A /* VoiceSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/VoiceSession.swift; sourceTree = "<group>"; };
 		CDEE4E65BD1368173EB33E93 /* VoiceSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VoiceSelector.swift; path = Sonique/VoiceSelector.swift; sourceTree = SOURCE_ROOT; };
 		D8F04A6A893C92D026BF8A2F /* VoiceLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VoiceLoop.swift; path = Sonique/VoiceLoop.swift; sourceTree = SOURCE_ROOT; };
 		DBE6BB31F45A485BAF13A5ED /* RemoteLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/RemoteLogger.swift; sourceTree = "<group>"; };
+		DE6F55C394164D9585151A81 /* ElevenLabsDirectTTS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/ElevenLabsDirectTTS.swift; sourceTree = "<group>"; };
 		E5D54884BF2700547B33C65E /* SoniqueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SoniqueApp.swift; path = Sonique/SoniqueApp.swift; sourceTree = SOURCE_ROOT; };
+		E8C46E3757124E6E84CBA42B /* LLMAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Views/LLMAuthView.swift; sourceTree = "<group>"; };
 		EA179CA93C46680826017095 /* ChatView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ChatView.swift; path = Sonique/ChatView.swift; sourceTree = SOURCE_ROOT; };
 		EE57C6A78015FFAD8828EFF9 /* CapabilityExecutor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CapabilityExecutor.swift; path = Sonique/CapabilityExecutor.swift; sourceTree = "<group>"; };
+		F646B4CDA3924C5EB179E3FD /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/Views/OnboardingView.swift; sourceTree = "<group>"; };
+		FE4F178DCA2B6736F4F68ADF /* ProviderManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProviderManager.swift; path = Sonique/Services/ProviderManager.swift; sourceTree = "<group>"; };
 		FF1A00000000000000ASSET0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Sonique/Resources/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 		TST000000000000000010A /* SoniqueTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SoniqueTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -150,6 +158,10 @@
 				EE57C6A78015FFAD8828EFF9 /* CapabilityExecutor.swift */,
 				816F6DC62CE49E77EB708B8C /* Sonique */,
 				TST000000000000000020G /* SoniqueTests */,
+				5F83C688F3B3F47769C639E0 /* SetupSuccessView.swift */,
+				FE4F178DCA2B6736F4F68ADF /* ProviderManager.swift */,
+				A98882DC276D47836717C1A6 /* KeychainHelper.swift */,
+				9B8E7D6AB0BB86B629B0A209 /* ClaudeSessionManager.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -263,8 +275,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E517F3E423DE4B52942BFCDD /* LLMAuthView.swift in Sources */,
-				C6E85413C22B4647AD4D4CC4 /* OnboardingView.swift in Sources */,
 				FF1A00000000000000ASSET1 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -309,8 +319,14 @@
 				78B954F685307573B5EB423A /* DeviceRegistration.swift in Sources */,
 				53D6F717889645D79E14FFC2 /* ChatView.swift in Sources */,
 				1F086CC3122C84ACFCF8A7C5 /* ProactiveAgent.swift in Sources */,
-							2DB3C58CB53040F4AF462036 /* ElevenLabsDirectTTS.swift in Sources */,
-);
+				2DB3C58CB53040F4AF462036 /* ElevenLabsDirectTTS.swift in Sources */,
+				C7080D7E7C4D28493841A0B5 /* SetupSuccessView.swift in Sources */,
+				2046C1DA733015DE7BC5ADC0 /* ProviderManager.swift in Sources */,
+				C25CAB5D439682BC10BDAF9A /* KeychainHelper.swift in Sources */,
+				87AFDF4B17D8C9BE4FFA4DA4 /* ClaudeSessionManager.swift in Sources */,
+				175B58261F154273C2746187 /* OnboardingView.swift in Sources */,
+				37380BD5FF622B109411644C /* LLMAuthView.swift in Sources */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		TST000000000000000012P /* Sources */ = {
