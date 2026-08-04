@@ -52,7 +52,8 @@ class VoiceBoxTTS: NSObject, TTSProvider {
 
         let payload: [String: Any] = [
             "text": text,
-            "voice": "default"  // Fish TTS uses "default" voice
+            "voice": "jessica",  // Fish TTS Jessica-clone voice
+            "speed": 1.2  // Slightly faster for energy
         ]
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: payload) else {
