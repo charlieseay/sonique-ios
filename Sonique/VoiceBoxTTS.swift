@@ -141,7 +141,7 @@ class VoiceBoxTTS: NSObject, TTSProvider {
     }
 
     func stop() {
-        // Kokoro synthesis is synchronous on SoniqueBar side
+        // VoiceBox synthesis is synchronous on SoniqueBar side
         // iOS playback stop is handled by VoiceSession
     }
 

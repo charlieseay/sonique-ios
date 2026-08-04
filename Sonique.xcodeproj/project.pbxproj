@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		07B93A2F0FEA4AD19B86D13D /* KokoroTTS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C928175E672279B0EF11D02 /* KokoroTTS.swift */; };
+		A1B2C3D4E5F6708192A3B4C5 /* VoiceBoxTTS.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E5D4C3B2A190817263544F /* VoiceBoxTTS.swift */; };
 		0F043EAB95B04B37A67616F0 /* WakeWordMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08D9A67C2CBC4419B88B3169 /* WakeWordMatcher.swift */; };
 		175B58261F154273C2746187 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F646B4CDA3924C5EB179E3FD /* OnboardingView.swift */; };
 		1C140EA451B919D9298BE32E /* NativeCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62F4F3D0ECD71D878D9DA058 /* NativeCapabilities.swift */; };
@@ -64,7 +64,7 @@
 
 /* Begin PBXFileReference section */
 		08D9A67C2CBC4419B88B3169 /* WakeWordMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/WakeWordMatcher.swift; sourceTree = "<group>"; };
-		0C928175E672279B0EF11D02 /* KokoroTTS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/KokoroTTS.swift; sourceTree = "<group>"; };
+		F6E5D4C3B2A190817263544F /* VoiceBoxTTS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/VoiceBoxTTS.swift; sourceTree = "<group>"; };
 		0CB785A30EAAFF93FC27484B /* TTSProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Sonique/TTSProvider.swift; sourceTree = "<group>"; };
 		14CE437189C0E4421DAF830B /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Config.swift; path = Sonique/Config.swift; sourceTree = SOURCE_ROOT; };
 		25381ECBF1984A48BC515678 /* ShortcutsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sonique/ShortcutsManager.swift; sourceTree = "<group>"; };
@@ -179,7 +179,7 @@
 			children = (
 				3A6EDC914A658CBC3E575AB7 /* DeviceContextPublisher.swift */,
 				0CB785A30EAAFF93FC27484B /* TTSProvider.swift */,
-				0C928175E672279B0EF11D02 /* KokoroTTS.swift */,
+				F6E5D4C3B2A190817263544F /* VoiceBoxTTS.swift */,
 				2A23AB4D69778C0A2A9DD563 /* BonjourDiscovery.swift */,
 				96DDA90423EADA4B1E17B4EA /* DeviceRegistration.swift */,
 				EA179CA93C46680826017095 /* ChatView.swift */,
@@ -312,7 +312,7 @@
 				865B1979F6D2564DBD38C8C0 /* CapabilityExecutor.swift in Sources */,
 				3AD4BE75784BB13A70577E66 /* DeviceContextPublisher.swift in Sources */,
 				B8272780DFB86587B6CD08CD /* TTSProvider.swift in Sources */,
-				07B93A2F0FEA4AD19B86D13D /* KokoroTTS.swift in Sources */,
+				A1B2C3D4E5F6708192A3B4C5 /* VoiceBoxTTS.swift in Sources */,
 				9799BFC0599B37F5FBC462FE /* BonjourDiscovery.swift in Sources */,
 				5A8627754ECF4312B7FC7B61 /* NotificationNames.swift in Sources */,
 				0F043EAB95B04B37A67616F0 /* WakeWordMatcher.swift in Sources */,
@@ -352,7 +352,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 203;
+				CURRENT_PROJECT_VERSION = 204;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -381,7 +381,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sonique.entitlements;
-				CURRENT_PROJECT_VERSION = 203;
+				CURRENT_PROJECT_VERSION = 204;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				EMBED_PACKAGE_FRAMEWORKS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -465,7 +465,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 203;
+				CURRENT_PROJECT_VERSION = 204;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -484,7 +484,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 203;
+				CURRENT_PROJECT_VERSION = 204;
 				DEVELOPMENT_TEAM = 7NSS5CJL9E;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;

@@ -3,7 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @AppStorage("serverURL") private var serverURL = ""
     @AppStorage("useTailscale") private var useTailscale = false
-    @AppStorage("tts_provider") private var ttsProvider = "kokoro"
+    @AppStorage("tts_provider") private var ttsProvider = "voicebox"
     @AppStorage("interruption_threshold") private var interruptionThreshold: Double = 0.4
 
     @State private var connectionTestResult: String?
@@ -94,17 +94,17 @@ struct SettingsView: View {
 
                 Section(header: Text("TTS Provider")) {
                     Picker("Provider", selection: $ttsProvider) {
-                        Text("ElevenLabs (Cloud)").tag("elevenlabs")
-                        Text("Kokoro (Local)").tag("kokoro")
+                        Text("VoiceBox (Local)").tag("voicebox")
+                        Text("ElevenLabs (BYO-AI)").tag("elevenlabs")
                     }
                     .pickerStyle(.segmented)
 
-                    if ttsProvider == "kokoro" {
-                        Label("Kokoro via SoniqueBar on your Mac (LAN/Tailscale)", systemImage: "checkmark.circle.fill")
+                    if ttsProvider == "voicebox" {
+                        Label("VoiceBox via SoniqueBar on your Mac (local, free)", systemImage: "checkmark.circle.fill")
                             .foregroundColor(.green)
                             .font(.caption)
                     } else {
-                        Label("Using ElevenLabs cloud API", systemImage: "cloud.fill")
+                        Label("Using ElevenLabs API (provide your own key)", systemImage: "cloud.fill")
                             .foregroundColor(.blue)
                             .font(.caption)
                     }
@@ -186,7 +186,7 @@ struct SettingsView: View {
 
                 Section(header: Text("About")) {
                     LabeledContent("App Version", value: appVersion)
-                    LabeledContent("TTS Provider", value: ttsProvider == "kokoro" ? "Kokoro (Local)" : "ElevenLabs")
+                    LabeledContent("TTS Provider", value: ttsProvider == "voicebox" ? "VoiceBox (Local)" : "ElevenLabs (BYO-AI)")
                     LabeledContent("Brain", value: "SoniqueBar (Mac)")
                 }
 
