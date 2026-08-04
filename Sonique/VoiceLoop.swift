@@ -53,14 +53,12 @@ class VoiceLoop: ObservableObject {
     }
 
     enum TTSMode: String {
-        case kokoro  // Kokoro native Swift TTS via SoniqueBar (on-device, free, fast)
-        case voicebox  // VoiceBox/Kokoro via SoniqueBar (deprecated - use .kokoro)
-        case elevenlabs  // ElevenLabs API (premium, costs $)
-        case ondevice  // Apple AVSpeechSynthesizer (free fallback)
+        case voicebox  // VoiceBox local binary via SoniqueBar
+        case elevenlabs  // ElevenLabs API (BYO-AI)
     }
 
     private var ttsMode: TTSMode {
-        let stored = UserDefaults.standard.string(forKey: "tts_provider") ?? "kokoro"
+        let stored = UserDefaults.standard.string(forKey: "tts_provider") ?? "voicebox"
         return TTSMode(rawValue: stored) ?? .elevenlabs
     }
 
@@ -579,22 +577,15 @@ class VoiceLoop: ObservableObject {
                 FileTracer.log("[conn] Initializing TTS provider: \(ttsMode.rawValue)")
 
                 switch ttsMode {
-                case .kokoro:
-                    ttsProvider = KokoroTTS(soniqueBarHost: Config.soniqueBarHost)
-                    debugLog.append("TTS ready (Kokoro)")
-                    FileTracer.log("[conn] Kokoro TTS initialized")
+                case .voicebox:
+                    ttsProvider = VoiceBoxTTS(soniqueBarHost: Config.soniqueBarHost)
+                    debugLog.append("TTS ready (VoiceBox)")
+                    FileTracer.log("[conn] VoiceBox TTS initialized")
 
                 case .elevenlabs:
-                    // Server-side ElevenLabs TTS (via SoniqueBar)
                     ttsProvider = ElevenLabsDirectTTS(soniqueBarHost: Config.soniqueBarHost)
                     debugLog.append("TTS ready (ElevenLabs)")
                     FileTracer.log("[conn] ElevenLabs TTS initialized (server-side)")
-
-                case .voicebox, .ondevice:
-                    // Fallback to Kokoro for removed TTS modes
-                    ttsProvider = KokoroTTS(soniqueBarHost: Config.soniqueBarHost)
-                    debugLog.append("TTS ready (Kokoro fallback)")
-                    FileTracer.log("[conn] Kokoro TTS initialized (fallback from \(ttsMode.rawValue))")
                 }
 
                 self.error = nil

@@ -2,9 +2,9 @@ import Foundation
 import AVFoundation
 import CryptoKit
 
-/// Kokoro TTS via SoniqueBar - native Swift on-device synthesis
+/// VoiceBox TTS via SoniqueBar
 @MainActor
-class KokoroTTS: NSObject, TTSProvider {
+class VoiceBoxTTS: NSObject, TTSProvider {
     private let soniqueBarHost: String
 
     init(soniqueBarHost: String) {
@@ -14,29 +14,29 @@ class KokoroTTS: NSObject, TTSProvider {
 
     func speak(_ text: String, completion: @escaping () -> Void) async {
         // Unused protocol method - VoiceLoop uses fetchPCM() only
-        fatalError("KokoroTTS.speak() should not be called; use fetchPCM() instead")
+        fatalError("VoiceBoxTTS.speak() should not be called; use fetchPCM() instead")
     }
 
     func fetchPCM(_ text: String) async -> Data? {
         guard !text.isEmpty else {
-            FileTracer.log("[kokoro] fetchPCM called with empty text")
+            FileTracer.log("[voicebox] fetchPCM called with empty text")
             await sendFeedback(type: "error", message: "fetchPCM called with empty text", metadata: [:])
             return nil
         }
 
-        FileTracer.log("[kokoro] fetching TTS for: '\(text.prefix(50))'")
+        FileTracer.log("[voicebox] fetching TTS for: '\(text.prefix(50))'")
 
         // Report request start
         let requestStartTime = Date()
         await sendFeedback(type: "performance", message: "TTS request sent", metadata: [
             "text_length": text.count,
-            "provider": "Kokoro"
+            "provider": "VoiceBox"
         ])
 
-        // Call SoniqueBar /synthesize/kokoro endpoint
-        guard let url = URL(string: "http://\(soniqueBarHost):8890/synthesize/kokoro") else {
-            FileTracer.log("[kokoro] Invalid URL")
-            await sendFeedback(type: "error", message: "Invalid Kokoro TTS URL", metadata: ["host": soniqueBarHost])
+        // Call SoniqueBar /synthesize/voicebox endpoint
+        guard let url = URL(string: "http://\(soniqueBarHost):8890/synthesize/voicebox") else {
+            FileTracer.log("[voicebox] Invalid URL")
+            await sendFeedback(type: "error", message: "Invalid VoiceBox TTS URL", metadata: ["host": soniqueBarHost])
             return nil
         }
 
@@ -56,8 +56,8 @@ class KokoroTTS: NSObject, TTSProvider {
         ]
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: payload) else {
-            FileTracer.log("[kokoro] Failed to serialize JSON")
-            await sendFeedback(type: "error", message: "Failed to serialize Kokoro TTS JSON", metadata: ["text_length": text.count])
+            FileTracer.log("[voicebox] Failed to serialize JSON")
+            await sendFeedback(type: "error", message: "Failed to serialize VoiceBox TTS JSON", metadata: ["text_length": text.count])
             return nil
         }
 
@@ -79,17 +79,17 @@ class KokoroTTS: NSObject, TTSProvider {
             let responseReceivedTime = Date()
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                FileTracer.log("[kokoro] Invalid response type")
-                await sendFeedback(type: "error", message: "Invalid HTTP response type from Kokoro", metadata: ["latency_ms": latencyMs])
+                FileTracer.log("[voicebox] Invalid response type")
+                await sendFeedback(type: "error", message: "Invalid HTTP response type from VoiceBox", metadata: ["latency_ms": latencyMs])
                 return nil
             }
 
-            FileTracer.log("[kokoro] HTTP \(httpResponse.statusCode), received \(data.count) bytes")
+            FileTracer.log("[voicebox] HTTP \(httpResponse.statusCode), received \(data.count) bytes")
 
             guard httpResponse.statusCode == 200 else {
                 if let errorString = String(data: data, encoding: .utf8) {
-                    FileTracer.log("[kokoro] Server error: \(errorString)")
-                    await sendFeedback(type: "error", message: "Kokoro TTS server error", metadata: [
+                    FileTracer.log("[voicebox] Server error: \(errorString)")
+                    await sendFeedback(type: "error", message: "VoiceBox TTS server error", metadata: [
                         "status_code": httpResponse.statusCode,
                         "error": errorString.prefix(100)
                     ])
@@ -105,11 +105,11 @@ class KokoroTTS: NSObject, TTSProvider {
 
             // Check Content-Type header
             let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type") ?? ""
-            FileTracer.log("[kokoro] Content-Type: \(contentType)")
+            FileTracer.log("[voicebox] Content-Type: \(contentType)")
 
             if contentType.contains("audio/pcm") {
                 // Already PCM - return directly
-                FileTracer.log("[kokoro] Received \(data.count) bytes PCM in \(latencyMs)ms")
+                FileTracer.log("[voicebox] Received \(data.count) bytes PCM in \(latencyMs)ms")
 
                 // Report successful PCM receipt
                 await sendFeedback(type: "performance", message: "PCM data received successfully", metadata: [
@@ -120,18 +120,18 @@ class KokoroTTS: NSObject, TTSProvider {
 
                 return data
             } else {
-                FileTracer.log("[kokoro] Unexpected Content-Type: \(contentType)")
-                await sendFeedback(type: "error", message: "Kokoro TTS unexpected content type", metadata: [
+                FileTracer.log("[voicebox] Unexpected Content-Type: \(contentType)")
+                await sendFeedback(type: "error", message: "VoiceBox TTS unexpected content type", metadata: [
                     "content_type": contentType,
                     "expected": "audio/pcm"
                 ])
                 return nil
             }
         } catch {
-            FileTracer.log("[kokoro] Request failed: \(error.localizedDescription)")
+            FileTracer.log("[voicebox] Request failed: \(error.localizedDescription)")
 
             // Report TTS failure
-            await sendFeedback(type: "error", message: "Kokoro TTS request failed: \(error.localizedDescription)", metadata: [
+            await sendFeedback(type: "error", message: "VoiceBox TTS request failed: \(error.localizedDescription)", metadata: [
                 "text_length": text.count,
                 "error": error.localizedDescription.prefix(100)
             ])
