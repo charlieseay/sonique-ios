@@ -30,13 +30,13 @@ class VoiceBoxTTS: NSObject, TTSProvider {
         let requestStartTime = Date()
         await sendFeedback(type: "performance", message: "TTS request sent", metadata: [
             "text_length": text.count,
-            "provider": "Fish"
+            "provider": "ElevenLabs"
         ])
 
-        // Call SoniqueBar /synthesize/fish endpoint (Fish Speech TTS)
-        guard let url = URL(string: "http://\(soniqueBarHost):8890/synthesize/fish") else {
+        // Call SoniqueBar /synthesize/elevenlabs endpoint (ElevenLabs Jessica)
+        guard let url = URL(string: "http://\(soniqueBarHost):8890/synthesize/elevenlabs") else {
             FileTracer.log("[voicebox] Invalid URL")
-            await sendFeedback(type: "error", message: "Invalid Fish TTS URL", metadata: ["host": soniqueBarHost])
+            await sendFeedback(type: "error", message: "Invalid ElevenLabs TTS URL", metadata: ["host": soniqueBarHost])
             return nil
         }
 
@@ -52,8 +52,7 @@ class VoiceBoxTTS: NSObject, TTSProvider {
 
         let payload: [String: Any] = [
             "text": text,
-            "voice": "jessica",  // Fish TTS Jessica-clone voice
-            "speed": 1.2  // Slightly faster for energy
+            "voice_id": "cgSgspJ2msm6clMCkdW9"  // ElevenLabs Jessica voice ID
         ]
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: payload) else {
