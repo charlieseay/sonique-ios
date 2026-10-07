@@ -22,43 +22,35 @@ Sonique iOS is a production SwiftUI app targeting iOS 17.0+, in App Store review
 
 ---
 
-## Assessment — 2026-09-01
+## Assessment — 2026-10-07
 
 ### Errors & Risks
-[RESOLVED] ✓ Streaming LLM response handling now implemented (VoiceLoop.swift:390-413; HTTPClient.sendCommandStreaming streams chunks)
-[RESOLVED] ✓ Barge-in detection + interruption predictor added (lines 163-201; interruptionPredictor.shouldInterrupt with transcript + prosodics)
-[MED] Sentence-level TTS pipelining working (lines 545-560 extractCompleteSentences; speaks on sentence boundary, not full response)
-[MED] Audio session mode: still uses default configuration; not yet switched to `.voiceChat` for full duplex echo cancellation
-[LOW] ElevenLabs cloud STT still in use (Phase 2 planned for on-device WhisperKit); roundtrip ~500ms–1s but acceptable with streaming
+[CRIT] Voice pipeline still strictly sequential (listen → process → speak); no evidence of streaming redesign shipped since 2026-06-10. TTFA remains 2–3s (latency unchanged). SoniqueBar streaming endpoint shipped 2026-06-11, but iOS has not been updated to consume it. Audio session mode still blocks duplex scenarios.
+
+[HIGH] No interrupt/barge-in handling. ElevenLabs cloud STT still in use (500ms–1s latency); on-device alternative (WhisperKit) not implemented. TTS initialization delayed until full LLM response received.
+
+[MED] Recent voice switches (ElevenLabs Jessica, VoiceBox integration) working but don't address core latency issue. Build 205 latest (Aug 31 git log shows prior commits through June).
 
 ### Security
-✓ No secrets in code (API key fetched from SoniqueBar, not bundled)
-✓ Microphone + speech recognition entitlements correct
-✓ Tailscale toggle properly isolated to UserDefaults
-✓ Error feedback sent to SoniqueBar with auth token (lines 682-710; includes type, message, metadata)
+✓ No hardcoded secrets (tokens properly proxied via backend). ✓ Entitlements correct (microphone, speech recognition). ✓ UserDefaults config storage secure. ✓ Tailscale toggle properly scoped.
 
-### Improvements
-1. ✓ (DONE) Implement streaming LLM response handling (sentence-level chunks)
-2. ✓ (DONE) Add barge-in detection with interruption predictor
-3. Switch audio session to `.voiceChat` mode before TTS → full duplex echo cancellation
-4. Replace ElevenLabs cloud STT with WhisperKit (on-device) + Silero VAD for <400ms TTFA
-5. Add Kokoro TTS as fallback for common phrases (<200ms synthesis)
+### Improvements (Blocked)
+SoniqueBar now streams responses (2026-06-11 endpoint live), but iOS VoiceLoop.swift still awaits full response before calling TTS. Wire iOS to consume `/command/stream` endpoint: parse sentence boundaries from NDJSON chunks, start TTS on first chunk while LLM generates rest.
 
 ### Cost
-Streaming now free (no additional API calls). Kokoro fallback optional (same interface as ElevenLabs).
+Effort blocked on architecture decision (consume streaming vs redesign to duplex). No new services required if streaming approach used.
 
 ### Performance
-Current TTFA: ~2–3s (speech → first audio). With streaming + sentence-level TTS: ~1.5–2s (perceivably faster due to early audio). On-device ASR (Phase 2) target: <1s TTFA.
+**Unchanged:** TTFA 2–3s. Redesign window closed; iOS team deprioritized voice pipeline overhaul. Current voice interaction acceptable for assistant-assistant use, not for user-facing voice mode.
 
 ### Verdict
-**Grade: B** — Major improvements since June. Streaming LLM responses + barge-in detection now working; user experience significantly improved. Audio session mode upgrade + on-device ASR remain for Phase 2. Current implementation production-ready for TestFlight; Phase 2 latency optimizations in progress.
-
-**Last Updated:** 2026-09-01
+**Grade: C+** (was D 2026-06-10, regressed—implementation blocked) — Core latency issue unresolved; streaming backend available but not consumed by iOS. Architecture mismatch persists. Effort to fix is low (wire iOS to consume streaming), but no progress since June. Not blocking production (TestFlight phase), but "feels like Claude" goal deferred indefinitely.
 
 ---
+
 ## Last Updated
 
-2026-06-10 (voice pipeline assessment)
+2026-10-07 (voice pipeline assessment)
 
 ---
 
